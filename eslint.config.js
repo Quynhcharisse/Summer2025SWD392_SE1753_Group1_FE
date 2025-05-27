@@ -23,7 +23,20 @@ export default [
     settings: {
       "import/resolver": {
         alias: {
-          map: [["@", "./src"]],
+          map: [
+            ["@", "./src"],
+            ["@components", "./src/components"],
+            ["@api", "./src/api"],
+            ["@hooks", "./src/hooks"],
+            ["@layouts", "./src/layouts"],
+            ["@forms", "./src/forms"],
+            ["@store", "./src/store"],
+            ["@queries", "./src/queries"],
+            ["@styles", "./src/styles"],
+            ["@assets", "./src/assets"],
+            ["@icons", "./src/icons"],
+            ["@theme", "./src/theme"],
+          ],
           extensions: [".js", ".jsx", ".ts", ".tsx"],
         },
       },
