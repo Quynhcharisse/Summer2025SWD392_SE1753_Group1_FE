@@ -1,5 +1,6 @@
 import Admission from "@/components/pages/Admission";
 import Home from "@/components/pages/Home";
+import Login from "@/components/pages/Login";
 import NotFound from "@/components/pages/NotFound";
 import MainLayout from "@/layouts/MainLayout";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -19,6 +20,14 @@ const router = createBrowserRouter([
       <MainLayout>
         <Admission />
       </MainLayout>
+    ),
+  },
+  {
+    path: "/login",
+    element: (
+      
+        <Login />
+      
     ),
   },
   {
