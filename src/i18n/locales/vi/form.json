@@ -1,0 +1,17 @@
+{
+  "required": "{{field}} là bắt buộc.",
+  "invalid_email": "Email không hợp lệ.",
+  "password_min_length": "Mật khẩu phải có ít nhất 6 ký tự.",
+  "passwords_not_match": "Mật khẩu không khớp.",
+  "signup_success": "Đăng ký thành công!",
+  "signup_failed": "Đăng ký thất bại. Vui lòng thử lại.",
+  "signup_loading": "Đang đăng ký...",
+  "signup": "Đăng ký",
+  "full_name": "Họ và tên",
+  "email": "Email",
+  "password": "Mật khẩu",
+  "confirm_password": "Xác nhận mật khẩu",
+  "phone": "Số điện thoại",
+  "gender": "Giới tính",
+  "identity_number": "Số CMND/CCCD"
+}

@@ -21,12 +21,14 @@ export default [
       "react-refresh": reactRefresh,
     },
     settings: {
-      "import/resolver": {
-        alias: {
-          map: [
+      "import/resolver": {        alias: {          map: [
             ["@", "./src"],
-            ["@components", "./src/components"],
+            ["@components", "./src/components/shared"],
+            ["@pages", "./src/components/shared/pages"],
+            ["@auth", "./src/auth"],
             ["@api", "./src/api"],
+            ["@services", "./src/api/services"],
+            ["@clients", "./src/api/clients"],
             ["@hooks", "./src/hooks"],
             ["@layouts", "./src/layouts"],
             ["@forms", "./src/forms"],
@@ -35,6 +37,7 @@ export default [
             ["@styles", "./src/styles"],
             ["@assets", "./src/assets"],
             ["@icons", "./src/icons"],
+            ["@utils", "./src/utils"],
             ["@theme", "./src/theme"],
           ],
           extensions: [".js", ".jsx", ".ts", ".tsx"],
