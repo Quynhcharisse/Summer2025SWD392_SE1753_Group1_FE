@@ -11,8 +11,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
-      "@components": path.resolve(__dirname, "src/components"),
-      "@pages": path.resolve(__dirname, "src/pages"),
+      "@components": path.resolve(__dirname, "src/components/shared"),
+      "@pages": path.resolve(__dirname, "src/components/shared/pages"),
       "@api": path.resolve(__dirname, "src/api"),
       "@hooks": path.resolve(__dirname, "src/hooks"),
       "@layouts": path.resolve(__dirname, "src/layouts"),
@@ -24,6 +24,15 @@ export default defineConfig({
       "@store": path.resolve(__dirname, "src/store"),
       "@styles": path.resolve(__dirname, "src/styles"),
       "@theme": path.resolve(__dirname, "src/theme"),
+      "@contexts": path.resolve(__dirname, "src/contexts"),
+      "@auth": path.resolve(__dirname, "src/auth"),
+      "@organisms": path.resolve(__dirname, "src/components/shared/organisms"),
+      "@atoms": path.resolve(__dirname, "src/components/shared/atoms"),
+      "@services": path.resolve(__dirname, "src/api/services"),
+      "@templates": path.resolve(__dirname, "src/components/shared/templates"),
+      "@molecules": path.resolve(__dirname, "src/components/shared/molecules"),
+      "@constants": path.resolve(__dirname, "src/constants"),
+      "@config": path.resolve(__dirname, "src/config"),
     },
   },
 });

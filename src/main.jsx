@@ -3,14 +3,17 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./i18n";
 import "./index.css";
-import AppRouter from "./routes/AppRouter";
+import { AppRouter } from "./routes/AppRouter";
+import { ThemeProvider } from "@contexts/ThemeContext";
 
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AppRouter />
+      <ThemeProvider defaultTheme="light">
+        <AppRouter />
+      </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>
 );

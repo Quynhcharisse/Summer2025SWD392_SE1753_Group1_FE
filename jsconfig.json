@@ -1,11 +1,16 @@
-{
-  "compilerOptions": {
-    "baseUrl": "src",
-    "paths": {
+{  "compilerOptions": {
+    "baseUrl": "src",    "paths": {
       "@/*": ["*"],
-      "@components/*": ["components/*"],
-      "@pages/*": ["pages/*"],
+      "@components/*": ["components/shared/*"],
+      "@atoms/*": ["components/shared/atoms/*"],
+      "@molecules/*": ["components/shared/molecules/*"],
+      "@organisms/*": ["components/shared/organisms/*"],
+      "@templates/*": ["components/shared/templates/*"],
+      "@pages/*": ["components/shared/pages/*"],
+      "@auth/*": ["auth/*"],
       "@api/*": ["api/*"],
+      "@services/*": ["api/services/*"],
+      "@clients/*": ["api/clients/*"],
       "@hooks/*": ["hooks/*"],
       "@layouts/*": ["layouts/*"],
       "@assets/*": ["assets/*"],
@@ -15,7 +20,8 @@
       "@queries/*": ["queries/*"],
       "@store/*": ["store/*"],
       "@styles/*": ["styles/*"],
-      "@theme/*": ["theme/*"]
+      "@theme/*": ["theme/*"],
+      "@contexts/*": ["contexts/*"]
     }
   },
   "include": ["src"]

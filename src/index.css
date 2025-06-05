@@ -1,3 +1,403 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Theme CSS Variables - Ultra High Contrast for all themes */
+:root {
+  /* Light Theme (default) - Ultra High Contrast */
+  --color-primary: #07663a; /* Xanh đen cực đậm */
+  --color-secondary: #ffd600; /* Vàng tươi, nổi bật */
+  --color-accent: #e53935; /* Đỏ tươi */
+  --color-background: #ffffff; /* Trắng tinh khiết */
+  --color-surface: #f8fafc; /* Trắng xanh nhạt */
+  --color-text: #07663a; /* Xanh đen cực đậm */
+  --color-text-secondary: #22223b; /* Xám xanh đậm */
+  --color-border: #07663a; /* Xanh đen cực đậm */
+  --color-success: #009688; /* Xanh ngọc đậm */
+  --color-warning: #ff9800; /* Cam đậm */
+  --color-error: #e53935; /* Đỏ tươi */
+  --color-info: #1976d2; /* Xanh dương đậm */
+}
+
+/* Dark Theme - giữ nguyên hoặc chỉnh sau nếu muốn */
+[data-theme="dark"] {
+  --color-primary: #7eaaff; /* Xanh navy sáng, nổi bật */
+  --color-secondary: #ffe066; /* Vàng sáng */
+  --color-accent: #b388ff; /* Tím pastel */
+  --color-background: #0a0c16; /* NAVY RẤT ĐẬM, gần như black */
+  --color-surface: #13152a; /* Đậm hơn background một chút */
+  --color-text: #fff; /* Trắng tuyệt đối, cực nổi */
+  --color-text-secondary: #bfc8e6; /* Xám xanh nhạt cho text phụ */
+  --color-border: #23253d; /* Border navy rất đậm */
+  --color-success: #42cba5;
+  --color-warning: #ffe066;
+  --color-error: #ff92a5;
+  --color-info: #7eaaff;
+}
+
+/* Playful Theme - giữ nguyên hoặc chỉnh sau nếu muốn */
+[data-theme="playful"] {
+  --color-primary: #8e24aa; /* Tím đậm */
+  --color-secondary: #f06292; /* Hồng đậm */
+  --color-accent: #ffd600; /* Vàng tươi */
+  --color-background: #fff9c4; /* Vàng nhạt sáng */
+  --color-surface: #ffffff;
+  --color-text: #ffffff; /* Xanh đen cực đậm */
+  --color-text-secondary: #22223b; /* Xám xanh đậm */
+  --color-border: #07663a; /* Xanh đen cực đậm */
+  --color-success: #009688; /* Xanh ngọc đậm */
+  --color-warning: #ff9800; /* Cam đậm */
+  --color-error: #e53935; /* Đỏ tươi */
+  --color-info: #1976d2; /* Xanh dương đậm */
+}
+
+/* Theme transition animation */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background-color 0.25s ease, color 0.25s ease,
+    border-color 0.25s ease !important;
+}
+
+/* Theme-aware utility classes */
+.theme-aware-bg {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.theme-aware-surface {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.theme-aware-border {
+  border-color: var(--color-border);
+}
+
+.theme-aware-text {
+  color: var(--color-text);
+}
+
+.theme-aware-text-secondary {
+  color: var(--color-text-secondary);
+}
+
+/* Primary color utilities */
+.bg-theme-primary {
+  background-color: var(--color-primary);
+}
+
+.text-theme-primary {
+  color: var(--color-primary);
+}
+
+.border-theme-primary {
+  border-color: var(--color-primary);
+}
+
+/* Secondary color utilities */
+.bg-theme-secondary {
+  background-color: var(--color-secondary);
+}
+
+.text-theme-secondary {
+  color: var(--color-secondary);
+}
+
+.border-theme-secondary {
+  border-color: var(--color-secondary);
+}
+
+/* Accent color utilities */
+.bg-theme-accent {
+  background-color: var(--color-accent);
+}
+
+.text-theme-accent {
+  color: var(--color-accent);
+}
+
+.border-theme-accent {
+  border-color: var(--color-accent);
+}
+
+/* Gradient utilities */
+.text-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-accent)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-primary {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-secondary) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-playful {
+  background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-secondary) 100%
+  );
+}
+
+.bg-gradient-rainbow {
+  background: linear-gradient(
+    135deg,
+    #ef4444 0%,
+    #f97316 20%,
+    #eab308 40%,
+    #22c55e 60%,
+    #3b82f6 80%,
+    #a855f7 100%
+  );
+}
+
+.bg-gradient-sunshine {
+  background: linear-gradient(135deg, #f3c85b 0%, #07663a 100%);
+}
+
+.text-gradient-sunshine {
+  background: linear-gradient(135deg, #07663a 0%, #f3c85b 50%, #ef4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Focus ring utilities */
+.focus\:ring-theme-primary:focus {
+  --tw-ring-color: var(--color-primary);
+}
+
+.ring-theme-primary {
+  --tw-ring-color: var(--color-primary);
+}
+
+/* Additional border utilities */
+.border-theme-primary {
+  border-color: var(--color-primary);
+}
+
+.hover\:border-theme-primary:hover {
+  border-color: var(--color-primary);
+}
+
+/* Background opacity utilities for themes */
+.bg-theme-primary-10 {
+  background-color: var(--color-primary);
+  opacity: 0.1;
+}
+
+.bg-theme-secondary-10 {
+  background-color: var(--color-secondary);
+  opacity: 0.1;
+}
+
+.hover\:bg-theme-primary-10:hover {
+  background-color: var(--color-primary);
+  opacity: 0.1;
+}
+
+/* Surface background utilities */
+.bg-theme-surface {
+  background-color: var(--color-surface);
+}
+
+.hover\:bg-theme-background:hover {
+  background-color: var(--color-background);
+}
+
+.focus-within\:bg-theme-background:focus-within {
+  background-color: var(--color-background);
+}
+
+.focus-within\:border-theme-primary:focus-within {
+  border-color: var(--color-primary);
+}
+
+/* Ring opacity for themes */
+.ring-opacity-50 {
+  --tw-ring-opacity: 0.5;
+}
+
+/* High contrast utilities - Các lớp tiện ích độ tương phản cao */
+.high-contrast {
+  filter: contrast(1.2);
+}
+
+.text-high-contrast {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.border-high-contrast {
+  border-color: var(--color-text);
+  border-width: 2px;
+}
+
+/* Focus states với độ tương phản cao */
+.focus-high-contrast:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Button states với độ tương phản tốt */
+.btn-high-contrast {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  border: 2px solid var(--color-primary);
+  font-weight: 600;
+}
+
+.btn-high-contrast:hover {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+}
+
+/* Link states với độ tương phản cao */
+.link-high-contrast {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link-high-contrast:hover {
+  color: var(--color-text);
+  text-decoration-thickness: 2px;
+}
+
+/* Additional High Contrast Utilities - Độ tương phản cao nhất */
+.ultra-high-contrast {
+  filter: contrast(1.5) brightness(1.1);
+}
+
+.text-ultra-contrast {
+  color: #000000;
+  font-weight: 700;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.bg-ultra-contrast {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.border-ultra-contrast {
+  border-color: #000000;
+  border-width: 3px;
+}
+
+/* Focus states siêu tương phận */
+.focus-ultra-contrast:focus {
+  outline: 4px solid #07663a;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 6px #07663a;
+}
+
+/* Button ultra contrast */
+.btn-ultra-contrast {
+  background-color: #07663a;
+  color: #ffffff;
+  border: 3px solid #07663a;
+  font-weight: 800;
+  text-shadow: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.btn-ultra-contrast:hover {
+  background-color: #ffffff;
+  color: #07663a;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Link ultra contrast */
+.link-ultra-contrast {
+  color: #07663a;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 3px;
+  font-weight: 700;
+}
+
+.link-ultra-contrast:hover {
+  color: #000000;
+  text-decoration-thickness: 4px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Card ultra contrast */
+.card-ultra-contrast {
+  background-color: #ffffff;
+  border: 3px solid #07663a;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  color: #000000;
+}
+
+/* Input ultra contrast */
+.input-ultra-contrast {
+  border: 3px solid #07663a !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+.input-ultra-contrast:focus {
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 3px rgba(4, 40, 24, 0.3) !important;
+}
+
+/* Table ultra contrast */
+.table-ultra-contrast {
+  border: 2px solid #000000;
+}
+
+.table-ultra-contrast th,
+.table-ultra-contrast td {
+  border: 1px solid #000000;
+  color: #000000;
+  font-weight: 600;
+}
+
+.table-ultra-contrast th {
+  background-color: #07663a;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+/* Logo style for Sunshine Preschool */
+.logo-sunshine {
+  height: 48px;
+  max-height: 56px;
+  width: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(32, 32, 32, 0.1);
+  background: #fffbe6; /* vàng kem nhạt, lấy cảm hứng từ logo */
+  padding: 2px 12px;
+  transition: transform 0.18s cubic-bezier(.4,0,.2,1), box-shadow 0.18s;
+  display: inline-block;
+  border: 2px solid #ffd600; /* vàng tươi, đồng bộ màu logo */
+}
+
+.logo-sunshine:hover {
+  transform: scale(1.06) rotate(-2deg);
+  box-shadow: 0 4px 16px rgba(32, 32, 32, 0.18);
+  background: #fffde7;
+  border-color: #fbc02d;
+}
