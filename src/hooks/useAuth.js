@@ -3,7 +3,7 @@
  * Provides easy access to authentication status and user data
  */
 import { useState, useEffect } from 'react';
-import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole } from '@/api/services/JWTService';
+import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole, isTokenExpired, refreshToken } from '@/api/services/JWTService';
 
 export const useAuth = () => {
     const [user, setUser] = useState(null);
@@ -12,12 +12,27 @@ export const useAuth = () => {
 
     useEffect(() => {
         checkAuthStatus();
-    }, []);
-
-    const checkAuthStatus = () => {
+    }, []);    const checkAuthStatus = async () => {
         try {
-            const tokenData = getCurrentTokenData();
-            const isAuth = isAuthenticated();
+            let tokenData = getCurrentTokenData();
+            let isAuth = isAuthenticated();
+            
+            // If token is expired, try to refresh
+            if (!isAuth && isTokenExpired()) {
+                console.log("🔄 Token expired, attempting refresh...");
+                
+                try {
+                    await refreshToken();
+                    tokenData = getCurrentTokenData();
+                    isAuth = isAuthenticated();
+                    
+                    if (isAuth) {
+                        console.log("✅ Token refresh successful in useAuth");
+                    }
+                } catch (refreshError) {
+                    console.error("❌ Token refresh failed in useAuth:", refreshError);
+                }
+            }
             
             setAuthenticated(isAuth);
             setUser(tokenData);

@@ -13,15 +13,15 @@ const Badge = ({
     sm: 'px-2 py-0.5 text-xs',
     md: 'px-2.5 py-1 text-sm',
     lg: 'px-3 py-1.5 text-base'
-  };  // Variant styles - theme aware
+  };  // Variant styles - theme aware for all themes
   const variantClasses = {
-    default: 'bg-theme-surface theme-aware-text-secondary',
-    primary: 'bg-theme-primary-10 text-theme-primary',
-    secondary: 'bg-theme-secondary-10 text-theme-secondary',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    danger: 'bg-red-100 text-red-800',
-    info: 'bg-blue-100 text-blue-800'
+    default: 'bg-theme-surface theme-aware-text-secondary border theme-aware-border',
+    primary: 'bg-theme-primary-10 text-theme-primary border border-theme-primary border-opacity-30',
+    secondary: 'bg-theme-secondary-10 text-theme-secondary border border-theme-secondary border-opacity-30',
+    success: 'bg-green-100 text-green-800 border border-green-200',
+    warning: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+    danger: 'bg-red-100 text-red-800 border border-red-200',
+    info: 'bg-theme-info-10 text-theme-info border border-theme-info border-opacity-30'
   };
 
   const baseClasses = 'inline-flex items-center font-medium rounded-full';

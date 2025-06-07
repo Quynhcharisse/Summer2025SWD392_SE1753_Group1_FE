@@ -43,16 +43,14 @@ const ProcessStepCard = ({
     md: "w-16 h-16",
     lg: "w-20 h-20"
   };
-
   const getIconBgClass = () => {
-    if (isCompleted) return "bg-green-100";
-    if (isActive) return "bg-blue-100";
-    return "bg-gray-100";
+    if (isCompleted) return "bg-theme-secondary-10";
+    if (isActive) return "bg-theme-primary-10";
+    return "bg-theme-surface";
   };
-
   const getIconColorClass = () => {
-    if (isCompleted) return "text-green-600";
-    if (isActive) return "text-blue-600";
+    if (isCompleted) return "text-theme-secondary";
+    if (isActive) return "text-theme-primary";
     return iconColors[variant];
   };
 
@@ -63,9 +61,8 @@ const ProcessStepCard = ({
   };
 
   return (
-    <div 
-      className={`text-center rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl cursor-pointer ${variantClasses[variant]} ${sizeClasses[size]} ${className} ${
-        isActive ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+    <div      className={`text-center rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl cursor-pointer ${variantClasses[variant]} ${sizeClasses[size]} ${className} ${
+        isActive ? 'ring-2 ring-theme-primary ring-opacity-50' : ''
       }`}
       onClick={onClick}
     >
@@ -83,9 +80,8 @@ const ProcessStepCard = ({
             {step}
           </Badge>
         )}
-        
-        {isCompleted && (
-          <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+          {isCompleted && (
+          <div className="absolute -top-1 -right-1 w-6 h-6 bg-theme-secondary rounded-full flex items-center justify-center">
             <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
@@ -98,27 +94,23 @@ const ProcessStepCard = ({
           let titleSize = 'text-lg';
           if (size === 'sm') titleSize = 'text-base';
           else if (size === 'lg') titleSize = 'text-xl';
-          
-          return (
-            <h3 className={`font-semibold text-gray-800 ${titleSize}`}>
+            return (
+            <h3 className={`font-semibold theme-aware-text ${titleSize}`}>
               {title}
             </h3>
           );
         })()}
-        
-        {description && (
-          <p className={`text-gray-600 ${
+          {description && (
+          <p className={`theme-aware-text-secondary ${
             size === 'sm' ? 'text-sm' : 'text-base'
           }`}>
             {description}
           </p>
         )}
-      </div>
-
-      {/* Progress Line for Active Step */}
+      </div>      {/* Progress Line for Active Step */}
       {isActive && (
-        <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
-          <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: '60%' }} />
+        <div className="mt-4 w-full bg-theme-surface rounded-full h-2">
+          <div className="bg-theme-primary h-2 rounded-full transition-all duration-300" style={{ width: '60%' }} />
         </div>
       )}
     </div>

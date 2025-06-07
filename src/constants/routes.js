@@ -1,4 +1,3 @@
-
 /**
  * Application Route Constants
  * Centralized route definitions for better maintainability
@@ -63,6 +62,9 @@ export const TEACHER_ROUTES = {
 // =====================================================
 export const PARENT_ROUTES = {
   DASHBOARD: '/user/parent/dashboard',
+  ENROLLMENT: '/user/parent/enrollment',
+  ENROLLMENT_APPLICATION: '/user/parent/enrollment/application',
+  MY_APPLICATIONS: '/user/parent/enrollment/my-applications',
   CHILD_PROFILE: '/user/parent/child/:id/profile',
   CALENDAR: '/user/parent/calendar',
   MEALS: '/user/parent/meals',
@@ -86,6 +88,32 @@ export const ADMISSION_ROUTES = {
 };
 
 // =====================================================
+// HR PROTECTED ROUTES
+// =====================================================
+export const HR_ROUTES = {
+  DASHBOARD: '/user/hr/dashboard',
+  STAFF: '/user/hr/staff',
+  STAFF_DETAIL: '/user/hr/staff/:id',
+  REPORTS: '/user/hr/reports',
+  PAYROLL: '/user/hr/payroll',
+  ATTENDANCE: '/user/hr/attendance',
+  RECRUITMENT: '/user/hr/recruitment',
+};
+
+// =====================================================
+// EDUCATION PROTECTED ROUTES
+// =====================================================
+export const EDUCATION_ROUTES = {
+  DASHBOARD: '/user/education/dashboard',
+  CURRICULUM: '/user/education/curriculum',
+  CLASSES: '/user/education/classes',
+  CLASS_DETAIL: '/user/education/classes/:id',
+  REPORTS: '/user/education/reports',
+  ASSESSMENTS: '/user/education/assessments',
+  LEARNING_MATERIALS: '/user/education/learning-materials',
+};
+
+// =====================================================
 // ADMIN PROTECTED ROUTES
 // =====================================================
 export const ADMIN_ROUTES = {
@@ -105,6 +133,7 @@ export const ADMIN_ROUTES = {
 // SHARED ROUTES - Available to all authenticated users
 // =====================================================
 export const SHARED_ROUTES = {
+  PROFILE: '/user/shared/profile',
   CALENDAR: '/user/shared/calendar',
   MEALS: '/user/shared/meals',
   GALLERY: '/user/shared/gallery',
@@ -159,6 +188,8 @@ export const isProtectedRoute = (path) => {
     ...Object.values(TEACHER_ROUTES),
     ...Object.values(PARENT_ROUTES),
     ...Object.values(ADMISSION_ROUTES),
+    ...Object.values(HR_ROUTES),
+    ...Object.values(EDUCATION_ROUTES),
     ...Object.values(ADMIN_ROUTES),
     ...Object.values(SHARED_ROUTES),
     ...Object.values(ENROLLMENT_ROUTES),
@@ -204,7 +235,7 @@ export const isAdmissionRoute = (path) => {
 
 /**
  * Get the appropriate dashboard route for a user role
- * @param {string} role - User role (teacher, parent, admin, admission)
+ * @param {string} role - User role (teacher, parent, admin, admission, hr, education)
  * @returns {string} Dashboard route for the role
  */
 export const getDashboardRoute = (role) => {
@@ -215,10 +246,44 @@ export const getDashboardRoute = (role) => {
       return PARENT_ROUTES.DASHBOARD;
     case 'admission':
       return ADMISSION_ROUTES.DASHBOARD;
+    case 'hr':
+      return HR_ROUTES.DASHBOARD;
+    case 'education':
+      return EDUCATION_ROUTES.DASHBOARD;
     case 'admin':
       return ADMIN_ROUTES.DASHBOARD;
     default:
       return SHARED_ROUTES.CALENDAR;
+  }
+};
+
+/**
+ * Get the appropriate enrollment route for a user role
+ * @param {string} role - User role (teacher, parent, admin, admission, hr, education)
+ * @returns {string} Enrollment route for the role
+ */
+export const getEnrollmentRoute = (role) => {
+  switch (role?.toLowerCase()) {
+    case 'parent':
+      return PARENT_ROUTES.ENROLLMENT;
+    case 'teacher':
+      // Teachers should go to their dashboard
+      return TEACHER_ROUTES.DASHBOARD;
+    case 'admission':
+      // Admission staff should go to registrations management
+      return ADMISSION_ROUTES.REGISTRATIONS;
+    case 'hr':
+      // HR should go to their dashboard  
+      return HR_ROUTES.DASHBOARD;
+    case 'education':
+      // Education staff should go to their dashboard
+      return EDUCATION_ROUTES.DASHBOARD;
+    case 'admin':
+      // Admin can access public enrollment to help parents
+      return ENROLLMENT_ROUTES.INDEX;
+    default:
+      // Default to public enrollment for non-authenticated users
+      return ENROLLMENT_ROUTES.INDEX;
   }
 };
 
@@ -229,6 +294,8 @@ export const ROUTES = {
   ...TEACHER_ROUTES,
   ...PARENT_ROUTES,
   ...ADMISSION_ROUTES,
+  ...HR_ROUTES,
+  ...EDUCATION_ROUTES,
   ...ADMIN_ROUTES,
   ...SHARED_ROUTES,
   ...ENROLLMENT_ROUTES,

@@ -1,17 +1,60 @@
 {
-  "required": "{{field}} là bắt buộc.",
-  "invalid_email": "Email không hợp lệ.",
-  "password_min_length": "Mật khẩu phải có ít nhất 6 ký tự.",
-  "passwords_not_match": "Mật khẩu không khớp.",
-  "signup_success": "Đăng ký thành công!",
-  "signup_failed": "Đăng ký thất bại. Vui lòng thử lại.",
-  "signup_loading": "Đang đăng ký...",
-  "signup": "Đăng ký",
-  "full_name": "Họ và tên",
-  "email": "Email",
-  "password": "Mật khẩu",
-  "confirm_password": "Xác nhận mật khẩu",
-  "phone": "Số điện thoại",
-  "gender": "Giới tính",
-  "identity_number": "Số CMND/CCCD"
+  "validation": {
+    "required": "Trường này là bắt buộc",
+    "email": "Vui lòng nhập địa chỉ email hợp lệ",
+    "phone": "Vui lòng nhập số điện thoại hợp lệ",
+    "password": "Mật khẩu phải có ít nhất 6 ký tự",
+    "confirm_password": "Mật khẩu không khớp",
+    "name": "Vui lòng nhập tên hợp lệ"
+  },
+  "labels": {
+    "first_name": "Tên",
+    "last_name": "Họ",
+    "email": "Địa chỉ Email",
+    "phone": "Số điện thoại",
+    "password": "Mật khẩu",
+    "confirm_password": "Xác nhận mật khẩu",
+    "address": "Địa chỉ",
+    "date_of_birth": "Ngày sinh",
+    "gender": "Giới tính",
+    "submit": "Gửi",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "previous": "Trước"
+  },
+  "placeholders": {
+    "enter_first_name": "Nhập tên của bạn",
+    "enter_last_name": "Nhập họ của bạn",
+    "enter_email": "Nhập địa chỉ email của bạn",
+    "enter_phone": "Nhập số điện thoại của bạn",
+    "enter_password": "Nhập mật khẩu của bạn",
+    "confirm_password": "Xác nhận mật khẩu của bạn",
+    "enter_address": "Nhập địa chỉ của bạn",
+    "select_gender": "Chọn giới tính"
+  },
+  "buttons": {
+    "sign_in": "Đăng nhập",
+    "sign_up": "Đăng ký",
+    "register": "Đăng ký",
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "forgot_password": "Quên mật khẩu",
+    "reset_password": "Đặt lại mật khẩu",
+    "update_profile": "Cập nhật hồ sơ",
+    "my_sunshine_profile": "Hồ sơ SunShine của tôi"
+  },
+  "messages": {
+    "success": "Thao tác hoàn thành thành công",
+    "error": "Đã xảy ra lỗi. Vui lòng thử lại",
+    "loading": "Đang tải...",
+    "saving": "Đang lưu...",
+    "updating": "Đang cập nhật...",
+    "profile_updated": "Hồ sơ đã được cập nhật thành công",
+    "login_success": "Đăng nhập thành công",
+    "logout_success": "Đăng xuất thành công"
+  }
 }

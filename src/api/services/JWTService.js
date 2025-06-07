@@ -1,6 +1,7 @@
 import apiClient from '@api/apiClient';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
+import { handleRefreshTokenError } from '@/utils/refreshTokenErrorHandler';
 
 /**
  * JWT Service for Cookie-based authentication
@@ -57,6 +58,39 @@ export const getCurrentTokenData = () => {
 };
 
 /**
+ * Check if there's an access token (even if expired)
+ */
+export const hasAccessToken = () => {
+    let accessToken = Cookies.get('access');
+    if (!accessToken) {
+        // Fallback: try to get from localStorage
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const userObj = JSON.parse(userStr);
+                if (userObj && userObj.token) {
+                    accessToken = userObj.token;
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+    }
+    return !!accessToken;
+};
+
+/**
+ * Check if access token exists but is expired
+ */
+export const isTokenExpired = () => {
+    const hasToken = hasAccessToken();
+    const tokenData = getCurrentTokenData();
+    
+    // If we have a token but getCurrentTokenData returns null, it means token is expired
+    return hasToken && !tokenData;
+};
+
+/**
  * Check if user is authenticated by validating access token
  */
 export const isAuthenticated = () => {
@@ -96,11 +130,24 @@ export const hasAnyRole = (roles = []) => {
  */
 export const refreshToken = async () => {
     try {
-        const response = await apiClient.post("/auth/refresh-token");
-        // Server sets new access token in regular cookie
-        return response.data;
+        console.log("🔄 Refreshing access token...");
+        const response = await apiClient.post("/auth/refresh");
+        
+        if (response.status === 200) {
+            console.log("✅ Token refresh successful");
+            return response.data;
+        } else {
+            throw new Error(`Unexpected response status: ${response.status}`);
+        }
+        
     } catch (error) {
-        console.error("Refresh token failed:", error);
+        console.error("❌ Refresh token failed:", error);
+        
+        // Use centralized error handler
+        handleRefreshTokenError(error, {
+            redirectToLogin: false, // Don't redirect here, let the caller decide
+        });
+        
         throw error;
     }
 };

@@ -2,18 +2,18 @@ import { Footer, Header } from "@organisms";
 import { themeClasses } from '@theme/colors';
 import PropTypes from 'prop-types';
 
-// This file has been removed. Please use MainTemplate from '@templates' instead.
-
-export function MainLayout({ children }) {
-  return (    <div className={`min-h-screen flex flex-col ${themeClasses.backgroundSurface} ${themeClasses.textPrimary}`}>
+const MainTemplate = ({ children }) => {
+  return (
+    <div className={`min-h-screen flex flex-col ${themeClasses.backgroundSurface} ${themeClasses.textPrimary}`}>
       <Header />
       <main className={`flex-1 container mx-auto p-4 ${themeClasses.backgroundSurface}`}>{children}</main>
       <Footer />
     </div>
   );
-}
+};
 
-// Add prop types validation
-MainLayout.propTypes = {
+MainTemplate.propTypes = {
   children: PropTypes.node.isRequired,
 };
+
+export default MainTemplate;

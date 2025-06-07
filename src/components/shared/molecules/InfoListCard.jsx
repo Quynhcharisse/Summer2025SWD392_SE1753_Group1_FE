@@ -9,29 +9,26 @@ const InfoListCard = ({
   variant = "default",
   showCheckmarks = true,
   orientation = "vertical"
-}) => {
-  const variantClasses = {
-    default: "bg-white border border-gray-200",
-    primary: "bg-blue-50 border border-blue-200",
+}) => {  const variantClasses = {
+    default: "theme-aware-bg theme-aware-border border",
+    primary: "bg-theme-primary-10 border-theme-primary border",
     success: "bg-green-50 border border-green-200",
     warning: "bg-yellow-50 border border-yellow-200",
-    info: "bg-gray-50 border border-gray-200"
+    info: "bg-theme-surface theme-aware-border border"
   };
-
   const iconColors = {
-    default: "text-gray-600",
-    primary: "text-blue-600",
+    default: "theme-aware-text-secondary",
+    primary: "text-theme-primary",
     success: "text-green-600",
     warning: "text-yellow-600",
-    info: "text-gray-600"
+    info: "theme-aware-text-secondary"
   };
-
   const checkmarkColors = {
-    default: "text-green-500",
-    primary: "text-blue-500",
+    default: "text-theme-secondary",
+    primary: "text-theme-primary",
     success: "text-green-500",
     warning: "text-yellow-500",
-    info: "text-gray-500"
+    info: "theme-aware-text-secondary"
   };
 
   const getListClasses = () => {
@@ -41,9 +38,8 @@ const InfoListCard = ({
     return "space-y-3";
   };
 
-  const getItemClasses = () => {
-    if (orientation === "horizontal") {
-      return "flex items-center gap-2 bg-white rounded-lg px-3 py-2 shadow-sm";
+  const getItemClasses = () => {    if (orientation === "horizontal") {
+      return "flex items-center gap-2 theme-aware-bg rounded-lg px-3 py-2 shadow-sm";
     }
     return "flex items-start gap-3";
   };
@@ -81,13 +77,12 @@ const InfoListCard = ({
       {/* Header */}
       {(title || Icon) && (
         <div className="flex items-center gap-3 mb-4">
-          {Icon && (
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+          {Icon && (            <div className="w-8 h-8 rounded-full bg-theme-surface flex items-center justify-center">
               <Icon className={`w-5 h-5 ${iconColors[variant]}`} />
             </div>
           )}
           {title && (
-            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+            <h3 className="text-lg font-semibold theme-aware-text">{title}</h3>
           )}
         </div>
       )}
@@ -103,19 +98,18 @@ const InfoListCard = ({
           return (
             <li key={itemKey} className={getItemClasses()}>
               {renderIcon(item)}
-              
-              <div className="flex-1">
-                <span className={`text-gray-700 text-sm ${isHighlighted ? 'font-semibold text-gray-900' : ''}`}>
+                <div className="flex-1">
+                <span className={`theme-aware-text text-sm ${isHighlighted ? 'font-semibold theme-aware-text' : ''}`}>
                   {text}
                 </span>
                 
                 {description && (
-                  <p className="text-xs text-gray-500 mt-1">{description}</p>
+                  <p className="text-xs theme-aware-text-secondary mt-1">{description}</p>
                 )}
               </div>
               
               {!isString && item.badge && (
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                <span className="text-xs bg-theme-primary-10 text-theme-primary px-2 py-1 rounded-full">
                   {item.badge}
                 </span>
               )}

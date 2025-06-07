@@ -5,8 +5,9 @@
  * - Refresh token in HttpOnly cookie (automatically managed by server)
  */
 import { Navigate } from "react-router-dom";
-import { getCurrentTokenData, hasAnyRole } from "../../../api/services/JWTService";
+import { getCurrentTokenData, hasAnyRole, isTokenExpired, hasAccessToken } from "../../../api/services/JWTService";
 import { useState, useEffect } from "react";
+import PropTypes from 'prop-types';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     const [isLoading, setIsLoading] = useState(true);
@@ -15,18 +16,46 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
     useEffect(() => {
         checkAuthentication();
-    }, [allowedRoles]);
+    }, [allowedRoles]);    const attemptTokenRefresh = async () => {
+        console.log("🔄 Access token expired, attempting refresh...");
+        
+        try {
+            const { refreshToken } = await import('../../../api/services/JWTService');
+            await refreshToken();
+            
+            const tokenData = getCurrentTokenData();
+            if (!tokenData) {
+                console.log("❌ Token refresh failed or returned invalid token");
+                return null;
+            }
+            
+            console.log("✅ Token refresh successful");
+            return tokenData;
+        } catch (refreshError) {
+            console.error("❌ Token refresh failed:", refreshError);
+            return null;
+        }
+    };
 
     const checkAuthentication = async () => {
         try {
-            // Get token data from access token cookie
-            const tokenData = getCurrentTokenData();
+            let tokenData = getCurrentTokenData();
             
+            // Handle missing or expired token
             if (!tokenData) {
-                // No valid access token, not authenticated
-                setIsAuthenticated(false);
-                setIsLoading(false);
-                return;
+                if (isTokenExpired()) {
+                    tokenData = await attemptTokenRefresh();
+                } else if (!hasAccessToken()) {
+                    console.log("❌ No access token found");
+                } else {
+                    console.log("❌ Invalid access token");
+                }
+                
+                if (!tokenData) {
+                    setIsAuthenticated(false);
+                    setIsLoading(false);
+                    return;
+                }
             }
 
             // User is authenticated
@@ -41,7 +70,6 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
                     console.warn(`Access denied. Required roles: ${allowedRoles.join(', ')}, User role: ${tokenData.role}`);
                 }
             } else {
-                // No role restrictions
                 setHasPermission(true);
             }
 
@@ -74,6 +102,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         return <Navigate to="/unauthorized" replace />;
     }    // Authenticated and has permission - render children
     return children;
+};
+
+ProtectedRoute.propTypes = {
+    children: PropTypes.node.isRequired,
+    allowedRoles: PropTypes.arrayOf(PropTypes.string)
 };
 
 export default ProtectedRoute;

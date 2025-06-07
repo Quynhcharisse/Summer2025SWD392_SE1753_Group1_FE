@@ -1,5 +1,5 @@
 import { isAuthenticated, getCurrentTokenData, refreshToken } from '../api/services/JWTService';
-import { ENROLLMENT_ROUTES, getLoginURL } from '../constants/routes';
+import { getLoginURL, getEnrollmentRoute } from '../constants/routes';
 
 /**
  * Check if user is authenticated and handle enrollment access
@@ -69,29 +69,36 @@ export const checkEnrollmentAccess = async () => {
  * @returns {Promise<boolean>} - Whether navigation was successful
  */
 export const handleEnrollmentNavigation = async (navigate, options = {}) => {
-  const { showNotification, redirectPath = ENROLLMENT_ROUTES.INDEX } = options;
+  const { showNotification } = options;
   
   try {
     const authCheck = await checkEnrollmentAccess();
     
     if (authCheck.action === 'allow') {
-      // User is authenticated, proceed to enrollment
-      navigate(redirectPath);
+      // User is authenticated, get appropriate enrollment route based on role
+      const userRole = authCheck.user?.role;
+      const enrollmentRoute = getEnrollmentRoute(userRole);
+      
+      // Navigate to role-based enrollment route
+      navigate(enrollmentRoute);
       
       if (showNotification) {
-        showNotification(authCheck.message, 'success');
+        showNotification('Chuyển đến trang đăng ký thành công', 'success');
       }
       
       return true;
     } else {
       // User needs to login first
       const currentUrl = window.location.pathname;
-      const loginUrl = getLoginURL(redirectPath, currentUrl);
+      // After login, redirect to appropriate enrollment route
+      const userRole = authCheck.user?.role;
+      const enrollmentRoute = getEnrollmentRoute(userRole);
+      const loginUrl = getLoginURL(enrollmentRoute, currentUrl);
       
       navigate(loginUrl);
       
       if (showNotification) {
-        showNotification(authCheck.message, 'warning');
+        showNotification('Vui lòng đăng nhập để tiếp tục đăng ký nhập học', 'warning');
       }
       
       return false;
@@ -99,8 +106,9 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
   } catch (error) {
     console.error('Error handling enrollment navigation:', error);
     
-    // Fallback to login page
-    navigate(getLoginURL(redirectPath));
+    // Fallback to login page with default enrollment route
+    const defaultEnrollmentRoute = getEnrollmentRoute();
+    navigate(getLoginURL(defaultEnrollmentRoute));
     
     if (showNotification) {
       showNotification('Đã xảy ra lỗi. Vui lòng đăng nhập lại.', 'error');

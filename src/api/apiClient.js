@@ -1,4 +1,5 @@
 import axios from "axios";
+import { handleRefreshTokenError, isRefreshTokenError } from "@/utils/refreshTokenErrorHandler";
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1",
@@ -15,25 +16,31 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Handle 401 Unauthorized - Token expired
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Handle 401 Unauthorized or 403 Forbidden - Token expired or invalid
+    if (isRefreshTokenError(error) && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
-        // Attempt to refresh the token using HttpOnly refresh cookie
+        console.log("🔄 Attempting token refresh due to", error.response?.status, "error");
+          // Attempt to refresh the token using HttpOnly refresh cookie
         // Server will automatically read refresh token from HttpOnly cookie
-        const refreshResponse = await apiClient.post("/auth/refresh-token");
+        const refreshResponse = await apiClient.post("/auth/refresh");
         
         if (refreshResponse.status === 200) {
+          console.log("✅ Token refresh successful");
           // Server sets new access token in regular cookie
           // Retry the original request
           return apiClient.request(originalRequest);
-        }      } catch (refreshError) {
-        console.error("Token refresh failed:", refreshError);
-        // Clear any client-side auth state
-        localStorage.removeItem('user');
-        // Redirect to login
-        window.location.href = "/auth/login";
+        }
+        
+      } catch (refreshError) {
+        console.error("❌ Token refresh failed:", refreshError);
+        
+        // Use centralized error handler
+        handleRefreshTokenError(refreshError, {
+          redirectToLogin: true,
+          loginPath: "/auth/login"
+        });
       }
     }
     

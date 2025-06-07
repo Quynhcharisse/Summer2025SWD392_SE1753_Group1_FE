@@ -222,12 +222,11 @@ const EnrollmentApplication = () => {
       setLoading(false);
     }
   };
-
   const handleLogin = () => {
     // Redirect to login with return URL
     navigate('/login', { 
       state: { 
-        returnUrl: '/enrollment/apply',
+        returnUrl: '/enrollment',
         message: 'Vui lòng đăng nhập để tiếp tục đăng ký nhập học.'
       }
     });

@@ -25,7 +25,7 @@ const ProgramCard = ({
     primary: "bg-theme-primary-10 border-theme-primary border",
     success: "bg-green-50 border border-green-200",
     warning: "bg-yellow-50 border border-yellow-200",
-    premium: "bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200"
+    premium: "bg-theme-secondary-10 border-theme-secondary border"
   };
 
   const iconMap = {
@@ -48,12 +48,11 @@ const ProgramCard = ({
       onClick={onClick}
     >
       {/* Header */}
-      <div className="p-6 pb-4">
-        <div className="flex items-start justify-between mb-2">
+      <div className="p-6 pb-4">        <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-gray-800 mb-1">{title}</h3>
+            <h3 className="text-xl font-bold theme-aware-text mb-1">{title}</h3>
             {subtitle && (
-              <p className="text-gray-600 text-sm">{subtitle}</p>
+              <p className="theme-aware-text-secondary text-sm">{subtitle}</p>
             )}
           </div>
           
@@ -62,20 +61,17 @@ const ProgramCard = ({
               {badgeText}
             </Badge>
           )}
-        </div>
-
-        {description && (
-          <p className="text-gray-600 text-sm mb-4">{description}</p>
+        </div>        {description && (
+          <p className="theme-aware-text-secondary text-sm mb-4">{description}</p>
         )}
       </div>
 
       {/* Program Details */}
       <div className="px-6 pb-4">
-        <div className="space-y-3">
-          {ages && (
+        <div className="space-y-3">          {ages && (
             <div className="flex items-center gap-3">
               <span className="text-lg">{iconMap.ages}</span>
-              <span className="text-gray-700 text-sm">
+              <span className="theme-aware-text text-sm">
                 <span className="font-medium">Ages:</span> {ages}
               </span>
             </div>
@@ -84,7 +80,7 @@ const ProgramCard = ({
           {capacity && (
             <div className="flex items-center gap-3">
               <span className="text-lg">{iconMap.capacity}</span>
-              <span className="text-gray-700 text-sm">
+              <span className="theme-aware-text text-sm">
                 <span className="font-medium">Class Size:</span> {capacity}
               </span>
             </div>
@@ -93,16 +89,15 @@ const ProgramCard = ({
           {ratio && (
             <div className="flex items-center gap-3">
               <span className="text-lg">{iconMap.ratio}</span>
-              <span className="text-gray-700 text-sm">
+              <span className="theme-aware-text text-sm">
                 <span className="font-medium">Teacher Ratio:</span> {ratio}
               </span>
             </div>
           )}
-          
-          {schedule && (
+            {schedule && (
             <div className="flex items-center gap-3">
               <span className="text-lg">{iconMap.schedule}</span>
-              <span className="text-gray-700 text-sm">
+              <span className="theme-aware-text text-sm">
                 <span className="font-medium">Schedule:</span> {schedule}
               </span>
             </div>
@@ -111,7 +106,7 @@ const ProgramCard = ({
           {tuition && (
             <div className="flex items-center gap-3">
               <span className="text-lg">{iconMap.tuition}</span>
-              <span className="text-green-600 text-sm font-semibold">
+              <span className="text-theme-secondary text-sm font-semibold">
                 {formatTuition(tuition)}
               </span>
             </div>
@@ -122,17 +117,17 @@ const ProgramCard = ({
       {/* Features */}
       {features.length > 0 && (
         <div className="px-6 pb-4">
-          <h4 className="text-sm font-medium text-gray-800 mb-2">Program Highlights:</h4>          <ul className="space-y-1">
+          <h4 className="text-sm font-medium theme-aware-text mb-2">Program Highlights:</h4>          <ul className="space-y-1">
             {features.slice(0, 3).map((feature) => (
-              <li key={`feature-${feature.slice(0, 20)}`} className="flex items-center gap-2 text-gray-600 text-xs">
-                <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <li key={`feature-${feature.slice(0, 20)}`} className="flex items-center gap-2 theme-aware-text-secondary text-xs">
+                <svg className="w-3 h-3 text-theme-secondary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 <span>{feature}</span>
               </li>
             ))}
             {features.length > 3 && (
-              <li className="text-gray-500 text-xs">
+              <li className="theme-aware-text-secondary text-xs">
                 +{features.length - 3} more features
               </li>
             )}
@@ -142,7 +137,7 @@ const ProgramCard = ({
 
       {/* Actions */}
       {actions.length > 0 && (
-        <div className="p-6 pt-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">          <div className="flex gap-2 flex-wrap">
+        <div className="p-6 pt-4 border-t theme-aware-border bg-theme-surface rounded-b-xl">          <div className="flex gap-2 flex-wrap">
             {actions.map((action) => (
               <Button
                 key={`action-${action.label}`}
@@ -164,7 +159,7 @@ const ProgramCard = ({
       
       {/* Default Learn More Button if no actions */}
       {actions.length === 0 && (
-        <div className="p-6 pt-4 border-t border-gray-200">
+        <div className="p-6 pt-4 border-t theme-aware-border">
           <Button 
             variant="primary" 
             size="sm" 

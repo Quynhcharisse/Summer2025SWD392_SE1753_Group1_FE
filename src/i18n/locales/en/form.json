@@ -1,17 +1,60 @@
 {
-  "required": "{{field}} is required.",
-  "invalid_email": "Invalid email address.",
-  "password_min_length": "Password must be at least 6 characters.",
-  "passwords_not_match": "Passwords do not match.",
-  "signup_success": "Sign up successful!",
-  "signup_failed": "Sign up failed. Please try again.",
-  "signup_loading": "Signing Up...",
-  "signup": "Sign Up",
-  "full_name": "Full Name",
-  "email": "Email",
-  "password": "Password",
-  "confirm_password": "Confirm Password",
-  "phone": "Phone Number",
-  "gender": "Gender",
-  "identity_number": "ID Number"
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "phone": "Please enter a valid phone number",
+    "password": "Password must be at least 6 characters",
+    "confirm_password": "Passwords do not match",
+    "name": "Please enter a valid name"
+  },
+  "labels": {
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "address": "Address",
+    "date_of_birth": "Date of Birth",
+    "gender": "Gender",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "placeholders": {
+    "enter_first_name": "Enter your first name",
+    "enter_last_name": "Enter your last name",
+    "enter_email": "Enter your email address",
+    "enter_phone": "Enter your phone number",
+    "enter_password": "Enter your password",
+    "confirm_password": "Confirm your password",
+    "enter_address": "Enter your address",
+    "select_gender": "Select gender"
+  },
+  "buttons": {
+    "sign_in": "Sign In",
+    "sign_up": "Sign Up",
+    "register": "Register",
+    "login": "Login",
+    "logout": "Logout",
+    "forgot_password": "Forgot Password",
+    "reset_password": "Reset Password",
+    "update_profile": "Update Profile",
+    "my_sunshine_profile": "My SunShine Profile"
+  },
+  "messages": {
+    "success": "Operation completed successfully",
+    "error": "An error occurred. Please try again",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "updating": "Updating...",
+    "profile_updated": "Profile updated successfully",
+    "login_success": "Login successful",
+    "logout_success": "Logout successful"
+  }
 }

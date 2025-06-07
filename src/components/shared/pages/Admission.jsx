@@ -120,10 +120,9 @@ const Admission = () => {
           </Button>
         </div>
       }
-    >      <div className="space-y-8 sm:space-y-12">
-        {/* Programs Section */}
+    >      <div className="space-y-8 sm:space-y-12">        {/* Programs Section */}
         <section>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6 sm:mb-8">Our Programs</h2>
+          <h2 className="text-xl sm:text-2xl font-bold theme-aware-text text-center mb-6 sm:mb-8">Our Programs</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {ageGroups.map((program) => (
               <ProgramCard
@@ -150,11 +149,9 @@ const Admission = () => {
               />
             ))}
           </div>
-        </section>
-
-        {/* Admission Process */}
-        <section className="bg-gray-50 p-4 sm:p-6 lg:p-8 rounded-lg sm:rounded-xl">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6 sm:mb-8">Admission Process</h2>
+        </section>        {/* Admission Process */}
+        <section className="bg-theme-surface p-4 sm:p-6 lg:p-8 rounded-lg sm:rounded-xl">
+          <h2 className="text-xl sm:text-2xl font-bold theme-aware-text text-center mb-6 sm:mb-8">Admission Process</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {admissionSteps.map((step) => (
               <ProcessStepCard
@@ -177,62 +174,57 @@ const Admission = () => {
             items={requirements}
             variant="success"
             showCheckmarks={true}
-          />
-            <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Important Dates</h2>
-            <div className="bg-white p-4 sm:p-6 rounded-lg sm:rounded-xl shadow-lg space-y-4 sm:space-y-6">
-              <div className="border-l-4 border-blue-600 pl-3 sm:pl-4">
-                <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Fall 2025 Enrollment</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Applications Open: January 15, 2025</p>
-                <p className="text-gray-600 text-xs sm:text-sm">Priority Deadline: March 1, 2025</p>
-                <p className="text-gray-600 text-xs sm:text-sm">Regular Deadline: May 1, 2025</p>
+          />            <div>
+            <h2 className="text-xl sm:text-2xl font-bold theme-aware-text mb-4 sm:mb-6">Important Dates</h2>
+            <div className="bg-theme-surface p-4 sm:p-6 rounded-lg sm:rounded-xl shadow-lg space-y-4 sm:space-y-6">
+              <div className="border-l-4 border-theme-primary pl-3 sm:pl-4">
+                <h3 className="font-semibold theme-aware-text text-sm sm:text-base">Fall 2025 Enrollment</h3>
+                <p className="theme-aware-text-secondary text-xs sm:text-sm">Applications Open: January 15, 2025</p>
+                <p className="theme-aware-text-secondary text-xs sm:text-sm">Priority Deadline: March 1, 2025</p>
+                <p className="theme-aware-text-secondary text-xs sm:text-sm">Regular Deadline: May 1, 2025</p>
               </div>
               
-              <div className="border-l-4 border-green-600 pl-3 sm:pl-4">
-                <h3 className="font-semibold text-gray-800 text-sm sm:text-base">School Year</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">First Day: August 25, 2025</p>
-                <p className="text-gray-600 text-xs sm:text-sm">Last Day: May 22, 2026</p>
+              <div className="border-l-4 border-theme-secondary pl-3 sm:pl-4">
+                <h3 className="font-semibold theme-aware-text text-sm sm:text-base">School Year</h3>
+                <p className="theme-aware-text-secondary text-xs sm:text-sm">First Day: August 25, 2025</p>
+                <p className="theme-aware-text-secondary text-xs sm:text-sm">Last Day: May 22, 2026</p>
               </div>
 
-              <div className="border-l-4 border-purple-600 pl-3 sm:pl-4">
-                <h3 className="font-semibold text-gray-800 text-sm sm:text-base">School Tours</h3>
-                <p className="text-gray-600 text-xs sm:text-sm">Every Tuesday & Thursday</p>
-                <p className="text-gray-600 text-xs sm:text-sm">10:00 AM - 11:00 AM</p>
+              <div className="border-l-4 border-theme-accent pl-3 sm:pl-4">
+                <h3 className="font-semibold theme-aware-text text-sm sm:text-base">School Tours</h3>
+                <p className="theme-aware-text-secondary text-xs sm:text-sm">Every Tuesday & Thursday</p>
+                <p className="theme-aware-text-secondary text-xs sm:text-sm">10:00 AM - 11:00 AM</p>
               </div>
             </div>
           </div>
-        </section>
-
-        {/* Download Forms */}
+        </section>        {/* Download Forms */}
         <section className="text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 sm:mb-8">Download Forms</h2>
+          <h2 className="text-xl sm:text-2xl font-bold theme-aware-text mb-6 sm:mb-8">Download Forms</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg sm:rounded-xl">
-              <Download className="w-8 sm:w-10 lg:w-12 h-8 sm:h-10 lg:h-12 text-blue-600 mx-auto mb-3 sm:mb-4" />
-              <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">Application Form</h3>
+            <div className="bg-theme-surface p-4 sm:p-6 rounded-lg sm:rounded-xl">
+              <Download className="w-8 sm:w-10 lg:w-12 h-8 sm:h-10 lg:h-12 text-theme-primary mx-auto mb-3 sm:mb-4" />
+              <h3 className="font-semibold theme-aware-text mb-2 text-sm sm:text-base">Application Form</h3>
               <Button variant="ghost" size="sm">
                 Download PDF
               </Button>
             </div>
-            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg sm:rounded-xl">
-              <Download className="w-8 sm:w-10 lg:w-12 h-8 sm:h-10 lg:h-12 text-blue-600 mx-auto mb-3 sm:mb-4" />
-              <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">Medical Form</h3>
+            <div className="bg-theme-surface p-4 sm:p-6 rounded-lg sm:rounded-xl">
+              <Download className="w-8 sm:w-10 lg:w-12 h-8 sm:h-10 lg:h-12 text-theme-primary mx-auto mb-3 sm:mb-4" />
+              <h3 className="font-semibold theme-aware-text mb-2 text-sm sm:text-base">Medical Form</h3>
               <Button variant="ghost" size="sm">
                 Download PDF
               </Button>
             </div>
-            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg sm:rounded-xl">
-              <Download className="w-8 sm:w-10 lg:w-12 h-8 sm:h-10 lg:h-12 text-blue-600 mx-auto mb-3 sm:mb-4" />
-              <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">Parent Handbook</h3>
+            <div className="bg-theme-surface p-4 sm:p-6 rounded-lg sm:rounded-xl">
+              <Download className="w-8 sm:w-10 lg:w-12 h-8 sm:h-10 lg:h-12 text-theme-primary mx-auto mb-3 sm:mb-4" />
+              <h3 className="font-semibold theme-aware-text mb-2 text-sm sm:text-base">Parent Handbook</h3>
               <Button variant="ghost" size="sm">
                 Download PDF
               </Button>
             </div>
           </div>
-        </section>
-
-        {/* Contact CTA */}
-        <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 sm:p-8 rounded-lg sm:rounded-xl text-center">
+        </section>        {/* Contact CTA */}
+        <section className="bg-gradient-primary text-white p-6 sm:p-8 rounded-lg sm:rounded-xl text-center">
           <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Questions About Enrollment?</h2>
           <p className="text-base sm:text-lg mb-4 sm:mb-6 px-2">
             Our admissions team is here to help you through the enrollment process.
@@ -242,7 +234,7 @@ const Admission = () => {
               <Phone className="w-4 sm:w-5 h-4 sm:h-5" />
               Call: 1900-1234
             </Button>
-            <Button variant="outline" size="md" className="border-white text-white hover:bg-white hover:text-blue-600 text-sm sm:text-base">
+            <Button variant="outline" size="md" className="border-white text-white hover:bg-white hover:text-theme-primary text-sm sm:text-base">
               Schedule a Tour
             </Button>
           </div>
