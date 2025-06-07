@@ -1,10 +1,15 @@
-import React, { useState } from "react";
-import PropTypes from "prop-types";
-import SearchBar from "@components/molecules/search/SearchBar";
+import { AUTH_ROUTES } from "@/constants/routes";
+import useAuth from "@/hooks/useAuth";
+import { Button } from "@atoms";
+import ThemeToggle from "@components/molecules/controls/ThemeToggle";
 import LanguageSelector from "@components/molecules/dropdowns/LanguageSelector";
 import Navigation from "@components/molecules/navigation/Navigation";
-import ThemeToggle from "@components/molecules/controls/ThemeToggle";
+import SearchBar from "@components/molecules/search/SearchBar";
 import { themeClasses } from "@theme/colors";
+import { LogIn, Sun, UserPlus } from "lucide-react";
+import PropTypes from "prop-types";
+import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const Header = ({
   onSearch,
@@ -15,7 +20,8 @@ const Header = ({
 }) => {
   const [localSearchValue, setLocalSearchValue] = useState(searchValue);
   const [isSearchActive, setIsSearchActive] = useState(false);
-
+  const { user, authenticated, loading } = useAuth();
+  const navigate = useNavigate();
   const handleSearch = (searchValue) => {
     setIsSearchActive(true);
     if (onSearch) {
@@ -146,6 +152,42 @@ const Header = ({
             >
               Hotline: 1900-1234
             </div>
+            <div className="flex justify-end items-center gap-3 px-4 py-2">
+              {!user ? (
+                <>
+                  <Button
+                    onClick={() => navigate(AUTH_ROUTES.LOGIN)}
+                    variant="solid"
+                    size="md"
+                    className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    <LogIn size={14} className="w-4 h-4" />
+                    <span>Sign In</span>
+                  </Button>
+                  <Button
+                    onClick={() => navigate(AUTH_ROUTES.REGISTER)}
+                    variant="solid"
+                    size="md"
+                    className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 border border-2 border-white"
+                  >
+                    <UserPlus size={14} className="w-4 h-4" />
+                    <span>Sign Up</span>
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={() => navigate("/user/dashboard")}
+                  variant="solid"
+                  size="md"
+                  className="flex items-center gap-2 bg-yellow-400 text-white hover:bg-yellow-500"
+                >
+                  <Sun size={14} className="w-4 h-4" />
+                  <span>My Sunshine</span>
+                </Button>
+              )}
+            </div>
+            v{" "}
+            <div className="flex items-center justify-center space-x-4 mt-4"></div>
           </div>
         </div>
       </div>

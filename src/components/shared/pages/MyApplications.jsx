@@ -127,7 +127,7 @@ const MyApplications = () => {
       actions={
         <Button 
           variant="primary" 
-          onClick={() => navigate('/enrollment')}
+          onClick={() => navigate('/user/parent/enrollment')}
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />

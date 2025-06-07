@@ -6,7 +6,9 @@
 :root {
   /* Light Theme (default) - Ultra High Contrast */
   --color-primary: #07663a; /* Xanh đen cực đậm */
+  --color-primary-rgb: 7, 102, 58; /* RGB values for rgba */
   --color-secondary: #ffd600; /* Vàng tươi, nổi bật */
+  --color-secondary-rgb: 255, 214, 0; /* RGB values for rgba */
   --color-accent: #e53935; /* Đỏ tươi */
   --color-background: #ffffff; /* Trắng tinh khiết */
   --color-surface: #f8fafc; /* Trắng xanh nhạt */
@@ -17,12 +19,15 @@
   --color-warning: #ff9800; /* Cam đậm */
   --color-error: #e53935; /* Đỏ tươi */
   --color-info: #1976d2; /* Xanh dương đậm */
+  --color-info-rgb: 25, 118, 210; /* RGB values for rgba */
 }
 
-/* Dark Theme - giữ nguyên hoặc chỉnh sau nếu muốn */
+/* Dark Theme - Ultra High Contrast Dark Mode */
 [data-theme="dark"] {
   --color-primary: #7eaaff; /* Xanh navy sáng, nổi bật */
+  --color-primary-rgb: 126, 170, 255; /* RGB values for rgba */
   --color-secondary: #ffe066; /* Vàng sáng */
+  --color-secondary-rgb: 255, 224, 102; /* RGB values for rgba */
   --color-accent: #b388ff; /* Tím pastel */
   --color-background: #0a0c16; /* NAVY RẤT ĐẬM, gần như black */
   --color-surface: #13152a; /* Đậm hơn background một chút */
@@ -33,22 +38,26 @@
   --color-warning: #ffe066;
   --color-error: #ff92a5;
   --color-info: #7eaaff;
+  --color-info-rgb: 126, 170, 255; /* RGB values for rgba */
 }
 
-/* Playful Theme - giữ nguyên hoặc chỉnh sau nếu muốn */
+/* Playful Theme - Colorful and Fun */
 [data-theme="playful"] {
   --color-primary: #8e24aa; /* Tím đậm */
+  --color-primary-rgb: 142, 36, 170; /* RGB values for rgba */
   --color-secondary: #f06292; /* Hồng đậm */
+  --color-secondary-rgb: 240, 98, 146; /* RGB values for rgba */
   --color-accent: #ffd600; /* Vàng tươi */
   --color-background: #fff9c4; /* Vàng nhạt sáng */
-  --color-surface: #ffffff;
-  --color-text: #ffffff; /* Xanh đen cực đậm */
-  --color-text-secondary: #22223b; /* Xám xanh đậm */
-  --color-border: #07663a; /* Xanh đen cực đậm */
-  --color-success: #009688; /* Xanh ngọc đậm */
-  --color-warning: #ff9800; /* Cam đậm */
-  --color-error: #e53935; /* Đỏ tươi */
-  --color-info: #1976d2; /* Xanh dương đậm */
+  --color-surface: #ffffff; /* Trắng tinh khiết */
+  --color-text: #4a148c; /* Tím đậm cho text */
+  --color-text-secondary: #7b1fa2; /* Tím nhạt hơn cho text phụ */
+  --color-border: #8e24aa; /* Tím đậm cho border */
+  --color-success: #4caf50; /* Xanh lá tươi */
+  --color-warning: #ff9800; /* Cam tươi */
+  --color-error: #e91e63; /* Hồng đậm */
+  --color-info: #2196f3; /* Xanh dương tươi */
+  --color-info-rgb: 33, 150, 243; /* RGB values for rgba */
 }
 
 /* Theme transition animation */
@@ -199,15 +208,56 @@
   border-color: var(--color-primary);
 }
 
-/* Background opacity utilities for themes */
+/* Background opacity utilities for themes - fixed with rgba */
 .bg-theme-primary-10 {
-  background-color: var(--color-primary);
-  opacity: 0.1;
+  background-color: rgba(var(--color-primary-rgb, 7, 102, 58), 0.1);
 }
 
 .bg-theme-secondary-10 {
-  background-color: var(--color-secondary);
-  opacity: 0.1;
+  background-color: rgba(var(--color-secondary-rgb, 255, 214, 0), 0.1);
+}
+
+.bg-theme-info-10 {
+  background-color: rgba(var(--color-info-rgb, 25, 118, 210), 0.1);
+}
+
+.text-theme-info {
+  color: var(--color-info);
+}
+
+/* Additional theme-aware background utilities */
+.bg-theme-primary-20 {
+  background-color: rgba(var(--color-primary-rgb, 7, 102, 58), 0.2);
+}
+
+.bg-theme-secondary-20 {
+  background-color: rgba(var(--color-secondary-rgb, 255, 214, 0), 0.2);
+}
+
+/* Border opacity utilities for themes */
+.border-theme-primary {
+  border-color: var(--color-primary);
+}
+
+.border-theme-secondary {
+  border-color: var(--color-secondary);
+}
+
+.border-theme-info {
+  border-color: var(--color-info);
+}
+
+.border-opacity-30 {
+  border-color: rgba(var(--color-primary-rgb, 7, 102, 58), 0.3);
+}
+
+/* Ring utilities for themes */
+.ring-theme-primary {
+  --tw-ring-color: var(--color-primary);
+}
+
+.ring-opacity-50 {
+  --tw-ring-opacity: 0.5;
 }
 
 .hover\:bg-theme-primary-10:hover {
@@ -390,7 +440,7 @@
   box-shadow: 0 2px 8px rgba(32, 32, 32, 0.1);
   background: #fffbe6; /* vàng kem nhạt, lấy cảm hứng từ logo */
   padding: 2px 12px;
-  transition: transform 0.18s cubic-bezier(.4,0,.2,1), box-shadow 0.18s;
+  transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.18s;
   display: inline-block;
   border: 2px solid #ffd600; /* vàng tươi, đồng bộ màu logo */
 }

@@ -148,6 +148,45 @@ export const register = async (userData) => {
   }
 };
 
+/**
+ * Reset user password
+ */
+export const resetPassword = async (passwordData) => {
+  try {
+    const response = await apiClient.post("/auth/password/reset", passwordData);
+    return response.data;
+  } catch (error) {
+    console.error("Password reset failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get user profile information
+ */
+export const getUserProfile = async () => {
+  try {
+    const response = await apiClient.get("/account/profile");
+    return response.data;
+  } catch (error) {
+    console.error("Get user profile failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Update user profile
+ */
+export const updateUserProfile = async (profileData) => {
+  try {
+    const response = await apiClient.put("/account/profile", profileData);
+    return response.data;
+  } catch (error) {
+    console.error("Update user profile failed:", error);
+    throw error;
+  }
+};
+
 // Default export object for easier imports
 export const authService = {
   login,
@@ -158,6 +197,9 @@ export const authService = {
   requestPasswordReset,
   confirmPasswordReset,
   register,
+  resetPassword,
+  getUserProfile,
+  updateUserProfile,
 };
 
 export default authService;

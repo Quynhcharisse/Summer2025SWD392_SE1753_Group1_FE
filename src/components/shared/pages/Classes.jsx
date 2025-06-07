@@ -3,20 +3,23 @@ import clsx from "clsx";
 import { PageTemplate } from "@templates";
 import { Button, Badge } from "@atoms";
 import { InfoListCard } from "@molecules";
-import { useNavigate } from "react-router-dom";
-import { isAuthenticated } from "@/api/services/JWTService";
-import { AUTH_ROUTES } from "@/constants/routes";
+import { 
+  getCurrentEnrollmentPeriod, 
+  getNextEnrollmentPeriod, 
+  getRegistrationStatus,
+  formatPeriodRange,
+  formatRegistrationDates
+} from "@/utils/enrollmentPeriods";
 
 const Classes = () => {
-  const navigate = useNavigate();  useEffect(() => {
+  // Get current and next enrollment periods
+  const currentPeriod = getCurrentEnrollmentPeriod();
+  const nextPeriod = getNextEnrollmentPeriod();
+  const currentRegistrationStatus = getRegistrationStatus(currentPeriod);
+  const currentRegistrationDates = formatRegistrationDates(currentPeriod);
+  const nextRegistrationDates = formatRegistrationDates(nextPeriod);useEffect(() => {
     document.title = "Classes - Sunshine Preschool";
-    // Check authentication using JWT service
-    if (!isAuthenticated()) {
-      console.log("User not authenticated, redirecting to login");
-      navigate(AUTH_ROUTES.LOGIN);
-    }
-  }, [navigate]);
-
+  }, []);
   const classes = [
     {
       id: 1,
@@ -27,6 +30,10 @@ const Classes = () => {
       capacity: "8 students",
       teacher: "Ms. Sarah Johnson",
       color: "blue",
+      enrollmentPeriod: "September 2025 - December 2025",
+      registrationStatus: "open",
+      registrationDeadline: "August 15, 2025",
+      nextPeriod: "January 2026 - April 2026"
     },
     {
       id: 2,
@@ -37,6 +44,10 @@ const Classes = () => {
       capacity: "12 students",
       teacher: "Ms. Emily Chen",
       color: "green",
+      enrollmentPeriod: "September 2025 - December 2025",
+      registrationStatus: "open",
+      registrationDeadline: "August 15, 2025",
+      nextPeriod: "January 2026 - April 2026"
     },
     {
       id: 3,
@@ -47,6 +58,10 @@ const Classes = () => {
       capacity: "15 students",
       teacher: "Mr. David Wilson",
       color: "purple",
+      enrollmentPeriod: "September 2025 - December 2025",
+      registrationStatus: "waiting",
+      registrationDeadline: "August 15, 2025",
+      nextPeriod: "January 2026 - April 2026"
     },
     {
       id: 4,
@@ -57,9 +72,12 @@ const Classes = () => {
       capacity: "20 students",
       teacher: "Ms. Lisa Park",
       color: "orange",
+      enrollmentPeriod: "September 2025 - December 2025",
+      registrationStatus: "closed",
+      registrationDeadline: "August 15, 2025",
+      nextPeriod: "January 2026 - April 2026"
     },
   ];
-
   const getColorClasses = (color) => {
     const colorMap = {
       blue: "from-blue-50 to-blue-100 border-blue-200 text-blue-600",
@@ -69,11 +87,32 @@ const Classes = () => {
     };
     return colorMap[color] || colorMap.blue;
   };
+  const getRegistrationStatusBadge = (status) => {
+    const statusConfig = {
+      open: { variant: "success", text: "Registration Open" },
+      waiting: { variant: "warning", text: "Waiting List" },
+      closed: { variant: "danger", text: "Registration Closed" }
+    };
+    return statusConfig[status] || statusConfig.closed;
+  };
 
-  return (
-    <PageTemplate
+  const getEnrollButtonText = (status) => {
+    switch (status) {
+      case "open": return "Enroll Now";
+      case "waiting": return "Join Waiting List";
+      case "closed": return "Notify Next Period";
+      default: return "Registration Closed";
+    }
+  };
+
+  const isEnrollmentActive = (status) => {
+    return status === "open" || status === "waiting";
+  };
+
+  return (    <PageTemplate
       title="Our Classes"
-      subtitle="Age-appropriate programs designed to nurture your child's development through play-based learning"      breadcrumbs={[
+      subtitle="4-month enrollment periods with age-appropriate programs designed to nurture your child's development through play-based learning"
+      breadcrumbs={[
         { label: "Home", href: "/homepage" },
         { label: "Classes", href: "/homepage/classes" }
       ]}
@@ -83,7 +122,7 @@ const Classes = () => {
             Schedule a Visit
           </Button>
           <Button variant="primary" size="md">
-            Enroll Now
+            View Enrollment
           </Button>
         </div>
       }
@@ -98,14 +137,23 @@ const Classes = () => {
                 "bg-gradient-to-br rounded-lg p-6 border",
                 getColorClasses(classItem.color)
               )}
-            >
-              <div className="flex items-start justify-between mb-3">
+            >              <div className="flex items-start justify-between mb-3">
                 <h3 className="text-xl font-semibold text-gray-900">
                   {classItem.name}
-                </h3>
-                <Badge variant="secondary" className="ml-2">
-                  {classItem.capacity}
-                </Badge>
+                </h3>                <div className="flex flex-col items-end gap-1">
+                  <Badge 
+                    variant="info" 
+                    size="sm"
+                  >
+                    {classItem.capacity}
+                  </Badge>
+                  <Badge 
+                    variant={getRegistrationStatusBadge(classItem.registrationStatus).variant}
+                    size="sm"
+                  >
+                    {getRegistrationStatusBadge(classItem.registrationStatus).text}
+                  </Badge>
+                </div>
               </div>
 
               <p className="text-gray-700 mb-4">{classItem.description}</p>
@@ -120,24 +168,89 @@ const Classes = () => {
 
                 <div className="flex items-center">
                   <span className="font-medium text-gray-700 w-20">
+                    📚 Period:
+                  </span>
+                  <span className="text-gray-600">{classItem.enrollmentPeriod}</span>
+                </div>
+
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 w-20">
                     👩‍🏫 Teacher:
                   </span>
                   <span className="text-gray-600">{classItem.teacher}</span>
                 </div>
-              </div>
 
-              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 w-20">
+                    ⏰ Deadline:
+                  </span>
+                  <span className="text-gray-600">{classItem.registrationDeadline}</span>
+                </div>
+
+                {classItem.registrationStatus === "closed" && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">
+                      🔄 Next Period:
+                    </span>
+                    <span className="text-gray-600">{classItem.nextPeriod}</span>
+                  </div>
+                )}
+              </div>              <div className="pt-4 border-t border-gray-200">
                 <Button 
-                  variant="primary"
+                  variant={isEnrollmentActive(classItem.registrationStatus) ? "primary" : "outline"}
                   size="md"
                   className="w-full"
+                  disabled={!isEnrollmentActive(classItem.registrationStatus) && classItem.registrationStatus !== "closed"}
                 >
-                  Enroll Now
+                  {getEnrollButtonText(classItem.registrationStatus)}
                 </Button>
+                
+                {classItem.registrationStatus === "closed" && (
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Get notified when registration opens for {classItem.nextPeriod}
+                  </p>
+                )}
               </div>
             </div>
           ))}
-        </div>        {/* Additional Information */}
+        </div>        {/* Enrollment Periods Information */}
+        <div className="bg-blue-50 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            📅 Enrollment Periods
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="bg-white rounded-lg p-4">
+              <h3 className="font-semibold text-gray-800 mb-2">Current Period</h3>
+              <p className="text-gray-600 mb-1">{formatPeriodRange(currentPeriod)}</p>
+              <p className={clsx(
+                "text-sm font-medium",
+                currentRegistrationStatus === 'open' ? "text-green-600" : 
+                currentRegistrationStatus === 'closed' ? "text-red-600" : "text-blue-600"
+              )}>
+                {currentRegistrationStatus === 'open' && `Registration Open until: ${currentRegistrationDates.end}`}
+                {currentRegistrationStatus === 'closed' && `Registration Closed on: ${currentRegistrationDates.end}`}
+                {currentRegistrationStatus === 'upcoming' && `Registration Opens: ${currentRegistrationDates.start}`}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-4">
+              <h3 className="font-semibold text-gray-800 mb-2">Next Period</h3>
+              <p className="text-gray-600 mb-1">{formatPeriodRange(nextPeriod)}</p>
+              <p className="text-sm text-blue-600 font-medium">Registration Opens: {nextRegistrationDates.start}</p>
+            </div>
+          </div>
+          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <h4 className="font-semibold text-amber-800 mb-2">📋 Important Notes:</h4>
+            <ul className="text-sm text-amber-700 space-y-1">
+              <li>• Each enrollment period is 4 months long</li>
+              <li>• Registration opens 2 months before each period starts</li>
+              <li>• Early registration is recommended due to limited capacity</li>
+              <li>• Waiting lists are available when classes are full</li>
+              <li>• No refunds after the first week of each period</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Additional Information */}
         <div className="bg-gray-50 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             📋 Class Information

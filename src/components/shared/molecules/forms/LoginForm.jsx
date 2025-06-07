@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Button } from '@atoms';
+import { useTranslation } from 'react-i18next';
 
 const LoginForm = ({
   onSubmit,
@@ -16,6 +17,8 @@ const LoginForm = ({
   size = 'md',
   className = ''
 }) => {
+  const { t } = useTranslation('form');
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (onSubmit && !loading) {
@@ -33,18 +36,16 @@ const LoginForm = ({
         <div className="p-3 bg-red-50 border border-red-200 rounded-md">
           <p className="text-sm text-red-600">{error}</p>
         </div>
-      )}
-
-      <div>
+      )}      <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email Address
+          {t('email')}
         </label>
         <input
           id="email"
           type="email"
           value={emailValue}
           onChange={(e) => onEmailChange?.(e.target.value)}
-          placeholder="Enter your email"
+          placeholder={t('email_placeholder')}
           required
           disabled={loading}
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
@@ -53,14 +54,14 @@ const LoginForm = ({
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-          Password
+          {t('password')}
         </label>
         <input
           id="password"
           type="password"
           value={passwordValue}
           onChange={(e) => onPasswordChange?.(e.target.value)}
-          placeholder="Enter your password"
+          placeholder={t('password_placeholder')}
           required
           disabled={loading}
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
@@ -78,7 +79,7 @@ const LoginForm = ({
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
           />
           <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-            Remember me
+            {t('remember_me')}
           </label>
         </div>
       )}
@@ -91,7 +92,7 @@ const LoginForm = ({
         loading={loading}
         className="w-full"
       >
-        {loading ? 'Signing in...' : 'Sign In'}
+        {loading ? t('login_loading') : t('login')}
       </Button>
     </form>
   );
