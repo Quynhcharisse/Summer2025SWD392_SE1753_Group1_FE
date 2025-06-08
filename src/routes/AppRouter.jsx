@@ -35,6 +35,11 @@ const EducationDashboard = lazy(() => import("@pages/EducationDashboard"));
 const UserProfile = lazy(() => import("@pages/UserProfile"));
 const ComingSoon = lazy(() => import("@pages/ComingSoon"));
 
+
+// Syllabus
+  const Syllabus = lazy(() => import("@pages/SyllabusManage"));
+
+
 // Reusable component wrappers
 const PageWrapper = ({ children, isPublic = false, requiredRoles = [] }) => {
   const content = (
@@ -507,15 +512,15 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "curriculum",
+        path: "syllabus",
         element: (
           <UserPageWrapper requiredRoles={["EDUCATION"]}>
-            <ComingSoon title="Curriculum Management" description="Manage educational programs and curricula." />
+            <Syllabus />
           </UserPageWrapper>
         ),
       },
       {
-        path: "assessment",
+        path: "",
         element: (
           <UserPageWrapper requiredRoles={["EDUCATION"]}>
             <ComingSoon title="Student Assessment" description="Track and evaluate student progress." />
