@@ -168,10 +168,16 @@ const UserLayout = ({ children }) => {
             path: '/user/education/dashboard'
           },
           { 
-            key: '/user/education/curriculum', 
+            key: '/user/education/syllabus', 
             icon: BookOpen, 
             label: 'Chương trình học',
-            path: '/user/education/curriculum'
+            path: '/user/education/syllabus'
+          },
+          { 
+            key: '/user/education/lesson', 
+            icon: BookOpen, 
+            label: 'Bài giảng',
+            path: '/user/education/lesson'
           },
           { 
             key: '/user/education/classes', 

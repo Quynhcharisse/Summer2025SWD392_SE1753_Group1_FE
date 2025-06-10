@@ -1,11 +1,8 @@
 import apiClient from "@api/apiClient";
-import { executeWithRetry } from "@utils/apiRetryHandler";
 
 export const getSyllabusList = async () => {
     try {
-        const response = await executeWithRetry(() => 
-            apiClient.get("/education/syllabus/list")
-        );
+        const response = await apiClient.get("/education/syllabus/list");
         return response;
     } catch (error) {
         console.error("Get syllabus list error:", error);
@@ -15,9 +12,7 @@ export const getSyllabusList = async () => {
 
 export const getSyllabusDetail = async (id) => {
     try {
-        const response = await executeWithRetry(() => 
-            apiClient.get(`/education/syllabus/detail/${id}`)
-        );
+        const response = await apiClient.get(`/education/syllabus/detail?id=${id}`);
         return response;
     } catch (error) {
         console.error("Get syllabus detail error:", error);
@@ -27,9 +22,7 @@ export const getSyllabusDetail = async (id) => {
 
 export const createSyllabus = async (data) => {
     try {
-        const response = await executeWithRetry(() => 
-            apiClient.post("/education/syllabus", data)
-        );
+        const response = await apiClient.post("/education/syllabus", data);
         return response;
     } catch (error) {
         console.error("Create syllabus error:", error);
@@ -42,13 +35,8 @@ export const updateSyllabus = async (id, data) => {
         // Log the update operation
         console.log(`Editing syllabus ${id} with data:`, data);
         
-        // Use a different endpoint for update to avoid conflict with create
-        const response = await executeWithRetry(() => 
-            apiClient.put(`/education/syllabus/${id}`, {
-                ...data,
-                id // Include ID in request body
-            })
-        );
+        // Use query parameter for id in update endpoint
+        const response = await apiClient.put(`/education/syllabus?id=${id}`, data);
         
         // Log the response
         console.log(`Edit response for syllabus ${id}:`, response);
@@ -66,18 +54,6 @@ export const createClass = async (data) => {
         return response.data;
     } catch (error) {
         console.error("Create class error:", error);
-        throw error;
-    }
-};
-
-export const deleteSyllabus = async (id) => {
-    try {
-        const response = await executeWithRetry(() => 
-            apiClient.delete(`/education/syllabus/${id}`)
-        );
-        return response;
-    } catch (error) {
-        console.error("Delete syllabus error:", error);
         throw error;
     }
 };

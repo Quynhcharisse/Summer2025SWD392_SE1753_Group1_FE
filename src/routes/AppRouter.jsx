@@ -38,6 +38,7 @@ const ComingSoon = lazy(() => import("@pages/ComingSoon"));
 
 // Syllabus
   const Syllabus = lazy(() => import("@pages/SyllabusManage"));
+  const Lesson = lazy(() => import("@pages/LessonManage"));
 
 
 // Reusable component wrappers
@@ -520,10 +521,10 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "",
+        path: "lesson",
         element: (
           <UserPageWrapper requiredRoles={["EDUCATION"]}>
-            <ComingSoon title="Student Assessment" description="Track and evaluate student progress." />
+            <Lesson />
           </UserPageWrapper>
         ),
       },
