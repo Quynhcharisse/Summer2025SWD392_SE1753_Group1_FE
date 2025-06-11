@@ -67,7 +67,7 @@
 #### **Enrollment Routes** (`/enrollment/*`)
 - `/enrollment` - Enrollment application ✅
 - `/enrollment/application` - Application form ✅
-- `/enrollment/my-applications` - My applications ✅
+- `/user/parent/enrollment/my-applications` - My applications ✅
 
 ### 3. **Role-Based Protection**
 - **TEACHER** - Access to teacher routes

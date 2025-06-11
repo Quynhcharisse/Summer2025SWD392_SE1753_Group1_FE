@@ -27,7 +27,7 @@ const MyApplications = () => {
     if (!isAuthenticated()) {
       navigate('/login', { 
         state: { 
-          returnUrl: '/enrollment/my-applications',
+          returnUrl: '/user/parent/enrollment/my-applications',
           message: 'Vui lòng đăng nhập để xem đơn đăng ký của bạn.'
         }
       });

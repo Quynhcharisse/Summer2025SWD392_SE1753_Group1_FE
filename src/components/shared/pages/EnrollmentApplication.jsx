@@ -145,7 +145,7 @@ const EnrollmentApplication = () => {
         
         if (authenticated) {
           // Optional: Check enrollment eligibility
-          await enrollmentService.checkEnrollmentEligibility();
+          
         }
       } catch (error) {
         console.error('Authentication check failed:', error);
@@ -222,17 +222,19 @@ const EnrollmentApplication = () => {
       setLoading(false);
     }
   };
+
   const handleLogin = () => {
     // Redirect to login with return URL
-    navigate('/login', { 
+    navigate('/auth/login', { 
       state: { 
-        returnUrl: '/enrollment',
+        returnUrl: '/user/parent/enrollment',
         message: 'Vui lòng đăng nhập để tiếp tục đăng ký nhập học.'
       }
     });
   };
+
   const handleManageApplications = () => {
-    navigate('/enrollment/my-applications');
+    navigate('/user/parent/enrollment/my-applications');
   };
 
   // Show loading while checking authentication

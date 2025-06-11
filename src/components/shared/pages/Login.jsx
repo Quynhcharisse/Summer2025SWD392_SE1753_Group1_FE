@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import authService from "@services/authService";
-import { getCurrentTokenData } from "@services/JWTService.jsx";
+import { getCurrentTokenData, waitForTokenAvailability } from "@services/JWTService.jsx";
 import { getDashboardRoute, AUTH_ROUTES } from "@/constants/routes";
 import Input from "../atoms/Input";
 
@@ -27,7 +27,9 @@ const storeUserData = (userData, email) => {
             name: userData?.name || userData?.data?.name,
             email: userData?.email || userData?.data?.email || email,
             role: userData?.role || userData?.data?.role,
-        }
+        },
+        // Include token if present in response for fallback
+        token: userData?.token || userData?.data?.token || userData?.accessToken || userData?.data?.accessToken
     };
     localStorage.setItem('user', JSON.stringify(userInfo));
 };
@@ -38,10 +40,17 @@ function Login() {
     
     // Get success message and pre-filled email from signup redirect
     const successMessage = location.state?.message;
-    const prefilledEmail = location.state?.email || "";
-      // Get redirect parameters from URL
+    const prefilledEmail = location.state?.email || "";    // Get redirect parameters from URL and state
     const urlParams = new URLSearchParams(location.search);
     const redirectUrl = urlParams.get('redirect') || location.state?.returnUrl;
+    const fromUrl = urlParams.get('from');
+    
+    console.log("🔑 Login redirect parameters:", { 
+        redirectUrl, 
+        fromUrl, 
+        search: location.search,
+        state: location.state 
+    });
     
     const [email, setEmail] = useState(prefilledEmail);
     const [password, setPassword] = useState("");
@@ -58,43 +67,52 @@ function Login() {
             return () => clearTimeout(timer);
         }
     }, [successMessage]);    // Display messages for enrollment redirects
-    useEffect(() => {
-        if (redirectUrl?.includes('enrollment')) {
-            console.log('User redirected from enrollment page');
-            // Could show a specific message here
-        }
-    }, [redirectUrl]);
+  
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         setErrors({});        try {
-            console.log("Starting login process...");
+            console.log("🔑 Starting login process...");
             const response = await authService.login({ email, password });
-            console.log("Login response:", response);            if (response?.success || response?.token || response?.data?.token) {
-                console.log("Login successful, storing user data...");
+            console.log("🔑 Login response:", response);            if (response?.success !== false) { // Accept any response that's not explicitly failed
+                console.log("🔑 Login successful, storing user data...");
+                  // Store user data
+                storeUserData(response?.data || response, email);                // Wait for token to be available in cookies (with retry mechanism)
+                console.log("🔑 Waiting for token availability...");
+                let tokenData = await waitForTokenAvailability();
                 
-                // Store user data
-                storeUserData(response?.data || response, email);
-
-                // Get current token data for navigation
-                const tokenData = getCurrentTokenData();
-                console.log("Token data for navigation:", tokenData);
+                if (!tokenData) {
+                    console.error("🔑 Token not available after login, trying fallback");
+                    // Fallback: try to get token immediately
+                    tokenData = getCurrentTokenData();
+                    if (!tokenData) {
+                        console.error("🔑 No token data available, login may have failed");
+                        setErrors({ submit: "Đăng nhập thất bại. Vui lòng thử lại." });
+                        return;
+                    }
+                    console.log("🔑 Fallback token data:", tokenData);
+                }
+                
+                console.log("🔑 Final token data for navigation:", tokenData);
 
                 // Check for first login indicators
                 const responseData = response?.data || response;
                 const isFirstLogin = responseData?.firstLogin || 
                                    responseData?.tempPassword || 
                                    responseData?.requirePasswordChange ||
-                                   responseData?.isFirstLogin;
-
-                // Handle redirect logic
+                                   responseData?.isFirstLogin;                // Handle redirect logic
                 if (redirectUrl) {
-                    console.log("Redirecting to:", redirectUrl);
-                    navigate(redirectUrl, { 
+                    console.log("🔑 Redirecting to:", redirectUrl);
+                    // Ensure redirect URL is properly formatted
+                    const cleanRedirectUrl = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`;
+                    
+                    navigate(cleanRedirectUrl, { 
                         replace: true,
                         state: { 
                             loginSuccess: true,
+                            fromLogin: true,
+                            fromUrl: fromUrl,
                             message: redirectUrl.includes('enrollment') 
                                 ? "Đăng nhập thành công! Bạn có thể tiếp tục đăng ký nhập học."
                                 : "Đăng nhập thành công!"
@@ -102,7 +120,7 @@ function Login() {
                     });
                 } else if (isFirstLogin) {
                     // Redirect to profile page for first login
-                    console.log("First login detected, redirecting to profile...");
+                    console.log("🔑 First login detected, redirecting to profile...");
                     navigate('/user/shared/profile', { 
                         replace: true,
                         state: { 
@@ -115,11 +133,11 @@ function Login() {
                     handleRoleBasedNavigation(navigate, tokenData);
                 }
             } else {
-                console.error("Login failed: Invalid response format");
+                console.error("🔑 Login failed: Invalid response format");
                 setErrors({ submit: "Đăng nhập thất bại. Vui lòng thử lại." });
             }
         } catch (error) {
-            console.error("Login error:", error);
+            console.error("🔑 Login error:", error);
             
             if (error.response?.status === 401) {
                 setErrors({ 
@@ -144,11 +162,13 @@ function Login() {
         isLoading,
         errors,
         showSuccessMessage,
-        successMessage,
-        redirectInfo: redirectUrl ? {
+        successMessage,        redirectInfo: redirectUrl ? {
             isFromEnrollment: redirectUrl.includes('enrollment'),
+            fromUrl: fromUrl,
             message: redirectUrl.includes('enrollment') 
                 ? "Vui lòng đăng nhập để tiếp tục đăng ký nhập học."
+                : fromUrl?.includes('admission')
+                ? "Vui lòng đăng nhập để tiếp tục từ trang tuyển sinh."
                 : "Vui lòng đăng nhập để tiếp tục."
         } : null
     };    return (
