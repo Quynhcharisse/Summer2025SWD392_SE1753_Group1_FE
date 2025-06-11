@@ -33,7 +33,7 @@ export const logout = async () => {
 
     return response.data;
   } catch (error) {
-    console.error("Logout error:", error);    // Even if server request fails, clear local data
+    console.error("Logout error:", error); // Even if server request fails, clear local data
     localStorage.removeItem("user");
     throw error;
   }
@@ -96,17 +96,26 @@ export const requestPasswordReset = async (email) => {
 /**
  * Confirm password reset with token and new password
  */
-export const confirmPasswordReset = async (token, email, password, confirmPassword) => {
+export const confirmPasswordReset = async (
+  token,
+  email,
+  password,
+  confirmPassword
+) => {
   try {
-    const response = await apiClient.post("/auth/password/reset/confirm", {
-      email,
-      password,
-      confirmPassword
-    }, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    const response = await apiClient.post(
+      "/auth/password/reset/confirm",
+      {
+        email,
+        password,
+        confirmPassword,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
-    });
+    );
     return response.data;
   } catch (error) {
     console.error("Password reset confirmation failed:", error);
@@ -114,29 +123,15 @@ export const confirmPasswordReset = async (token, email, password, confirmPasswo
   }
 };
 
-/**
- * Get current user info from server
- * Useful for getting fresh user data when cookies exist
- */
-export const getCurrentUser = async () => {
-  try {
-    const response = await apiClient.get("/auth/me");
-    return response.data;
-  } catch (error) {
-    console.error("Get current user failed:", error);
-    throw error;
-  }
-};
-
 export const register = async (userData) => {
   try {
-    console.log('🔥 register function called with:', userData);
-    console.log('📤 Making POST request to /auth/register');
+    console.log("🔥 register function called with:", userData);
+    console.log("📤 Making POST request to /auth/register");
     const response = await apiClient.post("/auth/register", userData);
-    console.log('✅ API Response:', response);
+    console.log("✅ API Response:", response);
     return response.data;
   } catch (error) {
-    console.log('❌ API Error:', error);
+    console.log("❌ API Error:", error);
     if (error.code === "ERR_NETWORK") {
       console.error(
         "Network error: Unable to reach the server. Please check your connection or the server URL."
@@ -193,7 +188,6 @@ export const authService = {
   signUp,
   logout,
   refreshToken,
-  getCurrentUser,
   requestPasswordReset,
   confirmPasswordReset,
   register,

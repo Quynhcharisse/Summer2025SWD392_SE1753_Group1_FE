@@ -9,152 +9,152 @@
 // =====================================================
 export const PUBLIC_ROUTES = {
   // Main homepage routes
-  HOMEPAGE: '/homepage',
-  HOMEPAGE_ADMISSION: '/homepage/admission',
-  HOMEPAGE_ADMISSION_FORM: '/homepage/admission/form',
-  HOMEPAGE_ABOUT: '/homepage/about-us',
-  HOMEPAGE_CLASSES: '/homepage/classes',
-  HOMEPAGE_EVENTS: '/homepage/events',
-  HOMEPAGE_CONTACT: '/homepage/contact',
-  
+  HOMEPAGE: "/homepage",
+  HOMEPAGE_ADMISSION: "/homepage/admission",
+  HOMEPAGE_ADMISSION_FORM: "/homepage/admission/form",
+  HOMEPAGE_ABOUT: "/homepage/about-us",
+  HOMEPAGE_CLASSES: "/homepage/classes",
+  HOMEPAGE_EVENTS: "/homepage/events",
+  HOMEPAGE_CONTACT: "/homepage/contact",
+
   // Legacy routes for compatibility
-  HOME: '/',
-  ADMISSION: '/admission',
-  ABOUT: '/about-us',
-  CLASSES: '/classes',
-  EVENTS: '/events',
-  
+  HOME: "/",
+  ADMISSION: "/admission",
+  ABOUT: "/about-us",
+  CLASSES: "/classes",
+  EVENTS: "/events",
+
   // Demo routes
-  DEMO_BOOK_STORY: '/demo/book-story',
-  DEMO_THEME_TEST: '/demo/theme-test',
+  DEMO_BOOK_STORY: "/demo/book-story",
+  DEMO_THEME_TEST: "/demo/theme-test",
 };
 
 // =====================================================
 // AUTHENTICATION ROUTES - Standalone Pages
 // =====================================================
 export const AUTH_ROUTES = {
-  LOGIN: '/auth/login',
-  REGISTER: '/auth/register', // Primary route for registration
-  FORGOT_PASSWORD: '/auth/forgot-password',
-  RESET_PASSWORD: '/auth/reset-password',
-  
+  LOGIN: "/auth/login",
+  REGISTER: "/auth/register", // Primary route for registration
+  FORGOT_PASSWORD: "/auth/forgot-password",
+  RESET_PASSWORD: "/auth/reset-password",
+
   // Legacy routes for compatibility
-  LEGACY_LOGIN: '/login',
-  LEGACY_SIGNUP: '/signup',
-  LEGACY_REGISTER: '/register',
-  LEGACY_FORGOT_PASSWORD: '/forgot-password',
-  LEGACY_RESET_PASSWORD: '/reset-password',
+  LEGACY_LOGIN: "/login",
+  LEGACY_SIGNUP: "/signup",
+  LEGACY_REGISTER: "/register",
+  LEGACY_FORGOT_PASSWORD: "/forgot-password",
+  LEGACY_RESET_PASSWORD: "/reset-password",
 };
 
 // =====================================================
 // TEACHER PROTECTED ROUTES
 // =====================================================
 export const TEACHER_ROUTES = {
-  DASHBOARD: '/user/teacher/dashboard',
-  ATTENDANCE: '/user/teacher/attendance',
-  CLASS_STUDENTS: '/user/teacher/class/:id/students',
-  JOURNAL: '/user/teacher/journal',
-  MESSAGES: '/user/teacher/messages',
+  DASHBOARD: "/user/teacher/dashboard",
+  ATTENDANCE: "/user/teacher/attendance",
+  CLASS_STUDENTS: "/user/teacher/class/:id/students",
+  JOURNAL: "/user/teacher/journal",
+  MESSAGES: "/user/teacher/messages",
 };
 
 // =====================================================
 // PARENT PROTECTED ROUTES
 // =====================================================
 export const PARENT_ROUTES = {
-  DASHBOARD: '/user/parent/dashboard',
-  ENROLLMENT: '/user/parent/enrollment',
-  ENROLLMENT_APPLICATION: '/user/parent/enrollment/application',
-  MY_APPLICATIONS: '/user/parent/enrollment/my-applications',
-  CHILD_PROFILE: '/user/parent/child/:id/profile',
-  CALENDAR: '/user/parent/calendar',
-  MEALS: '/user/parent/meals',
-  GALLERY: '/user/parent/gallery',
-  MESSAGES: '/user/parent/messages',
-  FEEDBACK: '/user/parent/feedback',
-  
-  // Legacy route for compatibility
-  LEGACY_DASHBOARD: '/parent/dashboard',
+  DASHBOARD: "/user/parent/dashboard",
+  ADMISSION: "/user/parent/admission",
+  ENROLLMENT: "/user/parent/enrollment",
+  ENROLLMENT_APPLICATION: "/user/parent/enrollment/application",
+  MY_APPLICATIONS: "/user/parent/enrollment/my-applications",
+  CHILD_PROFILE: "/user/parent/child/:id/profile",
+  CALENDAR: "/user/parent/calendar",  MEALS: "/user/parent/meals",
+  GALLERY: "/user/parent/gallery",
+  MESSAGES: "/user/parent/messages",
+  FEEDBACK: "/user/parent/feedback",
+  // Legacy routes for compatibility
+  LEGACY_DASHBOARD: "/parent/dashboard",
+  LEGACY_ADMISSION: "/parent/admission",
 };
 
 // =====================================================
 // ADMISSION STAFF PROTECTED ROUTES
 // =====================================================
 export const ADMISSION_ROUTES = {
-  DASHBOARD: '/user/admission/dashboard',
-  REGISTRATIONS: '/user/admission/registrations',
-  REGISTRATION_DETAIL: '/user/admission/registrations/:id',
-  REGISTRATION_REVIEW: '/user/admission/registrations/:id/review',
-  REPORTS: '/user/admission/reports',
+  DASHBOARD: "/user/admission/dashboard",
+  REGISTRATIONS: "/user/admission/registrations",
+  REGISTRATION_DETAIL: "/user/admission/registrations/:id",
+  REGISTRATION_REVIEW: "/user/admission/registrations/:id/review",
+  REPORTS: "/user/admission/reports",
 };
 
 // =====================================================
 // HR PROTECTED ROUTES
 // =====================================================
 export const HR_ROUTES = {
-  DASHBOARD: '/user/hr/dashboard',
-  STAFF: '/user/hr/staff',
-  STAFF_DETAIL: '/user/hr/staff/:id',
-  REPORTS: '/user/hr/reports',
-  PAYROLL: '/user/hr/payroll',
-  ATTENDANCE: '/user/hr/attendance',
-  RECRUITMENT: '/user/hr/recruitment',
+  DASHBOARD: "/user/hr/dashboard",
+  STAFF: "/user/hr/staff",
+  STAFF_DETAIL: "/user/hr/staff/:id",
+  REPORTS: "/user/hr/reports",
+  PAYROLL: "/user/hr/payroll",
+  ATTENDANCE: "/user/hr/attendance",
+  RECRUITMENT: "/user/hr/recruitment",
 };
 
 // =====================================================
 // EDUCATION PROTECTED ROUTES
 // =====================================================
 export const EDUCATION_ROUTES = {
-  DASHBOARD: '/user/education/dashboard',
-  CURRICULUM: '/user/education/curriculum',
-  CLASSES: '/user/education/classes',
-  CLASS_DETAIL: '/user/education/classes/:id',
-  REPORTS: '/user/education/reports',
-  ASSESSMENTS: '/user/education/assessments',
-  LEARNING_MATERIALS: '/user/education/learning-materials',
+  DASHBOARD: "/user/education/dashboard",
+  CURRICULUM: "/user/education/curriculum",
+  CLASSES: "/user/education/classes",
+  CLASS_DETAIL: "/user/education/classes/:id",
+  REPORTS: "/user/education/reports",
+  ASSESSMENTS: "/user/education/assessments",
+  LEARNING_MATERIALS: "/user/education/learning-materials",
 };
 
 // =====================================================
 // ADMIN PROTECTED ROUTES
 // =====================================================
 export const ADMIN_ROUTES = {
-  DASHBOARD: '/user/admin/dashboard',
-  USERS: '/user/admin/users',
-  CLASSES: '/user/admin/classes',
-  STATISTICS: '/user/admin/statistics',
-  SETTINGS: '/user/admin/settings',
-  ADMISSIONS: '/user/admin/admissions',
-  
+  DASHBOARD: "/user/admin/dashboard",
+  USERS: "/user/admin/users",
+  CLASSES: "/user/admin/classes",
+  STATISTICS: "/user/admin/statistics",
+  SETTINGS: "/user/admin/settings",
+  ADMISSIONS: "/user/admin/admissions",
+
   // Legacy routes for compatibility
-  LEGACY_ADMISSION: '/admin/admission',
-  LEGACY_CLASSES: '/admin/classes',
+  LEGACY_ADMISSION: "/admin/admission",
+  LEGACY_CLASSES: "/admin/classes",
 };
 
 // =====================================================
 // SHARED ROUTES - Available to all authenticated users
 // =====================================================
 export const SHARED_ROUTES = {
-  PROFILE: '/user/shared/profile',
-  CALENDAR: '/user/shared/calendar',
-  MEALS: '/user/shared/meals',
-  GALLERY: '/user/shared/gallery',
-  NOTIFICATIONS: '/user/shared/notifications',
+  PROFILE: "/user/shared/profile",
+  CALENDAR: "/user/shared/calendar",
+  MEALS: "/user/shared/meals",
+  GALLERY: "/user/shared/gallery",
+  NOTIFICATIONS: "/user/shared/notifications",
 };
 
 // =====================================================
 // ENROLLMENT ROUTES - For application process
 // =====================================================
 export const ENROLLMENT_ROUTES = {
-  INDEX: '/enrollment',
-  APPLICATION: '/enrollment/application',
-  MY_APPLICATIONS: '/enrollment/my-applications',
+  INDEX: "/user/parent/enrollment",
+  APPLICATION: "/user/parent/enrollment/application",
+  MY_APPLICATIONS: "/user/parent/enrollment/my-applications",
 };
 
 // =====================================================
 // ERROR & UTILITY ROUTES
 // =====================================================
 export const ERROR_ROUTES = {
-  UNAUTHORIZED: '/unauthorized',
-  NOT_FOUND: '*',
+  UNAUTHORIZED: "/unauthorized",
+  NOT_FOUND: "*",
 };
 
 // =====================================================
@@ -167,14 +167,14 @@ export const ERROR_ROUTES = {
  * @param {string} fromPath - Current path where redirect originated
  * @returns {string} Login URL with parameters
  */
-export const getLoginURL = (redirectPath = '/', fromPath = '') => {
+export const getLoginURL = (redirectPath = "/", fromPath = "") => {
   const params = new URLSearchParams();
-  params.set('redirect', redirectPath);
-  
+  params.set("redirect", redirectPath);
+
   if (fromPath) {
-    params.set('from', fromPath);
+    params.set("from", fromPath);
   }
-  
+
   return `${AUTH_ROUTES.LOGIN}?${params.toString()}`;
 };
 
@@ -194,9 +194,9 @@ export const isProtectedRoute = (path) => {
     ...Object.values(SHARED_ROUTES),
     ...Object.values(ENROLLMENT_ROUTES),
   ];
-  
-  return protectedPaths.some(protectedPath => 
-    path.startsWith(protectedPath.replace('/:id', ''))
+
+  return protectedPaths.some((protectedPath) =>
+    path.startsWith(protectedPath.replace("/:id", ""))
   );
 };
 
@@ -206,8 +206,8 @@ export const isProtectedRoute = (path) => {
  * @returns {boolean} Whether route requires admin/staff role
  */
 export const isAdminRoute = (path) => {
-  return Object.values(ADMIN_ROUTES).some(adminPath => 
-    path.startsWith(adminPath.replace('/:id', ''))
+  return Object.values(ADMIN_ROUTES).some((adminPath) =>
+    path.startsWith(adminPath.replace("/:id", ""))
   );
 };
 
@@ -217,8 +217,8 @@ export const isAdminRoute = (path) => {
  * @returns {boolean} Whether route requires teacher role
  */
 export const isTeacherRoute = (path) => {
-  return Object.values(TEACHER_ROUTES).some(teacherPath => 
-    path.startsWith(teacherPath.replace('/:id', ''))
+  return Object.values(TEACHER_ROUTES).some((teacherPath) =>
+    path.startsWith(teacherPath.replace("/:id", ""))
   );
 };
 
@@ -228,8 +228,8 @@ export const isTeacherRoute = (path) => {
  * @returns {boolean} Whether route requires admission role
  */
 export const isAdmissionRoute = (path) => {
-  return Object.values(ADMISSION_ROUTES).some(admissionPath => 
-    path.startsWith(admissionPath.replace('/:id', ''))
+  return Object.values(ADMISSION_ROUTES).some((admissionPath) =>
+    path.startsWith(admissionPath.replace("/:id", ""))
   );
 };
 
@@ -240,17 +240,17 @@ export const isAdmissionRoute = (path) => {
  */
 export const getDashboardRoute = (role) => {
   switch (role?.toLowerCase()) {
-    case 'teacher':
+    case "teacher":
       return TEACHER_ROUTES.DASHBOARD;
-    case 'parent':
+    case "parent":
       return PARENT_ROUTES.DASHBOARD;
-    case 'admission':
+    case "admission":
       return ADMISSION_ROUTES.DASHBOARD;
-    case 'hr':
+    case "hr":
       return HR_ROUTES.DASHBOARD;
-    case 'education':
+    case "education":
       return EDUCATION_ROUTES.DASHBOARD;
-    case 'admin':
+    case "admin":
       return ADMIN_ROUTES.DASHBOARD;
     default:
       return SHARED_ROUTES.CALENDAR;
@@ -264,26 +264,27 @@ export const getDashboardRoute = (role) => {
  */
 export const getEnrollmentRoute = (role) => {
   switch (role?.toLowerCase()) {
-    case 'parent':
+    case "parent":
       return PARENT_ROUTES.ENROLLMENT;
-    case 'teacher':
+    case "teacher":
       // Teachers should go to their dashboard
       return TEACHER_ROUTES.DASHBOARD;
-    case 'admission':
+    case "admission":
       // Admission staff should go to registrations management
       return ADMISSION_ROUTES.REGISTRATIONS;
-    case 'hr':
-      // HR should go to their dashboard  
+    case "hr":
+      // HR should go to their dashboard
       return HR_ROUTES.DASHBOARD;
-    case 'education':
+    case "education":
       // Education staff should go to their dashboard
       return EDUCATION_ROUTES.DASHBOARD;
-    case 'admin':
-      // Admin can access public enrollment to help parents
-      return ENROLLMENT_ROUTES.INDEX;
+    case "admin":
+      // Admin can access parent enrollment to help parents
+      return PARENT_ROUTES.ENROLLMENT;
     default:
-      // Default to public enrollment for non-authenticated users
-      return ENROLLMENT_ROUTES.INDEX;
+      // Default to parent enrollment route for unauthenticated users
+      // This will require authentication which is the intended behavior
+      return PARENT_ROUTES.ENROLLMENT;
   }
 };
 

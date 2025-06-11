@@ -1,16 +1,15 @@
-import { Button } from "../atoms";
-import {
-  ProcessStepCard,
-  ProgramCard,
-  SearchBar,
-} from "../molecules";
-import { PageTemplate } from "../templates";
+import { getCurrentTokenData, isAuthenticated } from "@services/JWTService.jsx";
+import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-import { handleEnrollmentNavigation, getAuthStatusMessage } from "../../../utils/authUtils";
-import { isAuthenticated, getCurrentTokenData } from "../../../api/services/JWTService";
-import { useSnackbar } from "notistack";
+import {
+  getAuthStatusMessage,
+  handleEnrollmentNavigation,
+} from "../../../utils/authUtils";
+import { Button } from "../atoms";
+import { ProcessStepCard, ProgramCard, SearchBar } from "../molecules";
+import { PageTemplate } from "../templates";
 
 export default function Home() {
   const { t } = useTranslation("home");
@@ -22,7 +21,7 @@ export default function Home() {
   const [authStatus, setAuthStatus] = useState({
     isAuthenticated: false,
     user: null,
-    statusMessage: ''
+    statusMessage: "",
   });
   useEffect(() => {
     document.title = t("welcome") + " - Sunshine Preschool";
@@ -40,11 +39,11 @@ export default function Home() {
     const isAuth = isAuthenticated();
     const tokenData = getCurrentTokenData();
     const statusMessage = getAuthStatusMessage(isAuth, tokenData);
-    
+
     setAuthStatus({
       isAuthenticated: isAuth,
       user: tokenData,
-      statusMessage
+      statusMessage,
     });
   };
 
@@ -53,25 +52,24 @@ export default function Home() {
     const success = await handleEnrollmentNavigation(navigate, {
       showNotification: (message, type) => {
         enqueueSnackbar(message, { variant: type });
-      }
+      },
     });
-    
+
     if (success) {
-      console.log('Navigated to enrollment successfully');
+      console.log("Navigated to enrollment successfully");
     }
   };
-
-  // Handle dashboard navigation with auth check  
+  // Handle dashboard navigation with auth check
   const handleDashboardClick = async () => {
     const success = await handleEnrollmentNavigation(navigate, {
-      redirectPath: '/parent/dashboard',
+      redirectPath: "/user/parent/dashboard",
       showNotification: (message, type) => {
         enqueueSnackbar(message, { variant: type });
-      }
+      },
     });
-    
+
     if (success) {
-      console.log('Navigated to dashboard successfully');
+      console.log("Navigated to dashboard successfully");
     }
   };
 
@@ -171,30 +169,25 @@ export default function Home() {
     } catch (error) {
       console.error("Failed to start speech recognition:", error);
       alert("Failed to start speech recognition");
-    }  }, [speechSupported, handleSearch]);
+    }
+  }, [speechSupported, handleSearch]);
 
   return (
     <PageTemplate
       title={t("welcome")}
-      subtitle={t("discover_programs")}      actions={        <div className="flex gap-4">
+      subtitle={t("discover_programs")}
+      actions={
+        <div className="flex gap-4">
           <Button variant="outline" size="md">
             <Link to="/admission">{t("admission_link")}</Link>
           </Button>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             size="md"
             onClick={handleEnrollmentClick}
             title={authStatus.statusMessage || "Đăng ký nhập học"}
           >
             {t("enroll_button")}
-          </Button>
-          <Button 
-            variant="secondary" 
-            size="md"
-            onClick={handleDashboardClick}
-            title={authStatus.statusMessage || "Truy cập dashboard"}
-          >
-            Dashboard
           </Button>
         </div>
       }
@@ -277,13 +270,10 @@ export default function Home() {
                 duration: t("prog1_duration"),
                 capacity: t("prog1_capacity"),
               }}
-              features={[
-                t("prog1_feat1"),
-                t("prog1_feat2"),
-                t("prog1_feat3"),
-              ]}
+              features={[t("prog1_feat1"), t("prog1_feat2"), t("prog1_feat3")]}
               price={t("prog1_price")}
-              badge={{ text: t("prog1_badge"), variant: "primary" }}              onEnroll={handleEnrollmentClick}
+              badge={{ text: t("prog1_badge"), variant: "primary" }}
+              onEnroll={handleEnrollmentClick}
               onLearnMore={() =>
                 console.log("Learning more about Toddler Discovery")
               }
@@ -296,13 +286,10 @@ export default function Home() {
                 duration: t("prog2_duration"),
                 capacity: t("prog2_capacity"),
               }}
-              features={[
-                t("prog2_feat1"),
-                t("prog2_feat2"),
-                t("prog2_feat3"),
-              ]}
+              features={[t("prog2_feat1"), t("prog2_feat2"), t("prog2_feat3")]}
               price={t("prog2_price")}
-              badge={{ text: t("prog2_badge"), variant: "secondary" }}              onEnroll={handleEnrollmentClick}
+              badge={{ text: t("prog2_badge"), variant: "secondary" }}
+              onEnroll={handleEnrollmentClick}
               onLearnMore={() =>
                 console.log("Learning more about Pre-K Excellence")
               }
@@ -315,13 +302,10 @@ export default function Home() {
                 duration: t("prog3_duration"),
                 capacity: t("prog3_capacity"),
               }}
-              features={[
-                t("prog3_feat1"),
-                t("prog3_feat2"),
-                t("prog3_feat3"),
-              ]}
+              features={[t("prog3_feat1"), t("prog3_feat2"), t("prog3_feat3")]}
               price={t("prog3_price")}
-              badge={{ text: t("prog3_badge"), variant: "outline" }}              onEnroll={handleEnrollmentClick}
+              badge={{ text: t("prog3_badge"), variant: "outline" }}
+              onEnroll={handleEnrollmentClick}
               onLearnMore={() =>
                 console.log("Learning more about After School Care")
               }

@@ -5,7 +5,7 @@
  * - Refresh token in HttpOnly cookie (automatically managed by server)
  */
 import { Navigate } from "react-router-dom";
-import { getCurrentTokenData, hasAnyRole, isTokenExpired, hasAccessToken } from "../../../api/services/JWTService";
+import { getCurrentTokenData, hasAnyRole, isTokenExpired, hasAccessToken } from "@services/JWTService.jsx";
 import { useState, useEffect } from "react";
 import PropTypes from 'prop-types';
 
@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         console.log("🔄 Access token expired, attempting refresh...");
         
         try {
-            const { refreshToken } = await import('../../../api/services/JWTService');
+            const { refreshToken } = await import('@services/JWTService.jsx');
             await refreshToken();
             
             const tokenData = getCurrentTokenData();
@@ -90,11 +90,12 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
                 <span className="ml-3 text-gray-600">Checking authentication...</span>
             </div>
         );
-    }
-
-    // Not authenticated - redirect to login
+    }    // Not authenticated - redirect to login with current path
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        const currentPath = window.location.pathname;
+        const loginUrl = `/auth/login?redirect=${encodeURIComponent(currentPath)}`;
+        console.log("🔐 ProtectedRoute - Redirecting to login:", loginUrl);
+        return <Navigate to={loginUrl} replace />;
     }
 
     // Authenticated but no permission - redirect to unauthorized

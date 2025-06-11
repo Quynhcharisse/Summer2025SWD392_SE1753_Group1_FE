@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { PageTemplate } from "@templates";
-import { Button, Spinner, Input, Label } from "@atoms";
+import { getDashboardRoute } from "@/constants/routes";
+import { Button, Input, Label, Spinner } from "@atoms";
 import { authService } from "@services/authService";
 import { getCurrentTokenData } from "@services/JWTService";
-import { getDashboardRoute } from "@/constants/routes";
-import { executeProfileApiWithRetry } from "@/utils/apiRetryHandler";
+import { PageTemplate } from "@templates";
 import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Shield,
-  Edit2,
-  Save,
-  X,
-  Key,
   AlertCircle,
+  Calendar,
+  Edit2,
+  Key,
+  Mail,
+  MapPin,
+  Phone,
+  Save,
+  Shield,
+  User,
+  Users,
+  X,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const UserProfile = () => {
+  console.log("🔍 UserProfile component rendered");
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,10 +34,10 @@ const UserProfile = () => {
 
   // Form data for editing
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     phone: "",
     address: "",
+    gender: "",
   });
 
   // Password reset form
@@ -47,53 +48,62 @@ const UserProfile = () => {
   });
 
   useEffect(() => {
+    console.log("🔄 UserProfile useEffect triggered, calling loadProfile");
     loadProfile();
   }, []);
+
   const loadProfile = async () => {
     try {
       setLoading(true);
       setError("");
 
-      // Use the retry handler for API call
-      const response = await executeProfileApiWithRetry(() =>
-        authService.getUserProfile()
-      );
-      setProfile(response);
+      const response = await authService.getUserProfile();
+      console.log("📋 Profile response:", response);
+      
+      // Extract actual data from response
+      const profileData = response.data || response;
+      console.log("📋 Profile data extracted:", profileData);
+      console.log("📋 Setting profile state with:", profileData);
+      setProfile(profileData);
 
       // Check if this is first login (profile incomplete or password needs reset)
-      const needsPasswordReset = response.firstLogin || response.tempPassword;
+      const needsPasswordReset = profileData.firstLogin || profileData.tempPassword;
       setIsFirstLogin(needsPasswordReset);
       setShowPasswordReset(needsPasswordReset);
 
-      // Set form data
+      // Set form data with name field directly
       setFormData({
-        firstName: response.firstName || "",
-        lastName: response.lastName || "",
-        phone: response.phone || "",
-        address: response.address || "",
+        name: profileData.name || "",
+        phone: profileData.phone || "",
+        address: profileData.address || "",
+        gender: profileData.gender || "",
       });
 
       setPasswordData((prev) => ({
         ...prev,
-        email: response.email || "",
+        email: profileData.email || "",
       }));
+      
+      console.log("✅ Profile loaded successfully, final state:", {
+        profile: profileData,
+        formData: { name: profileData.name, phone: profileData.phone, address: profileData.address, gender: profileData.gender }
+      });
     } catch (error) {
-      console.error("Failed to load profile:", error);
+      console.error("❌ Failed to load profile:", error);
       setError("Không thể tải thông tin profile. Vui lòng thử lại.");
     } finally {
+      console.log("🏁 loadProfile finished, setting loading to false");
       setLoading(false);
     }
   };
+
   const handleSaveProfile = async () => {
     try {
       setSaving(true);
       setError("");
       setSuccess("");
 
-      // Use the retry handler for API call
-      await executeProfileApiWithRetry(() =>
-        authService.updateUserProfile(formData)
-      );
+      await authService.updateUserProfile(formData);
 
       setSuccess("Cập nhật thông tin thành công!");
       setEditing(false);
@@ -147,7 +157,10 @@ const UserProfile = () => {
     navigate(dashboardRoute);
   };
 
+  console.log("🎭 Render state:", { loading, profile, formData, error });
+
   if (loading) {
+    console.log("⏳ Showing loading state");
     return (
       <PageTemplate title="Thông tin cá nhân">
         <div className="text-center py-8">
@@ -184,11 +197,12 @@ const UserProfile = () => {
                   variant="outline"
                   onClick={() => {
                     setEditing(false);
+                    // Reset to current profile data
                     setFormData({
-                      firstName: profile?.firstName || "",
-                      lastName: profile?.lastName || "",
+                      name: profile?.name || "",
                       phone: profile?.phone || "",
                       address: profile?.address || "",
+                      gender: profile?.gender || "",
                     });
                   }}
                   className="flex items-center gap-2"
@@ -219,10 +233,7 @@ const UserProfile = () => {
         )
       }
     >
-      {" "}
       <div className="space-y-6">
-        {/* Debug Component - Only show in development */}
-
         {/* First Login Alert */}
         {isFirstLogin && (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
@@ -341,48 +352,24 @@ const UserProfile = () => {
             {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="firstName">Họ</Label>
+                <Label htmlFor="name">Họ và tên</Label>
                 {editing ? (
                   <Input
-                    id="firstName"
-                    value={formData.firstName}
+                    id="name"
+                    value={formData.name}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        firstName: e.target.value,
+                        name: e.target.value,
                       }))
                     }
-                    placeholder="Nhập họ"
+                    placeholder="Nhập họ và tên"
                   />
                 ) : (
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                     <User className="w-4 h-4 text-gray-500" />
                     <span className="text-gray-900">
-                      {profile?.firstName || "Chưa cập nhật"}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="lastName">Tên</Label>
-                {editing ? (
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        lastName: e.target.value,
-                      }))
-                    }
-                    placeholder="Nhập tên"
-                  />
-                ) : (
-                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                    <User className="w-4 h-4 text-gray-500" />
-                    <span className="text-gray-900">
-                      {profile?.lastName || "Chưa cập nhật"}
+                      {formData.name || profile?.name || "Chưa cập nhật"}
                     </span>
                   </div>
                 )}
@@ -405,6 +392,47 @@ const UserProfile = () => {
               </div>
 
               <div>
+                <Label htmlFor="gender">Giới tính</Label>
+                {editing ? (
+                  <select
+                    id="gender"
+                    value={formData.gender}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        gender: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Chọn giới tính</option>
+                    <option value="MALE">Nam</option>
+                    <option value="FEMALE">Nữ</option>
+                    <option value="OTHER">Khác</option>
+                  </select>
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <span className="text-gray-900">
+                      {formData.gender === "MALE" 
+                        ? "Nam" 
+                        : formData.gender === "FEMALE" 
+                        ? "Nữ" 
+                        : formData.gender === "OTHER"
+                        ? "Khác"
+                        : profile?.gender === "MALE"
+                        ? "Nam"
+                        : profile?.gender === "FEMALE"
+                        ? "Nữ"
+                        : profile?.gender === "OTHER"
+                        ? "Khác"
+                        : "Chưa cập nhật"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div>
                 <Label htmlFor="phone">Số điện thoại</Label>
                 {editing ? (
                   <Input
@@ -422,7 +450,7 @@ const UserProfile = () => {
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                     <Phone className="w-4 h-4 text-gray-500" />
                     <span className="text-gray-900">
-                      {profile?.phone || "Chưa cập nhật"}
+                      {formData.phone || profile?.phone || "Chưa cập nhật"}
                     </span>
                   </div>
                 )}

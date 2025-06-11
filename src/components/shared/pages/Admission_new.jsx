@@ -9,11 +9,29 @@ import {
   Download,
   Phone
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
 import { PageTemplate } from "@templates";
 import { Button, Badge } from "@atoms";
+import { handleEnrollmentNavigation } from "../../../utils/authUtils";
 
 const Admission = () => {
+  const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
   const [selectedAge, setSelectedAge] = useState('');
+
+  // Handle enrollment navigation with authentication check
+  const handleEnrollmentClick = async () => {
+    const success = await handleEnrollmentNavigation(navigate, {
+      showNotification: (message, type) => {
+        enqueueSnackbar(message, { variant: type });
+      }
+    });
+    
+    if (success) {
+      console.log('Navigated to enrollment successfully');
+    }
+  };
 
   const ageGroups = [
     {
@@ -90,13 +108,12 @@ const Admission = () => {
       breadcrumbs={[
         { label: "Home", href: "/" },
         { label: "Admission", href: "/admission" }
-      ]}
-      actions={
+      ]}      actions={
         <div className="flex gap-4">
           <Button variant="outline" size="md">
             Schedule a Tour
           </Button>
-          <Button variant="primary" size="md">
+          <Button variant="primary" size="md" onClick={handleEnrollmentClick}>
             Apply Now
           </Button>
         </div>

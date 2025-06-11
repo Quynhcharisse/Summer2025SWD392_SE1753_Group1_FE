@@ -1,4 +1,4 @@
-import { isAuthenticated, getCurrentTokenData, refreshToken } from '../api/services/JWTService';
+import { isAuthenticated, getCurrentTokenData, refreshToken } from '@services/JWTService.jsx';
 import { getLoginURL, getEnrollmentRoute } from '../constants/routes';
 
 /**
@@ -7,17 +7,38 @@ import { getLoginURL, getEnrollmentRoute } from '../constants/routes';
  */
 export const checkEnrollmentAccess = async () => {
   try {
+    console.log("🔐 checkEnrollmentAccess - *** FUNCTION CALLED ***");
+    console.log("🔐 checkEnrollmentAccess - Starting authentication check");
+    
     // First check if user has a valid token
-    if (isAuthenticated()) {
+    const isAuth = isAuthenticated();
+    console.log("🔐 checkEnrollmentAccess - isAuthenticated():", isAuth);
+    
+    if (isAuth) {
       const tokenData = getCurrentTokenData();
+      console.log("🔐 checkEnrollmentAccess - Token data:", tokenData ? { role: tokenData.role, exp: tokenData.exp } : "null");
+      
+      if (!tokenData) {
+        console.warn("🔐 checkEnrollmentAccess - isAuthenticated() true but getCurrentTokenData() null");
+        return {
+          isAuthenticated: false,
+          action: 'require_login',
+          message: 'Token data inconsistent. Please login again.'
+        };
+      }
       
       // Check if token is about to expire (within 5 minutes)
       const currentTime = Math.floor(Date.now() / 1000);
       const timeUntilExpiry = tokenData.exp - currentTime;
       const fiveMinutes = 5 * 60;
       
+      console.log("🔐 checkEnrollmentAccess - Time until expiry:", timeUntilExpiry, "seconds");
+      console.log("🔐 checkEnrollmentAccess - Current time:", currentTime);
+      console.log("🔐 checkEnrollmentAccess - Token expires at:", tokenData.exp);
+      
       if (timeUntilExpiry > fiveMinutes) {
         // Token is valid and has sufficient time left
+        console.log("🔐 checkEnrollmentAccess - Token valid, access granted");
         return {
           isAuthenticated: true,
           action: 'allow',
@@ -26,26 +47,44 @@ export const checkEnrollmentAccess = async () => {
         };
       } else if (timeUntilExpiry > 0) {
         // Token is valid but expires soon, try to refresh
+        console.log("🔐 checkEnrollmentAccess - Token expires soon, attempting refresh");
         try {
+          console.log("🔄 checkEnrollmentAccess - Calling refreshToken()...");
           await refreshToken();
+          console.log("✅ checkEnrollmentAccess - refreshToken() completed successfully");
+          
           const newTokenData = getCurrentTokenData();
+          console.log("🔍 checkEnrollmentAccess - New token data after refresh:", newTokenData ? { role: newTokenData.role, exp: newTokenData.exp } : "null");
           
           if (newTokenData) {
+            console.log("✅ checkEnrollmentAccess - Token refresh successful, granting access");
             return {
               isAuthenticated: true,
               action: 'allow',
               user: newTokenData,
               message: 'Token refreshed, access granted'
             };
+          } else {
+            console.warn("⚠️ checkEnrollmentAccess - refreshToken() succeeded but newTokenData is null");
           }
         } catch (refreshError) {
-          console.warn('Token refresh failed:', refreshError);
+          console.error('❌ checkEnrollmentAccess - Token refresh failed with error:', refreshError);
+          console.error('❌ checkEnrollmentAccess - Error details:', {
+            message: refreshError.message,
+            status: refreshError.response?.status,
+            data: refreshError.response?.data
+          });
           // Fall through to require login
         }
+      } else {
+        console.log("🔐 checkEnrollmentAccess - Token expired");
       }
+    } else {
+      console.log("🔐 checkEnrollmentAccess - User not authenticated");
     }
     
     // No valid token or refresh failed
+    console.log("🔐 checkEnrollmentAccess - Requiring login");
     return {
       isAuthenticated: false,
       action: 'require_login',
@@ -53,7 +92,7 @@ export const checkEnrollmentAccess = async () => {
     };
     
   } catch (error) {
-    console.error('Error checking enrollment access:', error);
+    console.error('🔐 checkEnrollmentAccess - Error:', error);
     return {
       isAuthenticated: false,
       action: 'require_login',
@@ -69,18 +108,28 @@ export const checkEnrollmentAccess = async () => {
  * @returns {Promise<boolean>} - Whether navigation was successful
  */
 export const handleEnrollmentNavigation = async (navigate, options = {}) => {
-  const { showNotification } = options;
+  const { showNotification, redirectPath } = options;
   
   try {
+    console.log("🎯 handleEnrollmentNavigation - Starting enrollment navigation");
+    console.log("🎯 handleEnrollmentNavigation - About to call checkEnrollmentAccess");
+    
     const authCheck = await checkEnrollmentAccess();
     
+    console.log("🎯 handleEnrollmentNavigation - Auth check completed");
+    console.log("🎯 handleEnrollmentNavigation - Auth check result:", authCheck);
+    
     if (authCheck.action === 'allow') {
-      // User is authenticated, get appropriate enrollment route based on role
+      // User is authenticated, get appropriate route based on role
       const userRole = authCheck.user?.role;
-      const enrollmentRoute = getEnrollmentRoute(userRole);
+      console.log("🎯 handleEnrollmentNavigation - User role:", userRole);
       
-      // Navigate to role-based enrollment route
-      navigate(enrollmentRoute);
+      // If a specific redirectPath is provided, use it; otherwise use role-based route
+      const targetRoute = redirectPath || getEnrollmentRoute(userRole);
+      console.log("🎯 handleEnrollmentNavigation - Target route:", targetRoute);
+      
+      // Navigate to the target route
+      navigate(targetRoute);
       
       if (showNotification) {
         showNotification('Chuyển đến trang đăng ký thành công', 'success');
@@ -90,10 +139,20 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
     } else {
       // User needs to login first
       const currentUrl = window.location.pathname;
-      // After login, redirect to appropriate enrollment route
-      const userRole = authCheck.user?.role;
-      const enrollmentRoute = getEnrollmentRoute(userRole);
-      const loginUrl = getLoginURL(enrollmentRoute, currentUrl);
+      
+      // For unauthenticated users, redirect to public enrollment route after login
+      const targetEnrollmentRoute = redirectPath || "/user/parent/enrollment";
+      
+      // Create login URL with proper redirect parameters
+      const loginUrl = getLoginURL(targetEnrollmentRoute, currentUrl);
+      
+      console.log("🔐 handleEnrollmentNavigation - Redirecting to login:", {
+        currentUrl,
+        targetEnrollmentRoute,
+        loginUrl,
+        authCheckAction: authCheck.action,
+        authCheckMessage: authCheck.message
+      });
       
       navigate(loginUrl);
       
@@ -104,10 +163,10 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
       return false;
     }
   } catch (error) {
-    console.error('Error handling enrollment navigation:', error);
+    console.error('🚫 handleEnrollmentNavigation - Error:', error);
     
     // Fallback to login page with default enrollment route
-    const defaultEnrollmentRoute = getEnrollmentRoute();
+    const defaultEnrollmentRoute = "/user/parent/enrollment";
     navigate(getLoginURL(defaultEnrollmentRoute));
     
     if (showNotification) {

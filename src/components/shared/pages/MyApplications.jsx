@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { PageTemplate } from "@templates";
 import { Button, Badge, Spinner } from "@atoms";
 import { enrollmentService } from "../../../api/services/enrollmentService";
-import { isAuthenticated } from "../../../api/services/JWTService";
+import { isAuthenticated } from "@services/JWTService.jsx";
 import { 
   FileText, 
   Clock, 
@@ -27,7 +27,7 @@ const MyApplications = () => {
     if (!isAuthenticated()) {
       navigate('/login', { 
         state: { 
-          returnUrl: '/enrollment/my-applications',
+          returnUrl: '/user/parent/enrollment/my-applications',
           message: 'Vui lòng đăng nhập để xem đơn đăng ký của bạn.'
         }
       });
