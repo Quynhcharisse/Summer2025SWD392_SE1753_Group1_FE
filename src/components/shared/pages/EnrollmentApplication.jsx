@@ -4,7 +4,7 @@ import { AuthTemplate } from "@templates";
 import { Button, Spinner } from "@atoms";
 import EnrollmentForm from "../molecules/forms/EnrollmentForm";
 import { enrollmentService } from "../../../api/services/enrollmentService";
-import { isAuthenticated } from "../../../api/services/JWTService";
+import { isAuthenticated } from "@services/JWTService.jsx";
 import { CheckCircle, FileText, AlertTriangle } from "lucide-react";
 import PropTypes from "prop-types";
 

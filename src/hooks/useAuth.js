@@ -3,7 +3,7 @@
  * Provides easy access to authentication status and user data
  */
 import { useState, useEffect } from 'react';
-import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole, isTokenExpired, refreshToken } from '@/api/services/JWTService';
+import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole, isTokenExpired, refreshToken } from '@services/JWTService.jsx';
 
 export const useAuth = () => {
     const [user, setUser] = useState(null);

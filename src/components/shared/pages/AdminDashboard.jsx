@@ -13,7 +13,7 @@ import {
   Calendar,
   AlertTriangle
 } from "lucide-react";
-import { isAuthenticated, getCurrentTokenData } from "../../../api/services/JWTService";
+import { isAuthenticated, getCurrentTokenData } from "@services/JWTService.jsx";
 import { authService } from "../../../api/services/authService";
 
 const AdminDashboard = () => {

@@ -1,4 +1,4 @@
-import { isAuthenticated, getCurrentTokenData, refreshToken } from '../api/services/JWTService';
+import { isAuthenticated, getCurrentTokenData, refreshToken } from '@services/JWTService.jsx';
 import { getLoginURL, getEnrollmentRoute } from '../constants/routes';
 
 /**

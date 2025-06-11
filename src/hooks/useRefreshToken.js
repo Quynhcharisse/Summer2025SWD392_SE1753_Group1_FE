@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { refreshToken } from "../api/services/JWTService";
+import { refreshToken } from "@services/JWTService.jsx";
 import { useAuth } from "./useAuth";
 
 const useRefreshToken = () => {

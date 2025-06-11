@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCurrentTokenData } from "@/api/services/JWTService";
+import { getCurrentTokenData } from "@services/JWTService.jsx";
 import { Button, Badge } from "@atoms";
 import { StatCard } from "@molecules";
 import { 

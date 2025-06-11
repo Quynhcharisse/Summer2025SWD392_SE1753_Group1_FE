@@ -2,7 +2,7 @@
  * Protected Route Component
  * Handles route protection based on user authentication and roles
  */
-import { refreshToken, decodeToken } from "@api/services/JWTService";
+import { refreshToken, decodeToken } from "@services/JWTService.jsx";
 import Cookies from "js-cookie";
 import PropTypes from "prop-types";
 import { Navigate, useNavigate } from "react-router-dom";

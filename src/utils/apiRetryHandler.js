@@ -2,7 +2,7 @@
  * API Retry Handler Utility
  * Provides automatic retry mechanism for API calls when access token expires
  */
-import { refreshToken, isTokenExpired, getCurrentTokenData } from '@/api/services/JWTService';
+import { refreshToken, isTokenExpired, getCurrentTokenData } from '@services/JWTService.jsx';
 
 /**
  * Prepare for API execution by refreshing token if needed

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { PageTemplate } from "@templates";
 import { Button, Spinner, Input, Label } from "@atoms";
 import { authService } from "@services/authService";
-import { getCurrentTokenData } from "@services/JWTService";
+import { getCurrentTokenData } from "@services/JWTService.jsx";
 import { getDashboardRoute } from "@/constants/routes";
 import { executeProfileApiWithRetry } from "@/utils/apiRetryHandler";
 import {

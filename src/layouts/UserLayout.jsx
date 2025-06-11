@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { themeClasses } from '@theme/colors';
-import { getCurrentTokenData } from '@/api/services/JWTService';
+import { getCurrentTokenData } from '@services/JWTService.jsx';
 import PropTypes from 'prop-types';
 import { 
   Users, 
@@ -114,15 +114,15 @@ const UserLayout = ({ children }) => {
             path: '/user/admission/dashboard'
           },
           { 
-            key: '/user/admission/registrations', 
-            icon: FileText, 
-            label: 'Hồ sơ đăng ký',
-            path: '/user/admission/registrations'
+            key: '/user/admission/terms',
+            icon: Calendar,
+            label: 'Kỳ tuyển sinh',
+            path: '/user/admission/terms'
           },          { 
-            key: '/user/admission/reports', 
-            icon: TrendingUp, 
-            label: 'Báo cáo',
-            path: '/user/admission/reports'
+            key: '/user/admission/forms',
+            icon: FileText,
+            label: 'Đơn tuyển sinh',
+            path: '/user/admission/forms'
           },
           { 
             key: '/user/shared/profile', 
