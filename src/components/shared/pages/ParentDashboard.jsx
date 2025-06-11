@@ -18,7 +18,7 @@ import { enrollmentService } from "../../../api/services/enrollmentService";
 import {
   isAuthenticated,
   getCurrentTokenData,
-} from "../../../api/services/JWTService";
+} from "@services/JWTService.jsx";
 import { authService } from "../../../api/services/authService";
 
 const ParentDashboard = () => {

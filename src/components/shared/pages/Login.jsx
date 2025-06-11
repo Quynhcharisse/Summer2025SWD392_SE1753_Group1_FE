@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import authService from "@services/authService";
-import { getCurrentTokenData } from "@services/JWTService";
+import { getCurrentTokenData } from "@services/JWTService.jsx";
 import { getDashboardRoute, AUTH_ROUTES } from "@/constants/routes";
 import Input from "../atoms/Input";
 

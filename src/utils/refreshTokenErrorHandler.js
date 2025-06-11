@@ -3,7 +3,7 @@
  * Provides centralized handling for refresh token 403 errors
  */
 
-import { refreshToken } from '@/api/services/JWTService';
+import { refreshToken } from '@services/JWTService.jsx';
 
 /**
  * Error types for refresh token failures

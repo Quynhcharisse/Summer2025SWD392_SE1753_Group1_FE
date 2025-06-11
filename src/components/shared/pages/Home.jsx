@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { handleEnrollmentNavigation, getAuthStatusMessage } from "../../../utils/authUtils";
-import { isAuthenticated, getCurrentTokenData } from "../../../api/services/JWTService";
+import { isAuthenticated, getCurrentTokenData } from "@services/JWTService.jsx";
 import { useSnackbar } from "notistack";
 
 export default function Home() {

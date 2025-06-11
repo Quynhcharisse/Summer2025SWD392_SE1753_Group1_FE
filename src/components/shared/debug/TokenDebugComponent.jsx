@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import { Button } from '@atoms';
-import { getCurrentTokenData, refreshToken, isTokenExpired, hasAccessToken } from '@/api/services/JWTService';
+import { getCurrentTokenData, refreshToken, isTokenExpired, hasAccessToken } from '@services/JWTService.jsx';
 import { authService } from '@services/authService';
 import { executeProfileApiWithRetry } from '@/utils/apiRetryHandler';
 

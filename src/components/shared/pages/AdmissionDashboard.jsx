@@ -13,8 +13,8 @@ import {
   AlertCircle,
   TrendingUp
 } from "lucide-react";
-import { isAuthenticated, getCurrentTokenData } from "../../../api/services/JWTService";
-import { authService } from "../../../api/services/authService";
+import { isAuthenticated, getCurrentTokenData } from "@services/JWTService.jsx";
+import { authService } from "@services/authService.js";
 
 const AdmissionDashboard = () => {
   const navigate = useNavigate();
