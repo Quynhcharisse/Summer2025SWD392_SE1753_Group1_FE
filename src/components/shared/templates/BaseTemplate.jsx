@@ -9,7 +9,8 @@ const BaseTemplate = ({
   headerProps = {},
   footerProps = {},
   className = ''
-}) => {  return (
+}) => {
+  return (
     <div className={`min-h-screen flex flex-col theme-aware-bg theme-aware-text ${className}`}>
       {showHeader && (
         <Header {...headerProps} />

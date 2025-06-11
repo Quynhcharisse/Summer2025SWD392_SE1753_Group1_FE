@@ -1,25 +1,21 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { PageTemplate } from "@templates";
-import { Button, Badge, Spinner } from "@atoms";
+import { Badge, Button, Spinner } from "@atoms";
 import { StatCard } from "@molecules";
+import { getCurrentTokenData, isAuthenticated } from "@services/JWTService.jsx";
+import { PageTemplate } from "@templates";
 import {
+  AlertCircle,
+  Baby,
   Bell,
   Calendar,
+  CheckCircle,
+  CreditCard,
   FileText,
   MessageSquare,
-  CreditCard,
   Settings,
-  Baby,
-  AlertCircle,
-  CheckCircle,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { enrollmentService } from "../../../api/services/enrollmentService";
-import {
-  isAuthenticated,
-  getCurrentTokenData,
-} from "@services/JWTService.jsx";
-import { authService } from "../../../api/services/authService";
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -31,19 +27,17 @@ const ParentDashboard = () => {
 
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
-      try {
-        if (!isAuthenticated()) {
-          navigate("/login", {
+      try {        if (!isAuthenticated()) {
+          navigate("/auth/login", {
             state: {
-              returnUrl: "/parent/dashboard",
+              returnUrl: "/user/parent/dashboard",
               message: "Vui lòng đăng nhập để truy cập dashboard phụ huynh.",
             },
           });
           return;
-        } // Get current user
+        }        // Get current user
         const tokenData = getCurrentTokenData();
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser || tokenData);
+        setUser(tokenData);
 
         // Load applications
         const userApplications =
@@ -110,11 +104,10 @@ const ParentDashboard = () => {
   };
 
   const handleViewApplication = (applicationId) => {
-    navigate(`/enrollment/application/${applicationId}`);
+    navigate(`/user/parent/enrollment/application/${applicationId}`);
   };
-
   const handleNewApplication = () => {
-    navigate("/enrollment/application/new");
+    navigate("/user/parent/enrollment");
   };
 
   if (loading) {
@@ -137,7 +130,7 @@ const ParentDashboard = () => {
           <Button
             variant="outline"
             size="md"
-            onClick={() => navigate("/enrollment/my-applications")}
+            onClick={() => navigate("/user/parent/enrollment/my-applications")}
           >
             <FileText className="w-4 h-4 mr-2" />
             Đơn đăng ký
@@ -195,7 +188,9 @@ const ParentDashboard = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate("/enrollment/my-applications")}
+                  onClick={() =>
+                    navigate("/user/parent/enrollment/my-applications")
+                  }
                 >
                   Xem tất cả
                 </Button>
@@ -345,11 +340,10 @@ const ParentDashboard = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Thao tác nhanh
               </h3>
-              <div className="space-y-3">
-                <Button
+              <div className="space-y-3">                <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/enrollment")}
+                  onClick={() => navigate("/user/parent/enrollment")}
                 >
                   <Baby className="w-4 h-4 mr-3" />
                   Đăng ký nhập học mới
@@ -357,7 +351,9 @@ const ParentDashboard = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/enrollment/my-applications")}
+                  onClick={() =>
+                    navigate("/user/parent/enrollment/my-applications")
+                  }
                 >
                   <FileText className="w-4 h-4 mr-3" />
                   Quản lý đơn đăng ký
@@ -365,7 +361,7 @@ const ParentDashboard = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/schedule")}
+                  onClick={() => navigate("/user/parent/schedule")}
                 >
                   <Calendar className="w-4 h-4 mr-3" />
                   Đặt lịch hẹn
@@ -373,7 +369,7 @@ const ParentDashboard = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/payments")}
+                  onClick={() => navigate("/user/parent/payments")}
                 >
                   <CreditCard className="w-4 h-4 mr-3" />
                   Thanh toán
@@ -381,7 +377,7 @@ const ParentDashboard = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate("/user/parent/profile")}
                 >
                   <Settings className="w-4 h-4 mr-3" />
                   Cài đặt tài khoản
