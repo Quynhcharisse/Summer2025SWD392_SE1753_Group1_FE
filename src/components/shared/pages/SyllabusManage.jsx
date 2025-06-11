@@ -2,7 +2,6 @@ import {
   useCreateSyllabus,
   useSyllabusList,
   useUpdateSyllabus,
-  useDeleteSyllabus,
   useSyllabusDetail
 } from '@hooks/useSyllabus';
 import {
@@ -26,15 +25,13 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import { getSyllabusList } from '@api/services/syllabusService';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const SyllabusManage = () => {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
   const [viewDetailId, setViewDetailId] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -53,26 +50,37 @@ const SyllabusManage = () => {
   });
 
   // TanStack Query hooks
-  const { data: syllabusResponse = [], isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['list'],
-    queryFn: getSyllabusList,
-    retry: 1, // Only retry once
-    onError: (error) => {
-      if (error.response?.status === 403) {
+  const { data: syllabusResponse, isLoading, isError, error } = useSyllabusList();
+  const createSyllabusMutation = useCreateSyllabus();
+  const updateSyllabusMutation = useUpdateSyllabus();
+  const { data: detailData, isLoading: isLoadingDetail } = useSyllabusDetail(viewDetailId);
+
+  // Handle 403 errors
+  useEffect(() => {
+    if (error?.response?.status === 403) {
+      setSnackbar({
+        open: true,
+        message: 'You do not have permission to access this resource. Please log in with appropriate permissions.',
+        severity: 'error'
+      });
+    }
+  }, [error]);
+
+  // Handle mutation errors
+  useEffect(() => {
+    const handleMutationError = (error) => {
+      if (error?.response?.status === 403) {
         setSnackbar({
           open: true,
-          message: 'You do not have permission to access this resource',
+          message: 'You do not have permission to perform this action. Please log in with appropriate permissions.',
           severity: 'error'
         });
       }
-    }
-  });
-  const createSyllabusMutation = useCreateSyllabus();
-  const updateSyllabusMutation = useUpdateSyllabus();
-  const deleteSyllabusMutation = useDeleteSyllabus();
+    };
 
-  // Add detail query
-  const { data: detailData, isLoading: isLoadingDetail } = useSyllabusDetail(viewDetailId);
+    if (createSyllabusMutation.error) handleMutationError(createSyllabusMutation.error);
+    if (updateSyllabusMutation.error) handleMutationError(updateSyllabusMutation.error);
+  }, [createSyllabusMutation.error, updateSyllabusMutation.error]);
 
   const syllabusList = syllabusResponse?.data?.data || [];
   const totalItems = syllabusList.length || 0;
@@ -159,41 +167,56 @@ const SyllabusManage = () => {
       };
 
       if (editingId) {
-        console.log('Editing syllabus:', editingId, processedData);
-        const response = await updateSyllabusMutation.mutateAsync({
-          id: editingId,
-          data: processedData
-        });
-        
-        if (response?.data?.success) {
+        try {
+          await updateSyllabusMutation.mutateAsync({
+            id: editingId,
+            data: processedData
+          });
+          
           setSnackbar({
             open: true,
             message: 'Syllabus edited successfully',
             severity: 'success'
           });
           handleClose();
-          refetch();
-        } else {
-          throw new Error(response?.data?.message || 'Edit failed');
+        } catch (error) {
+          console.error('Edit error:', error);
+          if (error.response?.data?.message === 'Syllabus already exists') {
+            setFormErrors(prev => ({
+              ...prev,
+              subject: 'A syllabus with this subject already exists'
+            }));
+          } else {
+            setSnackbar({
+              open: true,
+              message: error.response?.data?.message || 'Failed to edit syllabus',
+              severity: 'error'
+            });
+          }
         }
       } else {
-        const response = await createSyllabusMutation.mutateAsync(processedData);
-        if (response?.data?.success) {
+        try {
+          await createSyllabusMutation.mutateAsync(processedData);
           setSnackbar({
             open: true,
             message: 'Syllabus created successfully',
             severity: 'success'
           });
           handleClose();
-          refetch();
-        } else {
-          if (response?.data?.message === 'Syllabus already exists') {
+        } catch (error) {
+          console.error('Create error:', error);
+          if (error.response?.data?.message === 'Syllabus already exists') {
             setFormErrors(prev => ({
               ...prev,
               subject: 'A syllabus with this subject already exists'
             }));
+          } else {
+            setSnackbar({
+              open: true,
+              message: error.response?.data?.message || 'Failed to create syllabus',
+              severity: 'error'
+            });
           }
-          throw new Error(response?.data?.message || 'Create failed');
         }
       }
     } catch (error) {
@@ -203,32 +226,6 @@ const SyllabusManage = () => {
         message: error.message || 'An error occurred',
         severity: 'error'
       });
-    }
-  };
-
-  const handleDeleteClick = (id) => {
-    setSelectedId(id);
-    setDeleteConfirmOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      await deleteSyllabusMutation.mutateAsync(selectedId);
-      setSnackbar({
-        open: true,
-        message: 'Syllabus deleted successfully',
-        severity: 'success'
-      });
-      refetch(); // Refresh the list after successful deletion
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: 'An error occurred while deleting: ' + (error.response?.data?.message || error.message),
-        severity: 'error'
-      });
-    } finally {
-      setDeleteConfirmOpen(false);
-      setSelectedId(null);
     }
   };
 
@@ -259,7 +256,10 @@ const SyllabusManage = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Error loading syllabus data: {error?.message || 'Please try again later.'}
+          {error?.response?.status === 403 
+            ? 'You do not have permission to access this resource. Please log in with appropriate permissions.'
+            : `Error loading syllabus data: ${error?.message || 'Please try again later.'}`
+          }
         </Alert>
       </Box>
     );
@@ -303,6 +303,7 @@ const SyllabusManage = () => {
                 <TableCell>Description</TableCell>
                 <TableCell>Max Number of Week</TableCell>
                 <TableCell>Grade</TableCell>
+                <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -313,6 +314,23 @@ const SyllabusManage = () => {
                   <TableCell>{row.description || '-'}</TableCell>
                   <TableCell>{row.maxNumberOfWeek || '-'}</TableCell>
                   <TableCell>{row.grade || '-'}</TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        backgroundColor: row.isAssigned ? '#e8f5e9' : '#ffebee',
+                        color: row.isAssigned ? '#2e7d32' : '#c62828',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {row.isAssigned ? 'Assigned' : 'Not Assigned'}
+                      </Typography>
+                    </Box>
+                  </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <Button
@@ -328,16 +346,9 @@ const SyllabusManage = () => {
                         color="primary"
                         onClick={() => showModal(row)}
                         size="small"
+                        disabled={row.isAssigned}
                       >
                         Edit
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={() => handleDeleteClick(row.id)}
-                        size="small"
-                      >
-                        Delete
                       </Button>
                     </Box>
                   </TableCell>
@@ -433,33 +444,6 @@ const SyllabusManage = () => {
             </Button>
           </DialogActions>
         </form>
-      </Dialog>
-
-      <Dialog
-        open={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this syllabus? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            disabled={deleteSyllabusMutation.isPending}
-          >
-            {deleteSyllabusMutation.isPending ? (
-              <CircularProgress size={24} />
-            ) : (
-              'Delete'
-            )}
-          </Button>
-        </DialogActions>
       </Dialog>
 
       <Snackbar

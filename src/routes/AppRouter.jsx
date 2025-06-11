@@ -41,7 +41,10 @@ const TermAdmission = lazy(() => import('../components/none-shared/admissionComp
 const AdmissionForm = lazy(() => import("../components/none-shared/admissionComponent/AdmissionForm.jsx"));
 
 // Syllabus
-const Syllabus = lazy(() => import("@pages/SyllabusManage"));
+
+  const Syllabus = lazy(() => import("@pages/SyllabusManage"));
+  const Lesson = lazy(() => import("@pages/LessonManage"));
+
 
 
 // Reusable component wrappers
@@ -165,11 +168,128 @@ const router = createBrowserRouter([
                 <Events/>
             </PublicPageWrapper>
         ),
+
+      },
+      {
+        path: "employees",
+        element: (
+          <UserPageWrapper requiredRoles={["HR"]}>
+            <ComingSoon title="Employee Management" description="Manage staff information and records." />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "recruitment",
+        element: (
+          <UserPageWrapper requiredRoles={["HR"]}>
+            <ComingSoon title="Recruitment" description="Manage job postings and applications." />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "reports",
+        element: (
+          <UserPageWrapper requiredRoles={["HR"]}>
+            <ComingSoon title="HR Reports" description="Generate and view HR statistics and reports." />
+          </UserPageWrapper>
+        ),
+      },
+    ],
+  },
+  // =====================================================
+  // EDUCATION PROTECTED ROUTES
+  // =====================================================
+  {
+    path: "/user/education",
+    children: [
+      {
+        path: "dashboard",
+        element: (
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
+            <EducationDashboard />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "syllabus",
+        element: (
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
+            <Syllabus />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "lesson",
+        element: (
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
+            <Lesson />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "resources",
+        element: (
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
+            <ComingSoon title="Educational Resources" description="Manage learning materials and resources." />
+          </UserPageWrapper>
+        ),
+      },
+    ],
+  },
+  // =====================================================
+  // ADMIN PROTECTED ROUTES
+  // =====================================================
+  {
+    path: "/user/admin",
+    children: [
+      {
+        path: "dashboard",
+        element: (
+          <UserPageWrapper requiredRoles={["ADMIN"]}>
+            <AdminDashboard />
+          </UserPageWrapper>
+        ),
+      },
+      {        path: "users",
+        element: (
+          <UserPageWrapper requiredRoles={["ADMIN"]}>
+            <ComingSoon title="User Management" description="Manage system users and their permissions." />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "classes",
+        element: (
+          <UserPageWrapper requiredRoles={["ADMIN"]}>
+            <Classes />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "statistics",
+        element: (
+          <UserPageWrapper requiredRoles={["ADMIN"]}>
+            <ComingSoon title="Statistics" description="View comprehensive system statistics and analytics." />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "settings",
+        element: (
+          <UserPageWrapper requiredRoles={["ADMIN"]}>
+            <ComingSoon title="Admin Settings" description="Configure system settings and preferences." />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "admissions",
+
     },
 
     // Legacy public routes for compatibility
     {
         path: ROUTES.ADMISSION,
+
         element: (
             <PublicPageWrapper>
                 <Admission/>

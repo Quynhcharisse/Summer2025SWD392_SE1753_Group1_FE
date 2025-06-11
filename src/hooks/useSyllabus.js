@@ -8,7 +8,6 @@ export const syllabusKeys = {
   detail: (id) => [...syllabusKeys.all, 'getSyllabusDetail', id],
   create: () => [...syllabusKeys.all, 'createSyllabus'],
   update: (id) => [...syllabusKeys.all, 'updateSyllabus', id],
-  delete: (id) => [...syllabusKeys.all, 'deleteSyllabus', id],
   classes: () => [...syllabusKeys.all, 'getClasses'],
 };
 
@@ -33,14 +32,24 @@ export const useCreateSyllabus = () => {
 
   return useMutation({
     mutationKey: syllabusKeys.create(),
-    mutationFn: syllabusService.createSyllabus,
-    onSuccess: (newSyllabus) => {
+    mutationFn: async (data) => {
+      const response = await syllabusService.createSyllabus(data);
+      return response.data;
+    },
+    onSuccess: (data) => {
       // Invalidate and refetch syllabus list
       queryClient.invalidateQueries({ queryKey: syllabusKeys.lists() });
       
       // Optionally update the cache directly
       queryClient.setQueryData(syllabusKeys.lists(), (old) => {
-        return old ? [...old, newSyllabus] : [newSyllabus];
+        if (!old?.data?.data) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: [...old.data.data, data]
+          }
+        };
       });
     },
   });
@@ -52,18 +61,8 @@ export const useUpdateSyllabus = () => {
   return useMutation({
     mutationKey: syllabusKeys.update(),
     mutationFn: async ({ id, data }) => {
-      try {
-        const response = await syllabusService.updateSyllabus(id, {
-          ...data,
-          id // Include ID in the request body
-        });
-        if (!response.data.success) {
-          throw new Error(response.data.message || 'Update failed');
-        }
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
+      const response = await syllabusService.updateSyllabus(id, data);
+      return response.data;
     },
     onSuccess: (data, { id }) => {
       // Invalidate and refetch affected queries
@@ -76,7 +75,7 @@ export const useUpdateSyllabus = () => {
       queryClient.setQueryData(syllabusKeys.lists(), (old) => {
         if (!old?.data?.data) return old;
         const updatedData = old.data.data.map((syllabus) => 
-          syllabus.id === id ? data.data : syllabus
+          syllabus.id === id ? data : syllabus
         );
         return {
           ...old,
@@ -85,24 +84,6 @@ export const useUpdateSyllabus = () => {
             data: updatedData
           }
         };
-      });
-    },
-  });
-};
-
-export const useDeleteSyllabus = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: syllabusKeys.delete(),
-    mutationFn: (id) => syllabusService.deleteSyllabus(id),
-    onSuccess: (_, deletedId) => {
-      // Invalidate and refetch affected queries
-      queryClient.invalidateQueries({ queryKey: syllabusKeys.lists() });
-      
-      // Optionally update the cache directly
-      queryClient.setQueryData(syllabusKeys.lists(), (old) => {
-        return old?.filter((syllabus) => syllabus.id !== deletedId);
       });
     },
   });
