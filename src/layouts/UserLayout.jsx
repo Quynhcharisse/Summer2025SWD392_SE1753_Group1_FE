@@ -109,23 +109,49 @@ const UserLayout = ({ children }) => {
 
       case "admission":
         return [
-          {
-            key: "/user/admission/dashboard",
-            icon: Home,
-            label: "Dashboard",
-            path: "/user/admission/dashboard",
+          { 
+            key: '/user/admission/dashboard', 
+            icon: Home, 
+            label: 'Dashboard',
+            path: '/user/admission/dashboard'
           },
-          {
-            key: "/user/admission/terms",
-            icon: Calendar,
-            label: "Kỳ tuyển sinh",
-            path: "/user/admission/terms",
+          { 
+            key: '/user/admission/registrations', 
+            icon: FileText, 
+            label: 'Hồ sơ đăng ký',
+            path: '/user/admission/registrations'
+          },          { 
+            key: '/user/admission/reports', 
+            icon: TrendingUp, 
+            label: 'Báo cáo',
+            path: '/user/admission/reports'
           },
-          {
-            key: "/user/admission/forms",
-            icon: FileText,
-            label: "Đơn tuyển sinh",
-            path: "/user/admission/forms",
+          { 
+            key: '/user/shared/profile', 
+            icon: User, 
+            label: 'Thông tin cá nhân',
+            path: '/user/shared/profile'
+          }        ];
+        
+      case 'hr':
+        return [
+          { 
+            key: '/user/hr/dashboard', 
+            icon: Home, 
+            label: 'Dashboard',
+            path: '/user/hr/dashboard'
+          },
+          { 
+            key: '/user/hr/staff', 
+            icon: Users, 
+            label: 'Quản lý nhân viên',
+            path: '/user/hr/staff'
+          },
+          { 
+            key: '/user/hr/reports', 
+            icon: TrendingUp, 
+            label: 'Báo cáo HR',
+            path: '/user/hr/reports'
           },
           {
             key: "/user/shared/profile",
@@ -134,66 +160,44 @@ const UserLayout = ({ children }) => {
             path: "/user/shared/profile",
           },
         ];
-
-      case "hr":
+        
+      case 'education':
         return [
-          {
-            key: "/user/hr/dashboard",
-            icon: Home,
-            label: "Dashboard",
-            path: "/user/hr/dashboard",
+          { 
+            key: '/user/education/dashboard', 
+            icon: Home, 
+            label: 'Dashboard',
+            path: '/user/education/dashboard'
           },
-          {
-            key: "/user/hr/staff",
-            icon: Users,
-            label: "Quản lý nhân viên",
-            path: "/user/hr/staff",
+          { 
+            key: '/user/education/syllabus', 
+            icon: BookOpen, 
+            label: 'Chương trình học',
+            path: '/user/education/syllabus'
           },
-          {
-            key: "/user/hr/reports",
-            icon: TrendingUp,
-            label: "Báo cáo HR",
-            path: "/user/hr/reports",
+          { 
+            key: '/user/education/lesson', 
+            icon: BookOpen, 
+            label: 'Bài giảng',
+            path: '/user/education/lesson'
           },
-          {
-            key: "/user/shared/profile",
-            icon: User,
-            label: "Thông tin cá nhân",
-            path: "/user/shared/profile",
+          { 
+            key: '/user/education/event', 
+            icon: BookOpen, 
+            label: 'Sự kiện',
+            path: '/user/education/event'
           },
-        ];
-
-      case "education":
-        return [
-          {
-            key: "/user/education/dashboard",
-            icon: Home,
-            label: "Dashboard",
-            path: "/user/education/dashboard",
+          { 
+            key: '/user/education/classes', 
+            icon: Users, 
+            label: 'Quản lý lớp học',
+            path: '/user/education/classes'
           },
-          {
-            key: "/user/education/syllabus",
-            icon: BookOpen,
-            label: "Chương trình học",
-            path: "/user/education/syllabus",
-          },
-          {
-            key: "/user/education/lesson",
-            icon: BookOpen,
-            label: "Bài giảng",
-            path: "/user/education/lesson",
-          },
-          {
-            key: "/user/education/classes",
-            icon: Users,
-            label: "Quản lý lớp học",
-            path: "/user/education/classes",
-          },
-          {
-            key: "/user/education/reports",
-            icon: TrendingUp,
-            label: "Báo cáo giáo dục",
-            path: "/user/education/reports",
+          { 
+            key: '/user/education/reports', 
+            icon: TrendingUp, 
+            label: 'Báo cáo giáo dục',
+            path: '/user/education/reports'
           },
           {
             key: "/user/shared/profile",
