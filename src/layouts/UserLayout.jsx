@@ -180,6 +180,12 @@ const UserLayout = ({ children }) => {
             path: '/user/education/lesson'
           },
           { 
+            key: '/user/education/event', 
+            icon: BookOpen, 
+            label: 'Sự kiện',
+            path: '/user/education/event'
+          },
+          { 
             key: '/user/education/classes', 
             icon: Users, 
             label: 'Quản lý lớp học',

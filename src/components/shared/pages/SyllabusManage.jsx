@@ -23,7 +23,12 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Typography
+  Typography,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio
 } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -38,7 +43,7 @@ const SyllabusManage = () => {
     subject: '',
     description: '',
     maxNumberOfWeek: '',
-    grade: ''
+    grade: 'LEAF'
   });
   const [formErrors, setFormErrors] = useState({});
   const [page, setPage] = useState(0);
@@ -96,7 +101,7 @@ const SyllabusManage = () => {
     if (!formData.maxNumberOfWeek || formData.maxNumberOfWeek < 1) {
       errors.maxNumberOfWeek = 'Max number of weeks must be at least 1';
     }
-    if (!formData.grade.trim()) {
+    if (!formData.grade) {
       errors.grade = 'Grade is required';
     }
     setFormErrors(errors);
@@ -110,7 +115,7 @@ const SyllabusManage = () => {
         subject: record.subject ?? '',
         description: record.description ?? '',
         maxNumberOfWeek: record.maxNumberOfWeek ? String(record.maxNumberOfWeek) : '',
-        grade: record.grade ?? ''
+        grade: record.grade ?? 'LEAF'
       });
       setEditingId(record.id);
     } else {
@@ -118,7 +123,7 @@ const SyllabusManage = () => {
         subject: '',
         description: '',
         maxNumberOfWeek: '',
-        grade: ''
+        grade: 'LEAF'
       });
       setEditingId(null);
     }
@@ -132,7 +137,7 @@ const SyllabusManage = () => {
       subject: '',
       description: '',
       maxNumberOfWeek: '',
-      grade: ''
+      grade: 'LEAF'
     });
     setFormErrors({});
   };
@@ -163,7 +168,7 @@ const SyllabusManage = () => {
         subject: formData.subject.trim(),
         description: formData.description.trim(),
         maxNumberOfWeek: Number(formData.maxNumberOfWeek),
-        grade: formData.grade.trim()
+        grade: formData.grade
       };
 
       if (editingId) {
@@ -350,6 +355,14 @@ const SyllabusManage = () => {
                       >
                         Edit
                       </Button>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() => navigate(`/user/education/syllabus/assignlesson/${row.id}`, { state: { syllabusData: row } })}
+                        size="small"
+                      >
+                        Assign Page
+                      </Button>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -414,16 +427,111 @@ const SyllabusManage = () => {
                 error={!!formErrors.maxNumberOfWeek}
                 helperText={formErrors.maxNumberOfWeek}
               />
-              <TextField
-                name="grade"
-                label="Grade"
-                value={formData.grade}
-                onChange={handleInputChange}
-                required
-                fullWidth
+              <FormControl 
+                required 
                 error={!!formErrors.grade}
-                helperText={formErrors.grade}
-              />
+                component="fieldset"
+                sx={{
+                  '& .MuiFormGroup-root': {
+                    flexDirection: 'row',
+                    gap: 4
+                  }
+                }}
+              >
+                <FormLabel 
+                  component="legend"
+                  sx={{
+                    mb: 1,
+                    color: theme => formErrors.grade ? theme.palette.error.main : 'inherit'
+                  }}
+                >
+                  Grade Level
+                </FormLabel>
+                <RadioGroup
+                  name="grade"
+                  value={formData.grade}
+                  onChange={handleInputChange}
+                >
+                  <FormControlLabel 
+                    value="LEAF" 
+                    control={
+                      <Radio 
+                        sx={{
+                          color: '#4caf50',
+                          '&.Mui-checked': {
+                            color: '#4caf50',
+                          },
+                        }}
+                      />
+                    } 
+                    label={
+                      <Typography 
+                        sx={{ 
+                          color: '#4caf50',
+                          fontWeight: formData.grade === 'LEAF' ? 600 : 400
+                        }}
+                      >
+                        LEAF
+                      </Typography>
+                    }
+                  />
+                  <FormControlLabel 
+                    value="BUD" 
+                    control={
+                      <Radio 
+                        sx={{
+                          color: '#ff9800',
+                          '&.Mui-checked': {
+                            color: '#ff9800',
+                          },
+                        }}
+                      />
+                    } 
+                    label={
+                      <Typography 
+                        sx={{ 
+                          color: '#ff9800',
+                          fontWeight: formData.grade === 'BUD' ? 600 : 400
+                        }}
+                      >
+                        BUD
+                      </Typography>
+                    }
+                  />
+                  <FormControlLabel 
+                    value="SEED" 
+                    control={
+                      <Radio 
+                        sx={{
+                          color: '#f44336',
+                          '&.Mui-checked': {
+                            color: '#f44336',
+                          },
+                        }}
+                      />
+                    } 
+                    label={
+                      <Typography 
+                        sx={{ 
+                          color: '#f44336',
+                          fontWeight: formData.grade === 'SEED' ? 600 : 400
+                        }}
+                      >
+                        SEED
+                      </Typography>
+                    }
+                  />
+                </RadioGroup>
+                {formErrors.grade && (
+                  <Typography 
+                    variant="caption" 
+                    color="error"
+                    sx={{ mt: 0.5 }}
+                  >
+                    {formErrors.grade}
+                  </Typography>
+                )}
+              </FormControl>
             </Box>
           </DialogContent>
           <DialogActions>

@@ -39,8 +39,8 @@ const ComingSoon = lazy(() => import("@pages/ComingSoon"));
 // Syllabus
   const Syllabus = lazy(() => import("@pages/SyllabusManage"));
   const Lesson = lazy(() => import("@pages/LessonManage"));
-
-
+  const Event = lazy(() => import("@pages/EventManage"));
+  const SyllabusAssign = lazy(() => import("@pages/SyllabusAssign"));
 // Reusable component wrappers
 const PageWrapper = ({ children, isPublic = false, requiredRoles = [] }) => {
   const content = (
@@ -521,6 +521,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "syllabus/assignlesson/:id",
+        element: (
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
+            <SyllabusAssign />
+          </UserPageWrapper>
+        ),
+      },
+      {
         path: "lesson",
         element: (
           <UserPageWrapper requiredRoles={["EDUCATION"]}>
@@ -529,10 +537,10 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "resources",
+        path: "event",
         element: (
           <UserPageWrapper requiredRoles={["EDUCATION"]}>
-            <ComingSoon title="Educational Resources" description="Manage learning materials and resources." />
+            <Event />
           </UserPageWrapper>
         ),
       },
