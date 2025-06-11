@@ -236,6 +236,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
 
 function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
 
+    const { enqueueSnackbar } = useSnackbar();
+
     const [formData, setFormData] = useState({
         grade: null,
         startDate: null,
