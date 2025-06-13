@@ -18,6 +18,7 @@ import {
   LogOut,
   Home,
   User,
+  RotateCcw
 } from "lucide-react";
 
 const UserLayout = ({ children }) => {
@@ -109,26 +110,26 @@ const UserLayout = ({ children }) => {
 
       case "admission":
         return [
-          { 
-            key: '/user/admission/dashboard', 
-            icon: Home, 
+          {
+            key: '/user/admission/dashboard',
+            icon: Home,
             label: 'Dashboard',
             path: '/user/admission/dashboard'
           },
-          { 
-            key: '/user/admission/registrations', 
-            icon: FileText, 
-            label: 'Hồ sơ đăng ký',
-            path: '/user/admission/registrations'
-          },          { 
-            key: '/user/admission/reports', 
-            icon: TrendingUp, 
-            label: 'Báo cáo',
-            path: '/user/admission/reports'
+          {
+            key: '/user/admission/terms',
+            icon: Calendar,
+            label: 'Kỳ tuyển sinh',
+            path: '/user/admission/terms'
+          },          {
+            key: '/user/admission/forms',
+            icon: RotateCcw,
+            label: 'Đơn xét duyệt',
+            path: '/user/admission/forms'
           },
-          { 
-            key: '/user/shared/profile', 
-            icon: User, 
+          {
+            key: '/user/shared/profile',
+            icon: User,
             label: 'Thông tin cá nhân',
             path: '/user/shared/profile'
           }        ];

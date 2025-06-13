@@ -1,5 +1,18 @@
-
 import apiClient from "@api/apiClient.js";
+
+export const getFormTracking = async () => {
+    const response = await apiClient.get("/admission/form/list")
+    return response ? response.data : null
+}
+
+export const processAdmissionForm = async (id, isApproved, reason) => {
+    const response = await apiClient.put("/admission/form/process", {
+        id: id,
+        approved: isApproved,
+        reason: reason,
+    })
+    return response ? response.data : null
+}
 
 export const getTermList = async () => {
     try {
@@ -80,3 +93,15 @@ export const updateTerm = async (
         throw error;
     }
 }
+
+export const getDefaultGrade = async (grade) => {
+    try {
+        const response = await apiClient.get(`/admission/default/fee`, {
+            params: { grade } //Gửi grade vào query
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching default fee for grade:", grade, error);
+        throw error;
+    }
+};

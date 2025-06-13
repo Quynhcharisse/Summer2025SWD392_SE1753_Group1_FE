@@ -5,6 +5,7 @@ import "./i18n";
 import "./index.css";
 import { AppRouter } from "./routes/AppRouter";
 import { ThemeProvider } from "@contexts/ThemeContext";
+import { SnackbarProvider } from "notistack";
 
 const queryClient = new QueryClient();
 
@@ -12,7 +13,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
-        <AppRouter />
+        <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
+          <AppRouter />
+        </SnackbarProvider>
       </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>
