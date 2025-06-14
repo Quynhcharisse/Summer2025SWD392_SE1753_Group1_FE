@@ -105,3 +105,17 @@ export const getDefaultGrade = async (grade) => {
         throw error;
     }
 };
+
+export const cancelAdmission = async (id, reason) => {
+    try {
+        const response = await apiClient.put("/admission/form/cancel", {
+            id: id,
+            reason: reason
+        });
+        return response ? response.data : null;
+    } catch (error) {
+        console.error("Cancel admission error:", error);
+        throw error;
+    }
+}
+

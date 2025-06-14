@@ -31,13 +31,16 @@ const HRDashboard = lazy(() => import("@pages/HRDashboard"));
 const EducationDashboard = lazy(() => import("@pages/EducationDashboard"));
 const UserProfile = lazy(() => import("@pages/UserProfile"));
 const ComingSoon = lazy(() => import("@pages/ComingSoon"));
-const TermAdmission = lazy(() => import("@/components/none-shared/admissionComponent/TermAdmission.jsx"));
-const ProcessForm = lazy(() => import("@/components/none-shared/admissionComponent/ProcessForm.jsx"));
+
 const Syllabus = lazy(() => import("@pages/SyllabusManage"));
 const Lesson = lazy(() => import("@pages/LessonManage"));
 const Event = lazy(() => import("@pages/EventManage"));
 const SyllabusAssign = lazy(() => import("@pages/SyllabusAssign"));
 const UserDashboard = lazy(() => import("@pages/UserDashboard"));
+
+const TermAdmission = lazy(() => import("@/components/none-shared/admissionComponent/TermAdmission.jsx"));
+const ProcessForm = lazy(() => import("@/components/none-shared/admissionComponent/ProcessForm.jsx"));
+const AdmissionForm = lazy(() => import("@/components/none-shared/parentComponent/AdmissionForm.jsx"));
 
 const PageWrapper = ({ children, isPublic = false, requiredRoles = [] }) => {
   const content = (
@@ -699,13 +702,10 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "meals",
+        path: "forms",
         element: (
           <UserPageWrapper requiredRoles={["PARENT"]}>
-            <ComingSoon
-              title="Meals Schedule"
-              description="Weekly meal plans."
-            />
+            <AdmissionForm />
           </UserPageWrapper>
         ),
       },

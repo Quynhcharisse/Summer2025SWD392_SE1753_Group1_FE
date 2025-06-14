@@ -18,7 +18,8 @@ import {
   LogOut,
   Home,
   User,
-  RotateCcw
+  RotateCcw,
+  ListTodo
 } from "lucide-react";
 
 const UserLayout = ({ children }) => {
@@ -49,16 +50,10 @@ const UserLayout = ({ children }) => {
             path: "/user/parent/calendar",
           },
           {
-            key: "/user/parent/meals",
-            icon: FileText,
-            label: "Thực đơn",
-            path: "/user/parent/meals",
-          },
-          {
-            key: "/user/parent/gallery",
-            icon: BookOpen,
-            label: "Thư viện ảnh",
-            path: "/user/parent/gallery",
+            key: "/user/parent/forms",
+            icon: ListTodo,
+            label: "Đơn nhâp học",
+            path: "/user/parent/forms",
           },
           {
             key: "/user/parent/messages",
