@@ -2,7 +2,7 @@ import {
   useCreateLesson,
   useLessonList,
   useUpdateLesson,
-} from '@hooks/useLesson';
+} from "@hooks/useLesson";
 import {
   Alert,
   Box,
@@ -22,239 +22,176 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Typography
-} from '@mui/material';
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+  Typography,
+} from "@mui/material";
+import { useEffect, useRef, useState } from "react";
 
 const LessonManage = () => {
-  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({
-    topic: '',
-    description: ''
-  });
   const [formErrors, setFormErrors] = useState({});
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success'
+    message: "",
+    severity: "success",
   });
 
-  // TanStack Query hooks
+  const topicRef = useRef();
+  const descriptionRef = useRef();
+  const objectiveRef = useRef();
+  const toolsRequiredRef = useRef();
+  const durationRef = useRef();
+
   const { data: lessonResponse, isLoading, isError, error } = useLessonList();
   const createLessonMutation = useCreateLesson();
   const updateLessonMutation = useUpdateLesson();
 
-  // Handle 403 errors
+  const lessonList = lessonResponse?.data?.data || [];
+  const totalItems = lessonList.length || 0;
+
   useEffect(() => {
     if (error?.response?.status === 403) {
       setSnackbar({
         open: true,
-        message: 'You do not have permission to access this resource. Please log in with appropriate permissions.',
-        severity: 'error'
+        message: "You do not have permission to access this resource.",
+        severity: "error",
       });
     }
   }, [error]);
 
-  // Handle mutation errors
   useEffect(() => {
     const handleMutationError = (error) => {
       if (error?.response?.status === 403) {
         setSnackbar({
           open: true,
-          message: 'You do not have permission to perform this action. Please log in with appropriate permissions.',
-          severity: 'error'
+          message: "You do not have permission to perform this action.",
+          severity: "error",
         });
       }
     };
-
-    if (createLessonMutation.error) handleMutationError(createLessonMutation.error);
-    if (updateLessonMutation.error) handleMutationError(updateLessonMutation.error);
+    if (createLessonMutation.error)
+      handleMutationError(createLessonMutation.error);
+    if (updateLessonMutation.error)
+      handleMutationError(updateLessonMutation.error);
   }, [createLessonMutation.error, updateLessonMutation.error]);
-
-  const lessonList = lessonResponse?.data?.data || [];
-  const totalItems = lessonList.length || 0;
-
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.topic.trim()) {
-      errors.topic = 'Topic is required';
-    }
-    if (!formData.description.trim()) {
-      errors.description = 'Description is required';
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
   const showModal = (record = null) => {
     setFormErrors({});
-    if (record) {
-      setFormData({
-        topic: record.topic ?? '',
-        description: record.description ?? ''
-      });
-      setEditingId(record.id);
-    } else {
-      setFormData({
-        topic: '',
-        description: ''
-      });
-      setEditingId(null);
-    }
+    setTimeout(() => {
+      if (record) {
+        topicRef.current.value = record.topic ?? "";
+        descriptionRef.current.value = record.description ?? "";
+        objectiveRef.current.value = record.objective ?? "";
+        toolsRequiredRef.current.value = record.toolsRequired ?? "";
+        durationRef.current.value = record.duration ?? "";
+        setEditingId(record.id);
+      } else {
+        topicRef.current.value = "";
+        descriptionRef.current.value = "";
+        objectiveRef.current.value = "";
+        toolsRequiredRef.current.value = "";
+        durationRef.current.value = "";
+        setEditingId(null);
+      }
+    }, 0);
     setIsModalOpen(true);
   };
 
   const handleClose = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    setFormData({
-      topic: '',
-      description: ''
-    });
     setFormErrors({});
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user types
-    if (formErrors[name]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) {
-      return;
-    }
+
+    const data = {
+      topic: topicRef.current.value.trim(),
+      description: descriptionRef.current.value.trim(),
+      objective: objectiveRef.current.value.trim(),
+      toolsRequired: toolsRequiredRef.current.value.trim(),
+      duration: Number(durationRef.current.value),
+    };
+
+    const errors = {};
+    if (!data.topic) errors.topic = "Topic is required";
+    if (!data.description) errors.description = "Description is required";
+    if (!data.objective) errors.objective = "Objective is required";
+    if (!data.duration || data.duration < 1)
+      errors.duration = "Duration must be at least 1 hour";
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     try {
-      const processedData = {
-        topic: formData.topic.trim(),
-        description: formData.description.trim()
-      };
-
       if (editingId) {
-        try {
-          console.log('Updating lesson:', editingId, processedData);
-          await updateLessonMutation.mutateAsync({
-            id: editingId,
-            data: processedData
-          });
-          
-          setSnackbar({
-            open: true,
-            message: 'Lesson edited successfully',
-            severity: 'success'
-          });
-          handleClose();
-        } catch (error) {
-          console.error('Edit error:', error);
-          setSnackbar({
-            open: true,
-            message: error.response?.data?.message || 'Failed to edit lesson',
-            severity: 'error'
-          });
-        }
+        await updateLessonMutation.mutateAsync({ id: editingId, data });
+        setSnackbar({
+          open: true,
+          message: "Lesson updated successfully",
+          severity: "success",
+        });
       } else {
-        try {
-          console.log('Creating lesson:', processedData);
-          await createLessonMutation.mutateAsync(processedData);
-          setSnackbar({
-            open: true,
-            message: 'Lesson created successfully',
-            severity: 'success'
-          });
-          handleClose();
-        } catch (error) {
-          console.error('Create error:', error);
-          setSnackbar({
-            open: true,
-            message: error.response?.data?.message || 'Failed to create lesson',
-            severity: 'error'
-          });
-        }
+        await createLessonMutation.mutateAsync(data);
+        setSnackbar({
+          open: true,
+          message: "Lesson created successfully",
+          severity: "success",
+        });
       }
+      handleClose();
     } catch (error) {
-      console.error('Operation error:', error);
       setSnackbar({
         open: true,
-        message: error.message || 'An error occurred',
-        severity: 'error'
+        message: error?.response?.data?.message || "Failed to process request",
+        severity: "error",
       });
     }
   };
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+  const handleChangePage = (_, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = (e) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
     setPage(0);
   };
+  const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
 
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  };
-
-  if (isError) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">
-          {error?.response?.status === 403 
-            ? 'You do not have permission to access this resource. Please log in with appropriate permissions.'
-            : `Error loading lesson data: ${error?.message || 'Please try again later.'}`
-          }
-        </Alert>
-      </Box>
-    );
-  }
-
-  const displayedData = lessonList?.slice(
+  const displayedData = lessonList.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
-  ) || [];
+  );
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ 
-        mb: 3, 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        borderBottom: '2px solid #e3f2fd',
-        pb: 2
-      }}>
+      <Box
+        sx={{
+          mb: 3,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: "2px solid #e3f2fd",
+          pb: 2,
+        }}
+      >
         <Box>
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
-              color: '#1976d2',
-              fontWeight: 'bold',
-              mb: 1
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
+              color: "#1976d2",
+              fontWeight: "bold",
+              mb: 1,
             }}
           >
             Lesson Management
           </Typography>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              color: '#666',
-              fontWeight: 'medium'
+          <Typography
+            variant="subtitle1"
+            sx={{
+              color: "#666",
+              fontWeight: "medium",
             }}
           >
             Total Lessons: {totalItems}
@@ -262,22 +199,22 @@ const LessonManage = () => {
         </Box>
         <Button
           variant="contained"
+          sx={{
+            backgroundColor: "#1976d2",
+            "&:hover": {
+              backgroundColor: "#1565c0",
+            },
+            px: 3,
+          }}
           color="primary"
           onClick={() => showModal()}
-          sx={{
-            backgroundColor: '#1976d2',
-            '&:hover': {
-              backgroundColor: '#1565c0'
-            },
-            px: 3
-          }}
         >
           Create New Lesson
         </Button>
       </Box>
 
       {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
           <CircularProgress />
         </Box>
       ) : (
@@ -287,103 +224,131 @@ const LessonManage = () => {
               <TableRow>
                 <TableCell>Topic</TableCell>
                 <TableCell>Description</TableCell>
-                <TableCell align="right" sx={{ width: '200px' }}>Actions</TableCell>
+                <TableCell>Objective</TableCell>
+                <TableCell>Required Tools</TableCell>
+                <TableCell>Duration (Hours)</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {displayedData.map((row) => (
+              {displayedData.filter(Boolean).map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell>{row.topic || '-'}</TableCell>
-                  <TableCell>{row.description || '-'}</TableCell>
-                  <TableCell align="right">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={() => showModal(row)}
-                        size="small"
-                      >
-                        Edit
-                      </Button>
-                    </Box>
+                  <TableCell>{row.topic}</TableCell>
+                  <TableCell>{row.description}</TableCell>
+                  <TableCell>{row.objective}</TableCell>
+                  <TableCell>{row.toolsRequired}</TableCell>
+                  <TableCell>{row.duration}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => showModal(row)}
+                    >
+                      Edit
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
             component="div"
             count={totalItems}
-            rowsPerPage={rowsPerPage}
             page={page}
+            rowsPerPage={rowsPerPage}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage="Rows per page:"
-            labelDisplayedRows={({ from, to, count }) => 
-              `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}-${to} of ${count}`
             }
           />
         </TableContainer>
       )}
 
-      {/* Form Dialog */}
       <Dialog
         open={isModalOpen}
         onClose={handleClose}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            display: "flex",
+            flexDirection: "column",
+          },
+        }}
       >
         <form onSubmit={handleSubmit}>
           <DialogTitle>
-            {editingId ? 'Edit Lesson' : 'Create New Lesson'}
+            {editingId ? "Edit Lesson" : "Create New Lesson"}
           </DialogTitle>
           <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
+            >
               <TextField
                 name="topic"
                 label="Topic"
-                value={formData.topic}
-                onChange={handleInputChange}
-                required
+                inputRef={topicRef}
                 fullWidth
+                required
+                multiline
+                rows={1}
                 error={!!formErrors.topic}
                 helperText={formErrors.topic}
               />
               <TextField
                 name="description"
                 label="Description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
+                inputRef={descriptionRef}
                 fullWidth
+                required
                 multiline
-                rows={4}
+                rows={2}
                 error={!!formErrors.description}
                 helperText={formErrors.description}
+              />
+              <TextField
+                name="objective"
+                label="Objective"
+                inputRef={objectiveRef}
+                fullWidth
+                required
+                multiline
+                rows={2}
+                error={!!formErrors.objective}
+                helperText={formErrors.objective}
+              />
+              <TextField
+                name="toolsRequired"
+                label="Required Tools"
+                inputRef={toolsRequiredRef}
+                fullWidth
+                multiline
+                rows={2}
+                error={!!formErrors.toolsRequired}
+                helperText={formErrors.toolsRequired}
+              />
+              <TextField
+                name="duration"
+                label="Duration (Hours)"
+                inputRef={durationRef}
+                fullWidth
+                type="number"
+                required
+                rows={1}
+                error={!!formErrors.duration}
+                helperText={formErrors.duration}
               />
             </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={createLessonMutation.isPending || updateLessonMutation.isPending}
-            >
-              {createLessonMutation.isPending || updateLessonMutation.isPending ? (
-                <CircularProgress size={24} />
-              ) : editingId ? (
-                'Save'
-              ) : (
-                'Create'
-              )}
+            <Button type="submit" variant="contained" color="primary">
+              {editingId ? "Update" : "Create"}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
-
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -392,7 +357,8 @@ const LessonManage = () => {
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
-          sx={{ width: '100%' }}
+          variant="filled"
+          sx={{ width: "100%", whiteSpace: "pre-line" }}
         >
           {snackbar.message}
         </Alert>
@@ -401,4 +367,4 @@ const LessonManage = () => {
   );
 };
 
-export default LessonManage; 
+export default LessonManage;

@@ -31,12 +31,8 @@ const HRDashboard = lazy(() => import("@pages/HRDashboard"));
 const EducationDashboard = lazy(() => import("@pages/EducationDashboard"));
 const UserProfile = lazy(() => import("@pages/UserProfile"));
 const ComingSoon = lazy(() => import("@pages/ComingSoon"));
-const TermAdmission = lazy(() =>
-  import("../components/none-shared/admissionComponent/TermAdmission.jsx")
-);
-const AdmissionForm = lazy(() =>
-  import("../components/none-shared/admissionComponent/AdmissionForm.jsx")
-);
+
+
 const Syllabus = lazy(() => import("@pages/SyllabusManage"));
 const Lesson = lazy(() => import("@pages/LessonManage"));
 const Event = lazy(() => import("@pages/EventManage"));
@@ -572,7 +568,7 @@ const router = createBrowserRouter([
         path: "terms",
         element: (
           <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            <TermAdmission />
+            
           </UserPageWrapper>
         ),
       },
@@ -580,7 +576,7 @@ const router = createBrowserRouter([
         path: "forms",
         element: (
           <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            <AdmissionForm />
+            
           </UserPageWrapper>
         ),
       },
