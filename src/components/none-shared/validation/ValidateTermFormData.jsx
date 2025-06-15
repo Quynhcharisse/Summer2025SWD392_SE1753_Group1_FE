@@ -9,7 +9,7 @@ export function ValidateTermFormData(formData, existingTerms = []) {
     const end = new Date(formData.endDate);
 
     if (start >= end) return "Start date must be before end date";
-    if (start < now) return "Start date must not be in the past";
+    // if (start < now) return "Start date must not be in the past";
 
     if (
         formData.maxNumberRegistration <= 0 ||

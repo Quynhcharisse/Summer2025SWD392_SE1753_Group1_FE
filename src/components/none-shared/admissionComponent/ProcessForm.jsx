@@ -1,7 +1,7 @@
 import {
     AppBar,
     Box,
-    Button,
+    Button, Chip,
     Dialog,
     FormControl,
     FormControlLabel,
@@ -26,6 +26,8 @@ import {
 import {Close, Info} from '@mui/icons-material';
 import {useEffect, useState} from "react";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {getFormTracking, processAdmissionForm} from "@/api/services/admissionService.js";
 import { parseISO } from "date-fns";
 import {enqueueSnackbar} from "notistack";
@@ -83,7 +85,20 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                                     <TableCell align="center" sx={{minWidth: 160}}>{form.studentName}</TableCell>
                                     <TableCell align="center" sx={{minWidth: 140}}>{form.submittedDate}</TableCell>
                                     <TableCell align="center" sx={{minWidth: 160}}>{form.cancelReason || "N/A"}</TableCell>
-                                    <TableCell align="center" sx={{minWidth: 120}}>{form.status}</TableCell>
+                                    <TableCell align="center" sx={{
+                                        color:
+                                            form.status === "approved"
+                                                ? "#07663a"
+                                                : form.status === "rejected" || form.status === "cancelled"
+                                                    ? "#dc3545"
+                                                    : form.status === "pending approval" || form.status === "pending"
+                                                        ? "#0d6efd"
+                                                        : "black",
+                                        fontWeight: "600",
+                                        padding: '6px 12px',
+                                        width: 'fit-content',
+                                        margin: '0 auto'
+                                    }}> ></TableCell>
                                     <TableCell align="center" sx={{minWidth: 120}}>{form.note}</TableCell>
                                     <TableCell align="center" sx={{minWidth: 80}}>
                                         <Tooltip title="View Detail">
@@ -189,9 +204,11 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                         </FormControl>
                     </Stack>
                     <Stack>
-                        <DatePicker label='Date of birth' disabled
-                                    value={selectedForm.studentDateOfBirth ? parseISO(selectedForm.studentDateOfBirth.toString()) : null}
-                        />
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                            <DatePicker label='Date of birth' disabled
+                                        value={selectedForm.studentDateOfBirth ? parseISO(selectedForm.studentDateOfBirth.toString()) : null}
+                            />
+                        </LocalizationProvider>
                     </Stack>
                     <Stack>
                         <TextField fullWidth label={'Place of birth'} disabled

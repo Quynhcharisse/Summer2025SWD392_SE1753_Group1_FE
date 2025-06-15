@@ -2,6 +2,7 @@ import {
     AppBar,
     Box,
     Button,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -9,7 +10,9 @@ import {
     DialogTitle,
     FormControl,
     FormControlLabel,
+    FormHelperText,
     FormLabel,
+    Grid,
     IconButton,
     InputLabel,
     MenuItem,
@@ -32,8 +35,9 @@ import {
 import {Add, Close, CloudUpload, Info} from '@mui/icons-material';
 import {useEffect, useState} from "react";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
-
-import dayjs from "dayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
+import {parseISO} from "date-fns";
 import {enqueueSnackbar} from "notistack";
 import axios from "axios";
 import {cancelAdmission, getFormInformation, submittedForm} from "@services/parentService.js";
@@ -43,7 +47,6 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
     const [page, setPage] = useState(0); // Trang hiện tại
     const [rowsPerPage, setRowsPerPage] = useState(5); //số dòng trang
 
-    console.log("form" + forms)
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     }
@@ -75,7 +78,6 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                     <TableHead>
                         <TableRow>
                             <TableCell align={"center"}>No</TableCell>
-                            {/*<TableCell align={"center"}>Child ID</TableCell>*/}
                             <TableCell align={"center"}>Submit Date</TableCell>
                             <TableCell align={"center"}>Cancel Reason</TableCell>
                             <TableCell align={"center"}>Status</TableCell>
@@ -88,48 +90,73 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                         {forms?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((form, index) => {
                                 return (
-                                    <TableRow key={index}>
+                                    <TableRow
+                                        key={index}
+                                    >
                                         <TableCell align={"center"}>{index + 1}</TableCell>
-                                        {/*<TableCell align={"center"}>{form.studentId}</TableCell>*/}
                                         <TableCell align={"center"}>{form.submittedDate}</TableCell>
                                         <TableCell align={"center"}>{form.cancelReason || "N/A"}</TableCell>
                                         <TableCell align="center" sx={{
                                             color:
                                                 form.status === "approved"
-                                                    ? "green"
+                                                    ? "#07663a"
                                                     : form.status === "rejected" || form.status === "cancelled"
-                                                        ? "red"
-                                                        : form.status === "pending approval"
-                                                            ? "#052c65"
+                                                        ? "#dc3545"
+                                                        : form.status === "pending approval" || form.status === "pending"
+                                                            ? "#0d6efd"
                                                             : "black",
-                                            fontWeight: "bold"
+                                            fontWeight: "600",
+                                            padding: '6px 12px',
+                                            width: 'fit-content',
+                                            margin: '0 auto'
                                         }}>
                                             {form.status}
                                         </TableCell>
                                         <TableCell align={"center"}>{form.note}</TableCell>
                                         <TableCell align={"center"}>
-                                            <IconButton color="primary"
-                                                        onClick={() => handleDetailClick(form)}
+                                            <IconButton
+                                                onClick={() => handleDetailClick(form)}
+                                                sx={{
+                                                    backgroundColor: 'rgba(7, 102, 58, 0.1)',
+                                                    borderRadius: '12px',
+                                                    padding: '8px',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(7, 102, 58, 0.2)',
+                                                    },
+                                                    transition: 'all 0.2s'
+                                                }}
                                             >
-                                                <Info sx={{color: '#2c3e50'}}/>
+                                                <Info sx={{
+                                                    color: '#07663a',
+                                                    fontSize: '1.2rem'
+                                                }}/>
                                             </IconButton>
                                         </TableCell>
                                     </TableRow>
                                 )
                             })
                         }
-
                     </TableBody>
                 </Table>
             </TableContainer>
             <TablePagination
                 component="div"
                 rowsPerPageOptions={[5, 10, 15]}
-                count={forms?.length} //phân trang có bn dòng
+                count={forms?.length}
                 page={page}
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                sx={{
+                    '.MuiTablePagination-select': {
+                        backgroundColor: 'rgba(7, 102, 58, 0.1)',
+                        borderRadius: '8px',
+                        padding: '4px 8px',
+                    },
+                    '.MuiTablePagination-selectIcon': {
+                        color: '#07663a'
+                    }
+                }}
             />
         </Paper>
     )
@@ -149,12 +176,33 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
     const [selectedImage, setSelectedImage] = useState('');
 
     async function HandleCancel() {
-        const response = await cancelAdmission(selectedForm.id)
-        if (response && response.success) {
-            enqueueSnackbar("Form cancelled successfully", {variant: "success"});
-            handleClosePopUp()
-        } else {
-            enqueueSnackbar("Failed to cancel admission form", {variant: "error"});
+        console.log(selectedForm.id)
+        try {
+            const response = await cancelAdmission(selectedForm.id);
+            if (response && response.success) {
+                enqueueSnackbar(response.message || "Form cancelled successfully", {variant: "success"});
+                handleClosePopUp();
+                handleCloseConfirm(); // Close confirm dialog
+                // await GetForm(); // Refresh the form list
+            } else {
+                enqueueSnackbar(response?.message || "Failed to cancel admission form", {variant: "error"});
+            }
+        } catch (error) {
+            console.error("Error canceling form:", error);
+            if (error.response?.status === 403) {
+                enqueueSnackbar("Your session has expired. Please login again.", {
+                    variant: "error",
+                    action: (
+                        <Button color="inherit" size="small" onClick={() => {
+                            window.location.href = '/auth/login';
+                        }}>
+                            Login
+                        </Button>
+                    )
+                });
+            } else {
+                enqueueSnackbar(error.response?.data?.message || "Failed to cancel admission form", {variant: "error"});
+            }
         }
     }
 
@@ -165,7 +213,10 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
-            <AppBar sx={{position: 'relative'}}>
+            <AppBar sx={{
+                position: 'relative',
+                backgroundColor: '#07663a'
+            }}>
                 <Toolbar>
                     <IconButton edge="start"
                                 color="inherit"
@@ -182,7 +233,13 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
             <Box p={4}>
                 <Typography
                     variant='subtitle1'
-                    sx={{mb: 2, fontWeight: 'bold', fontSize: "2.5rem", textAlign: "center"}}
+                    sx={{
+                        mb: 2,
+                        fontWeight: 'bold',
+                        fontSize: "2.5rem",
+                        textAlign: "center",
+                        color: '#07663a'
+                    }}
                 >
                     Form Information
                 </Typography>
@@ -203,9 +260,14 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                         </FormControl>
                     </Stack>
                     <Stack>
-                        <DatePicker label='Date of birth' disabled
-                                    defaultValue={selectedForm.studentDateOfBirth ? dayjs(selectedForm.studentDateOfBirth.toString()) : null}
-                        />
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                            <DatePicker
+                                label="Date of Birth"
+                                value={selectedForm.studentDateOfBirth ? parseISO(selectedForm.studentDateOfBirth.toString()) : null}
+                                disabled
+                                renderInput={(params) => <TextField {...params} fullWidth/>}
+                            />
+                        </LocalizationProvider>
                     </Stack>
                     <Stack>
                         <TextField fullWidth label={'Place of birth'} disabled
@@ -224,8 +286,14 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                         <TextField fullWidth label={'Cancel reason'} disabled value={selectedForm.cancelReason || ''}/>
                     </Stack>
 
-                    <Typography variant="subtitle1" sx={{mt: 5, mb: 2, fontWeight: 'bold'}}>Uploaded
-                        Documents</Typography>
+                    <Typography variant="subtitle1" sx={{
+                        mt: 5,
+                        mb: 2,
+                        fontWeight: 'bold',
+                        color: '#07663a'
+                    }}>
+                        Uploaded Documents
+                    </Typography>
                     <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
                         {[
                             {label: "Profile Image", src: selectedForm.profileImage},
@@ -268,9 +336,12 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                     >
                         {/*button submit*/}
                         <Button
-                            sx={{width: '10%', height: '5vh'}}
+                            sx={{
+                                width: '10%',
+                                height: '5vh',
+                            }}
                             variant="contained"
-                            color="warning"
+                            color='warning'
                             onClick={handleClosePopUp}
                         >
                             Close
@@ -280,9 +351,12 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                         {/*xét điều kiện, nếu cancel rồi thì ẩn nút cancel đó, ko cho hiện lại */}
                         {selectedForm.status !== 'cancelled' && (
                             <Button
-                                sx={{width: '10%', height: '5vh'}}
+                                sx={{
+                                    width: '10%',
+                                    height: '5vh',
+                                }}
                                 variant="contained"
-                                color="success"
+                                color='error'
                                 onClick={handleOpenConfirm}
                             >
                                 Cancel
@@ -291,7 +365,9 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
 
                         {/* Dialog xác nhận cancel */}
                         <Dialog open={openConfirm} onClose={handleCloseConfirm}>
-                            <DialogTitle>Cancel Admission Form</DialogTitle>
+                            <DialogTitle sx={{color: 'red', fontWeight:'bold'}}>
+                                Cancel Admission Form
+                            </DialogTitle>
                             <DialogContent>
                                 <DialogContentText>
                                     ⚠️ Are you sure you want to cancel this admission form?
@@ -301,9 +377,23 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                                 </DialogContentText>
                             </DialogContent>
                             <DialogActions>
-                                {/*handleCloseConfirm sẽ đặt lại openConfirm = false để đóng dialog khi người dùng nhấn Disagree hoặc đóng hộp thoại*/}
-                                <Button onClick={handleCloseConfirm} color="inherit">Disagree</Button>
-                                <Button onClick={HandleCancel} color="error" autoFocus>Agree</Button>
+                                <Button
+                                    onClick={handleCloseConfirm}
+                                    sx={{
+                                        color: 'red',
+                                    }}
+                                >
+                                    Disagree
+                                </Button>
+                                <Button
+                                    onClick={HandleCancel}
+                                    sx={{
+                                        color: 'red',
+                                    }}
+                                    autoFocus
+                                >
+                                    Agree
+                                </Button>
                             </DialogActions>
                         </Dialog>
                     </Stack>
@@ -314,15 +404,22 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
 }
 
 function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) {
-    //mỗi lần select là lưu id student
-    const [selectedStudentId, setSelectedStudentId] = useState(studentList?[0]?.id : []);
-    //lam 1 useState de nhap input cho address + note
+    //Lưu id học sinh được chọn từ dropdown
+    const [selectedStudentId, setSelectedStudentId] = useState('');
+
+    //Hiển thị trạng thái đang xử lý (true khi submit, upload...)
+    const [isLoading, setIsLoading] = useState(false);
+
+    //Lưu trữ lỗi khi validate (ví dụ thiếu địa chỉ, file...)
+    const [errors, setErrors] = useState({});
+
+    //Lưu nội dung nhập từ form: địa chỉ thường trú, ghi chú
     const [input, setInput] = useState({
         address: '',
         note: ''
     });
 
-    //nơi lưu file thô mà người dùng upload từ <input="file"/>
+    //Lưu các file thô (ảnh, giấy tờ) được người dùng upload
     const [uploadedFile, setUploadedFile] = useState({
         profile: '',
         houseAddress: '',
@@ -330,370 +427,406 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         commit: ''
     });
 
-    //nơi lưu trữ URL trả về từ Couldinary sau khi upload thành công
-    const [imageLink, setImageLink] = useState({
-        profileLink: '',
-        houseAddressLink: '',
-        birthLink: '',
-        commitLink: ''
-    });
+    //Khi studentList thay đổi
+    // Nếu chưa chọn học sinh (selectedStudentId rỗng), thì chọn học sinh đầu tiên chưa có đơn nhập học
+    useEffect(() => {
+        if (Array.isArray(studentList) && studentList.length > 0 && !selectedStudentId) {
+            const availableStudent = studentList.find(student => !student.hadForm);
+            if (availableStudent) {
+                setSelectedStudentId(availableStudent.id);
+            }
+        }
+    }, [studentList, selectedStudentId]);
 
-    const [isSubmit, setIsSubmit] = useState(false); // để chỉ báo rằng user đã bấm Submit ít nhất 1 lần
+    //Trả về thông tin của học sinh đang chọn theo selectedStudentId
+    const getSelectedStudent = () => {
+        if (!studentList || !selectedStudentId) return null;
+        return studentList.find(s => s.id === selectedStudentId) || null;
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        // Required field validations
+        if (!selectedStudentId) {
+            newErrors.student = "Please select a student";
+        }
+        if (!input.address.trim()) {
+            newErrors.address = "Household registration address is required";
+        }
+
+        // File validations
+        if (!uploadedFile.profile) {
+            newErrors.profile = "Profile image is required";
+        }
+        if (!uploadedFile.houseAddress) {
+            newErrors.houseAddress = "Household registration document is required";
+        }
+        if (!uploadedFile.birth) {
+            newErrors.birth = "Birth certificate is required";
+        }
+        if (!uploadedFile.commit) {
+            newErrors.commit = "Commitment form is required";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const validateFileSize = (file) => {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            enqueueSnackbar(`File size should not exceed 5MB`, {variant: "error"});
+            return false;
+        }
+        return true;
+    };
+
+    const validateFileType = (file) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!allowedTypes.includes(file.type)) {
+            enqueueSnackbar(`Only JPG, JPEG & PNG files are allowed`, {variant: "error"});
+            return false;
+        }
+        return true;
+    };
 
     async function HandleSubmit() {
+        try {
+            if (!validateForm()) {
+                return;
+            }
 
-        setIsSubmit(true);//báo hiệu bấm submit
+            setIsLoading(true);
+            const uploadResult = await handleUploadImage();
+            if (!uploadResult) {
+                return;
+            }
 
-        // Validate bắt buộc
-        if (!input.address.trim()) {
-            enqueueSnackbar("Please enter household registration address", {variant: "error"});
-            return;
-        }
+            const formData = {
+                studentId: selectedStudentId,
+                householdRegistrationAddress: input.address,
+                profileImage: uploadResult.profileLink,
+                birthCertificateImg: uploadResult.birthLink,
+                householdRegistrationImg: uploadResult.houseAddressLink,
+                commitmentImg: uploadResult.commitLink,
+                note: input.note || ""
+            };
 
+            const response = await submittedForm(formData);
 
-        const uploadResult = await handleUploadImage()
-        if (!uploadResult) {
-            return;
-        }
-
-        const selectedStudent = studentList.find(child => child.id === selectedStudentId);
-        console.log("Selected student:", selectedStudent);
-
-        const response = await submittedForm(
-            selectedStudent.id,
-            input.address,
-            uploadResult.profileLink,
-            uploadResult.houseAddressLink,
-            uploadResult.birthLink,
-            uploadResult.commitLink,
-            input.note
-        )
-
-        console.log("Phản hồi từ submittedForm:", response);
-
-        if (response && response.success) {
-            enqueueSnackbar(response.message, {variant: 'success'});
-            // muốn gọi lại danh sách sau khi submit
-            GetForm()
-            handleClosePopUp()
-        } else {
-            enqueueSnackbar("Submission failed", {variant: "error"});
+            if (response && response.success) {
+                enqueueSnackbar(response.message, {variant: 'success'});
+                await GetForm();
+                handleClosePopUp();
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            if (error.response?.status === 403) {
+                enqueueSnackbar("Your session has expired. Please login again.", {
+                    variant: "error",
+                    action: (
+                        <Button color="inherit" size="small" onClick={() => {
+                            window.location.href = '/login';
+                        }}>
+                            Login
+                        </Button>
+                    )
+                });
+            } else {
+                enqueueSnackbar(error.message || "Failed to submit form", {variant: "error"});
+            }
+        } finally {
+            setIsLoading(false);
         }
     }
 
-    //đưa vào id, lưu đúng loại file vào uploadFile
     function HandleUploadFile(file, id) {
+        if (!validateFileSize(file) || !validateFileType(file)) {
+            return;
+        }
+
         switch (id) {
             case 1:
-                setUploadedFile({...uploadedFile, profile: file})
+                setUploadedFile({...uploadedFile, profile: file});
                 break;
-
             case 2:
-                setUploadedFile({...uploadedFile, houseAddress: file})
+                setUploadedFile({...uploadedFile, houseAddress: file});
                 break;
-
             case 3:
-                setUploadedFile({...uploadedFile, birth: file})
+                setUploadedFile({...uploadedFile, birth: file});
                 break;
-
             default:
-                setUploadedFile({...uploadedFile, commit: file})
+                setUploadedFile({...uploadedFile, commit: file});
                 break;
         }
     }
 
     const handleUploadImage = async () => {
-        if (!uploadedFile.profile) {
-            enqueueSnackbar("Please upload profile image.", {variant: "warning"});
+        try {
+            if (!validateFileUploads()) {
+                return null;
+            }
+
+            const uploadPromises = [
+                uploadToCloudinary(uploadedFile.profile),
+                uploadToCloudinary(uploadedFile.houseAddress),
+                uploadToCloudinary(uploadedFile.birth),
+                uploadToCloudinary(uploadedFile.commit)
+            ];
+
+            const [profileRes, houseAddressRes, birthRes, commitRes] = await Promise.all(uploadPromises);
+
+            return {
+                profileLink: profileRes.data.url,
+                houseAddressLink: houseAddressRes.data.url,
+                birthLink: birthRes.data.url,
+                commitLink: commitRes.data.url
+            };
+        } catch (error) {
+            console.error('Error uploading images:', error);
+            enqueueSnackbar("Failed to upload images", {variant: "error"});
             return null;
         }
+    };
 
-        if (!uploadedFile.houseAddress) {
-            enqueueSnackbar("Please upload household registration document.", {variant: "warning"});
-            return null;
-        }
+    const uploadToCloudinary = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "pes_swd");
+        formData.append("api_key", "837117616828593");
 
-        if (!uploadedFile.birth) {
-            enqueueSnackbar("Please upload birth certificate.", {variant: "warning"});
-            return null;
-        }
-
-        if (!uploadedFile.commit) {
-            enqueueSnackbar("Please upload commitment form.", {variant: "warning"});
-            return null;
-        }
-
-        //ghép các chuỗi lại với nhau
-        const profileData = new FormData();
-        profileData.append("file", uploadedFile.profile);
-        profileData.append("upload_preset", "pes_swd");
-        profileData.append("api_key", "837117616828593");
-
-        const houseAddressData = new FormData();
-        houseAddressData.append("file", uploadedFile.houseAddress);
-        houseAddressData.append("upload_preset", "pes_swd");
-        houseAddressData.append("api_key", "837117616828593");
-
-        const birthData = new FormData();
-        birthData.append("file", uploadedFile.birth);
-        birthData.append("upload_preset", "pes_swd");
-        birthData.append("api_key", "837117616828593");
-
-        const commitData = new FormData();
-        commitData.append("file", uploadedFile.commit);
-        commitData.append("upload_preset", "pes_swd");
-        commitData.append("api_key", "837117616828593");
-
-        //mock api cho từng upload ảnh
-        const profileResponse = await axios.post("https://api.cloudinary.com/v1_1/dbrfnkrbh/image/upload", profileData, {
+        return axios.post("https://api.cloudinary.com/v1_1/dbrfnkrbh/image/upload", formData, {
             headers: {
                 "Content-Type": "multipart/form-data"
             }
         });
+    };
 
-        const houseAddressResponse = await axios.post("https://api.cloudinary.com/v1_1/dbrfnkrbh/image/upload", houseAddressData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
+    const validateFileUploads = () => {
+        const requiredFiles = {
+            profile: 'Profile image',
+            houseAddress: 'Household registration document',
+            birth: 'Birth certificate',
+            commit: 'Commitment form'
+        };
+
+        for (const [key, label] of Object.entries(requiredFiles)) {
+            if (!uploadedFile[key]) {
+                enqueueSnackbar(`${label} is required`, {variant: "error"});
+                return false;
             }
-        });
-
-        const birthResponse = await axios.post("https://api.cloudinary.com/v1_1/dbrfnkrbh/image/upload", birthData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        });
-
-        const commitResponse = await axios.post("https://api.cloudinary.com/v1_1/dbrfnkrbh/image/upload", commitData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        });
-
-        const profileCondition = profileResponse && profileResponse.status === 200
-        const houseAddressCondition = houseAddressResponse && houseAddressResponse.status === 200
-        const birthCondition = birthResponse && birthResponse.status === 200
-        const commitCondition = commitResponse && commitResponse.status === 200
-
-        if (profileCondition && houseAddressCondition && birthCondition && commitCondition) {
-            const result = {
-                profileLink: profileResponse.data.url,
-                houseAddressLink: houseAddressResponse.data.url,
-                birthLink: birthResponse.data.url,
-                commitLink: commitResponse.data.url,
-            }
-            setImageLink(result)
-            return result;
         }
-        return null
-    }
+
+        return true;
+    };
 
     // bản chât luôn nằm trong hàm tổng, chỉ là ẩn nó thông qua cái nút
     return (
-        <div>
-            {/* Pop-up content goes here */}
-            <Dialog fullScreen
-                    open={isPopUpOpen}
-                    onClose={handleClosePopUp}
-            >
-                <AppBar sx={{position: 'relative'}}>
-                    <Toolbar>
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            onClick={handleClosePopUp}
-                            aria-label="close"
-                        >
-                            <Close/>
-                        </IconButton>
-                        <Typography sx={{ml: 2, flex: 1}} variant="h6" component="div">
-                            Create Admission Form
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
-
-                <Box p={4}>
-                    {/*form content*/}
-                    <Typography
-                        variant='subtitle1'
-                        sx={{mb: 2, fontWeight: 'bold', fontSize: "2.5rem", textAlign: "center"}}
+        <Dialog
+            fullScreen
+            open={isPopUpOpen}
+            onClose={handleClosePopUp}
+        >
+            <AppBar sx={{
+                position: 'relative',
+                backgroundColor: '#07663a'
+            }}>
+                <Toolbar>
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        onClick={handleClosePopUp}
                     >
-                        Form Information
+                        <Close/>
+                    </IconButton>
+                    <Typography sx={{ml: 2, flex: 1}} variant="h6">
+                        Create Admission Form
                     </Typography>
+                </Toolbar>
+            </AppBar>
 
-                    {/*check id co bi null */}
-                    {selectedStudentId != null && Array.isArray(studentList) && (
-                        <Stack spacing={3}>
-                            <Stack>
-                                <FormControl fullWidth>
-                                    <InputLabel>Child Name</InputLabel>
-                                    <Select
-                                        value={selectedStudentId}
-                                        onChange={(e) => setSelectedStudentId(e.target.value)}
-                                        label="Child Name"
-                                        name="childName"
-                                        variant={"outlined"}>
-                                        {
-                                            studentList.filter(student => !student.hadForm).map((student, index) => (
-                                                <MenuItem key={index} value={student.id}>{student.name}</MenuItem>
-                                            ))}
-                                    </Select>
-                                </FormControl>
-                            </Stack>
+            <Box sx={{
+                p: {xs: 2, sm: 4, md: 6},
+                maxWidth: '1200px',
+                margin: '0 auto',
+                width: '100%'
+            }}>
+                <Typography variant="h4" sx={{
+                    mb: 4,
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    color: '#07663a'
+                }}>
+                    Form Information
+                </Typography>
 
-                            <Stack>
-                                <FormControl>
-                                    <FormLabel sx={{color: 'black'}}>Gender</FormLabel>
-                                    <RadioGroup row
-                                                value={studentList.find(child => child.id === selectedStudentId) ? studentList.find(child => child.id === selectedStudentId).gender : ''}>
-                                        <FormControlLabel value="female" control={<Radio/>} label="Female"
-                                                          sx={{color: 'black'}} disabled/>
-                                        <FormControlLabel value="male" control={<Radio/>} label="Male"
-                                                          sx={{color: 'black'}} disabled/>
-                                    </RadioGroup>
-                                </FormControl>
-                            </Stack>
-
-                            <Stack>
-                                <DatePicker
-                                    sx={{fill: '#2c3e50'}}
-                                    label="Date of birth"
-                                    disabled
-                                    defaultValue={dayjs(studentList.find(child => child.id === selectedStudentId) ? studentList.find(child => child.id === selectedStudentId).dateOfBirth : null)}
-                                    slotProps={{textField: {fullWidth: true}}}
-                                />
-                            </Stack>
-
-                            <Stack>
-                                <TextField
-                                    fullWidth
-                                    label="Place of birth"
-                                    disabled
-                                    defaultValue={studentList.find(child => child.id === selectedStudentId) ? studentList.find(child => child.id === selectedStudentId).placeOfBirth : ''}
-                                    name="placeOfBirth"
-                                />
-                            </Stack>
-                            <Stack>
-                                <TextField fullWidth
-                                           label="Household registration address *"
-                                           value={input.address}
-                                           onChange={(e) => setInput({...input, address: e.target.value})}
-                                           name="householdRegistrationAddress"
-                                               error={isSubmit && !input.address.trim()}
-                                               helperText={isSubmit && !input.address.trim() ? "This field is required" : ""}
-                                />
-                            </Stack>
-                            <Stack>
-                                <TextField fullWidth
-                                           label="Note" //note là optional nên ko cần bắt buộc
-                                           value={input.note}
-                                           onChange={(e) => setInput({...input, note: e.target.value})}
-                                           name="note"
-                                />
-                            </Stack>
-                        </Stack>
-                    )}
-
-                    {/*form upload*/}
-                    <Typography
-                        variant='subtitle1'
-                        sx={{mb: 3, mt: 5, fontSize: '1rem', fontWeight: 'bold'}}
-                    >
-                        UPLOAD DOCUMENTS
-                    </Typography>
-
-                    <Stack spacing={3}>
-
-                        <Stack>
-                            <Typography variant='body1' sx={{mb: 1}}>Profile Image: <span
-                                className={'text-primary'}>{uploadedFile.profile ? uploadedFile.profile.name : ""}</span></Typography>
-                            <Button component="label" sx={{width: '10%', marginTop: '2vh', height: '5vh'}}
-                                    variant="contained"
-                                    startIcon={<CloudUpload/>}>
-                                Upload
-                                <input type="file" hidden name="profileImage"
-                                       onChange={(e) =>
-                                           HandleUploadFile(e.target.files[0], 1) /*số 1 tham số truyền vào mấy case 1, case 2,..*/
-                                       }
-                                />
-                            </Button>
-                        </Stack>
-
-                        <Stack>
-                            <Typography variant='body1' sx={{mb: 1}}>Household Registration: <span
-                                className={'text-primary'}>{uploadedFile.houseAddress ? uploadedFile.houseAddress.name : ""}</span></Typography>
-                            <Button component="label" sx={{width: '10%', marginTop: '2vh', height: '5vh'}}
-                                    variant="contained"
-                                    startIcon={<CloudUpload/>}>
-                                Upload
-                                <input type="file" hidden name="householdRegistrationImg"
-                                       onChange={(e) => HandleUploadFile(e.target.files[0], 2)}/>
-                            </Button>
-                        </Stack>
-
-                        <Stack>
-                            <Typography variant='body1' sx={{mb: 1}}>Birth Certificate: <span
-                                className={'text-primary'}>{uploadedFile.birth ? uploadedFile.birth.name : ""}</span></Typography>
-                            <Button component="label" sx={{width: '10%', marginTop: '2vh', height: '5vh'}}
-                                    variant="contained"
-                                    startIcon={<CloudUpload/>}>
-                                Upload
-                                <input type="file" hidden name="birthCertificateImg"
-                                       onChange={(e) =>
-                                           HandleUploadFile(e.target.files[0], 3)
-                                       }
-                                />
-                            </Button>
-                        </Stack>
-
-                        <Stack>
-                            <Typography variant='body1' sx={{mb: 1}}>Commitment: <span
-                                className={'text-primary'}>{uploadedFile.commit ? uploadedFile.commit.name : ""}</span></Typography>
-                            <Button component="label" sx={{width: '10%', marginTop: '2vh', height: '5vh'}}
-                                    variant="contained"
-                                    startIcon={<CloudUpload/>}>
-                                Upload
-                                <input type="file" hidden name="commitmentImg"
-                                       onChange={(e) => HandleUploadFile(e.target.files[0], 4)}/>
-                            </Button>
-                        </Stack>
-                    </Stack>
-
-                    <Stack
-                        sx={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'flex-end',
-                            gap: '1rem',
-                            marginTop: '2vh'
-                        }}
-                    >
-                        <Button
-                            sx={{width: '10%', height: '5vh'}}
-                            variant="contained"
-                            color="warning"
-                            onClick={handleClosePopUp}
+                <Stack spacing={4} sx={{
+                    maxWidth: '800px',
+                    mx: 'auto',
+                    width: '100%',
+                    '& .MuiFormControl-root': {
+                        backgroundColor: '#fff',
+                        borderRadius: '8px'
+                    }
+                }}>
+                    {/* Student Selection */}
+                    <FormControl fullWidth error={!!errors.student}>
+                        <InputLabel>Child Name</InputLabel>
+                        <Select
+                            value={selectedStudentId}
+                            onChange={(e) => setSelectedStudentId(e.target.value)}
+                            label="Child Name"
+                            sx={{
+                                '& .MuiSelect-select': {
+                                    padding: '12px 16px'
+                                }
+                            }}
                         >
-                            Close
-                        </Button>
-
-                        <Button
-                            sx={{width: '10%', height: '5vh'}}
-                            variant="contained"
-                            color="success"
-                            onClick={() => HandleSubmit(
-                                imageLink.profileLink,
-                                imageLink.houseAddressLink,
-                                imageLink.birthLink,
-                                imageLink.commitLink,
+                            {studentList && studentList.length > 0 ? (
+                                studentList.map((student) => (
+                                    <MenuItem
+                                        key={student.id}
+                                        value={student.id}
+                                        disabled={student.hadForm}
+                                    >
+                                        {student.name} {student.hadForm ? '(Already has form)' : ''}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem disabled>No available students</MenuItem>
                             )}
+                        </Select>
+                        {errors.student && (
+                            <FormHelperText>{errors.student}</FormHelperText>
+                        )}
+                    </FormControl>
+
+                    {/* Form Fields */}
+                    <TextField
+                        fullWidth
+                        label="Household Registration Address *"
+                        value={input.address}
+                        onChange={(e) => setInput({...input, address: e.target.value})}
+                        error={!!errors.address}
+                        helperText={errors.address}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                padding: '12px 16px'
+                            }
+                        }}
+                    />
+
+                    <TextField
+                        fullWidth
+                        label="Note"
+                        value={input.note}
+                        onChange={(e) => setInput({...input, note: e.target.value})}
+                        multiline
+                        rows={4}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                padding: '12px 16px'
+                            }
+                        }}
+                    />
+
+                    {/* Document Upload Section */}
+                    <Typography variant="h6" sx={{
+                        mt: 4,
+                        mb: 2,
+                        color: '#07663a',
+                        fontWeight: 600
+                    }}>
+                        Upload Documents
+                    </Typography>
+
+                    <Grid container spacing={3} sx={{ mt: 2 }}>
+                        {[
+                            {label: 'Profile Image', key: 'profile', error: errors.profile},
+                            {label: 'Household Registration', key: 'houseAddress', error: errors.houseAddress},
+                            {label: 'Birth Certificate', key: 'birth', error: errors.birth},
+                            {label: 'Commitment', key: 'commit', error: errors.commit}
+                        ].map((item) => (
+                            <Grid item xs={12} md={6} lg={3} key={item.key}>
+                                <Box sx={{
+                                    mb: 1,
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}>
+                                    <Typography variant="subtitle2" sx={{mb: 1}}>
+                                        {item.label} {item.error && <span style={{color: 'red'}}>*</span>}
+                                    </Typography>
+                                    <Button
+                                        variant="outlined"
+                                        component="label"
+                                        startIcon={<CloudUpload/>}
+                                        fullWidth
+                                        sx={{
+                                            height: '56px',
+                                            borderColor: '#07663a',
+                                            color: '#07663a',
+                                            '&:hover': {
+                                                borderColor: '#07663a',
+                                                backgroundColor: 'rgba(7, 102, 58, 0.04)'
+                                            }
+                                        }}
+                                    >
+                                        Upload
+                                        <input
+                                            type="file"
+                                            hidden
+                                            onChange={(e) => HandleUploadFile(e.target.files[0], ['profile', 'houseAddress', 'birth', 'commit'].indexOf(item.key) + 1)}
+                                            accept="image/*"
+                                        />
+                                    </Button>
+                                    {uploadedFile[item.key] && (
+                                        <Typography variant="caption" sx={{mt: 1, display: 'block'}}>
+                                            Selected: {uploadedFile[item.key].name}
+                                        </Typography>
+                                    )}
+                                    {item.error && (
+                                        <FormHelperText error>{item.error}</FormHelperText>
+                                    )}
+                                </Box>
+                            </Grid>
+                        ))}
+                    </Grid>
+
+                    {/* Action Buttons */}
+                    <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{mt: 4}}>
+                        <Button
+                            variant="contained"
+                            color='warning'
+                            onClick={handleClosePopUp}
+                            disabled={isLoading}
+                            sx={{
+                                minWidth: '120px'
+                            }}
                         >
-                            Submit
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={HandleSubmit}
+                            disabled={isLoading}
+                            startIcon={isLoading ? <CircularProgress size={20}/> : null}
+                            sx={{
+                                backgroundColor: '#07663a',
+                                '&:hover': {
+                                    backgroundColor: ''
+                                },
+                                minWidth: '120px'
+                            }}
+                        >
+                            {isLoading ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Stack>
-                </Box>
-            </Dialog>
-        </div>
-    )
+                </Stack>
+            </Box>
+        </Dialog>
+    );
 }
 
 function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, forms, HandleSelectedForm, studentList}) {
@@ -713,7 +846,7 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, forms, HandleSelect
                         color: '#07663a'
                     }}
                 >
-                    Term Admission
+                    Form Admission
                 </Typography>
                 <Typography
                     variant="subtitle1"
@@ -724,7 +857,7 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, forms, HandleSelect
                         fontFamily: 'inherit'
                     }}
                 >
-                    Manage the terms for student admission
+                    Fill and submit the student admission form
                 </Typography>
             </Box>
 
@@ -741,10 +874,12 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, forms, HandleSelect
                         fontWeight: 600,
                         fontSize: 14,
                         backgroundColor: '#07663a',
+                        '&:hover': {
+                            backgroundColor: 'rgba(7, 102, 58, 0.85)'
+                        },
                         boxShadow: 2,
                         mr: {xs: 0, md: 2}
                     }}
-            
                 >
                     Create new form
                 </Button>
@@ -761,52 +896,50 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, forms, HandleSelect
 }
 
 export default function AdmissionForm() {
-    //lưu những biến sài cục bộ
     const [popUp, setPopUp] = useState({
         isOpen: false,
         type: ''
-    })
+    });
 
-    //tạo useState data của BE để sài (dành cho form)
     const [data, setData] = useState({
         admissionFormList: [],
-        studentList: null
-    })
+        studentList: []
+    });
 
-    const [selectedForm, setSelectedForm] = useState(null) // tuong trung cho 1 cai selected
+    const [selectedForm, setSelectedForm] = useState(null);
 
     function HandleSelectedForm(form) {
-        setSelectedForm(form)
+        setSelectedForm(form);
     }
 
     const handleOpenPopUp = (type) => {
-        setPopUp({...popUp, isOpen: true, type: type})
+        setPopUp({...popUp, isOpen: true, type: type});
     }
 
     const handleClosePopUp = () => {
-        setPopUp({...popUp, isOpen: false, type: ''})
-        GetForm()
+        setPopUp({...popUp, isOpen: false, type: ''});
+        GetForm();
     }
 
-    //gọi API form list //save trực tiếp data
     async function GetForm() {
-        const response = await getFormInformation()
-        if (response && response.success) {
-            setData({
-                ...data,
-                admissionFormList: response?.admissionFormList,
-                studentList: response?.studentList
-            })
+        try {
+            const response = await getFormInformation();
+            if (response && response.success) {
+                setData({
+                    admissionFormList: response.data.admissionFormList || [],
+                    studentList: response.data.studentList || []
+                });
+            } else {
+                enqueueSnackbar("Failed to fetch data", {variant: "error"});
+            }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            enqueueSnackbar(error.message || "Failed to fetch data", {variant: "error"});
         }
-         // ✅ Thêm dòng này để kiểm tra
-         console.log("📦 Students loaded:", response?.studentList);
-         console.log("🟢 Students chưa có form:", response?.studentList.filter(s => !s.hadForm));
     }
 
-    //useEffcet sẽ chạy lần đầu tiên, or sẽ chạy khi có thay đổi
     useEffect(() => {
-        //lấy data lên và lưu data vào getForm
-        GetForm()
+        GetForm();
     }, []);
 
     return (
@@ -815,27 +948,24 @@ export default function AdmissionForm() {
                 forms={data.admissionFormList}
                 openFormPopUpFunc={() => handleOpenPopUp('form')}
                 openDetailPopUpFunc={() => handleOpenPopUp('detail')}
-                HandleSelectedForm={HandleSelectedForm} // la 1 ham, truyen ham vao, để cập nhật form đã chọn
+                HandleSelectedForm={HandleSelectedForm}
                 studentList={data.studentList}
             />
-            {
-                popUp.isOpen && popUp.type === 'form' &&
+            {popUp.isOpen && popUp.type === 'form' && (
                 <RenderFormPopUp
-                    // isPopUpOpen={popUp.isOpen && data.students && data.students.filter(student => !student.hadForm).length !== 0} // form đăng kí bị block khi parent đã điiền form hết cho con mình
-                    isPopUpOpen={popUp.isOpen && data.studentList && data.studentList.filter(student => !student.hadForm).length !== 0} // form đăng kí bị block khi parent đã điiền form hết cho con mình
+                    isPopUpOpen={popUp.isOpen}//chú ý
                     handleClosePopUp={handleClosePopUp}
                     studentList={data.studentList}
                     GetForm={GetForm}
                 />
-            }
-            {
-                popUp.isOpen && popUp.type === 'detail' &&
+            )}
+            {popUp.isOpen && popUp.type === 'detail' && (
                 <RenderDetailPopUp
                     isPopUpOpen={popUp.isOpen}
                     handleClosePopUp={handleClosePopUp}
                     selectedForm={selectedForm}
                 />
-            }
+            )}
         </>
-    )
+    );
 }
