@@ -18,6 +18,8 @@ import {
   LogOut,
   Home,
   User,
+  RotateCcw,
+  ListTodo
 } from "lucide-react";
 
 const UserLayout = ({ children }) => {
@@ -48,16 +50,10 @@ const UserLayout = ({ children }) => {
             path: "/user/parent/calendar",
           },
           {
-            key: "/user/parent/meals",
-            icon: FileText,
-            label: "Thực đơn",
-            path: "/user/parent/meals",
-          },
-          {
-            key: "/user/parent/gallery",
-            icon: BookOpen,
-            label: "Thư viện ảnh",
-            path: "/user/parent/gallery",
+            key: "/user/parent/forms",
+            icon: ListTodo,
+            label: "Đơn nhâp học",
+            path: "/user/parent/forms",
           },
           {
             key: "/user/parent/messages",
@@ -109,26 +105,26 @@ const UserLayout = ({ children }) => {
 
       case "admission":
         return [
-          { 
-            key: '/user/admission/dashboard', 
-            icon: Home, 
+          {
+            key: '/user/admission/dashboard',
+            icon: Home,
             label: 'Dashboard',
             path: '/user/admission/dashboard'
           },
-          { 
-            key: '/user/admission/registrations', 
-            icon: FileText, 
-            label: 'Hồ sơ đăng ký',
-            path: '/user/admission/registrations'
-          },          { 
-            key: '/user/admission/reports', 
-            icon: TrendingUp, 
-            label: 'Báo cáo',
-            path: '/user/admission/reports'
+          {
+            key: '/user/admission/terms',
+            icon: Calendar,
+            label: 'Kỳ tuyển sinh',
+            path: '/user/admission/terms'
+          },          {
+            key: '/user/admission/forms',
+            icon: RotateCcw,
+            label: 'Đơn xét duyệt',
+            path: '/user/admission/forms'
           },
-          { 
-            key: '/user/shared/profile', 
-            icon: User, 
+          {
+            key: '/user/shared/profile',
+            icon: User,
             label: 'Thông tin cá nhân',
             path: '/user/shared/profile'
           }        ];
