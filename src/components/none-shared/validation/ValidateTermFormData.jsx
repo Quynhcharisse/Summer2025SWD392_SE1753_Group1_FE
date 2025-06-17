@@ -1,5 +1,5 @@
 export const ValidateTermFormData = (formData, existingTerms) => {
-    // Check empty fields
+    // 1. Validate các field cơ bản (empty check)
     if (!formData.grade) {
         return "Grade is required";
     }
@@ -13,44 +13,56 @@ export const ValidateTermFormData = (formData, existingTerms) => {
         return "Max number of registrations must be greater than 0";
     }
 
-    // Validate grade format
+    // 2. Validate grade format - phải match với enum Grade ở BE
     const validGrades = ['SEED', 'BUD', 'LEAF'];
-    if (!validGrades.includes(formData.grade.toUpperCase())) {
+    const inputGrade = formData.grade.toUpperCase();
+    if (!validGrades.includes(inputGrade)) {
         return "Invalid grade. Grade must be one of: Seed, Bud, Leaf";
     }
 
-    // Convert dates to Date objects for comparison
+    // 3. Validate thời gian
     const startDate = new Date(formData.startDate);
     const endDate = new Date(formData.endDate);
     const currentYear = new Date().getFullYear();
 
-    // Check if end date is after start date
+    // Kiểm tra endDate phải sau startDate
     if (endDate <= startDate) {
         return "End date must be after start date";
     }
 
-    // Check if there's already a term for this grade in current year
+    // 4. Kiểm tra mỗi năm mỗi grade chỉ được có 1 đợt tuyển sinh
     const termsThisYear = existingTerms.filter(term => {
-        return term.grade.toUpperCase() === formData.grade.toUpperCase() && 
-               term.year === currentYear;
+        const termGrade = term.grade.toUpperCase();
+        const termYear = new Date(term.startDate).getFullYear();
+        return termGrade === inputGrade && termYear === currentYear;
     });
 
     if (termsThisYear.length > 0) {
         return `An admission term already exists for grade ${formData.grade} in year ${currentYear}`;
     }
 
-    // Check for time overlap with same grade
+    // 5. Kiểm tra trùng thời gian với cùng grade
     const sameGradeTerms = existingTerms.filter(term => 
-        term.grade.toUpperCase() === formData.grade.toUpperCase()
+        term.grade.toUpperCase() === inputGrade
     );
 
     for (const term of sameGradeTerms) {
         const termStart = new Date(term.startDate);
         const termEnd = new Date(term.endDate);
 
+        // Sử dụng logic giống BE để check overlap
         if (!(endDate <= termStart || startDate >= termEnd)) {
             return "Time period overlaps with another term of the same grade";
         }
+    }
+
+    // 6. Validate các khoản phí
+    if (formData.reservationFee < 0 || 
+        formData.serviceFee < 0 || 
+        formData.uniformFee < 0 || 
+        formData.learningMaterialFee < 0 || 
+        formData.facilityFee < 0) {
+        return "All fees must be non-negative";
     }
 
     return ""; // Return empty string if validation passes

@@ -1,4 +1,5 @@
 import {
+    Alert,
     AppBar,
     Box,
     Button,
@@ -296,9 +297,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                     </Typography>
                     <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
                         {[
-                            {label: "Profile Image", src: selectedForm.profileImage},
-                            {label: "Household Registration", src: selectedForm.householdRegistrationImg},
-                            {label: "Birth Certificate", src: selectedForm.birthCertificateImg},
+                            {label: "Child Characteristics Form", src: selectedForm.childCharacteristicsFormImg},
                             {label: "Commitment", src: selectedForm.commitmentImg}
                         ].map((item, idx) => (
                             <Paper key={idx} elevation={2} sx={{p: 2, borderRadius: 2, width: 200}}>
@@ -365,7 +364,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
 
                         {/* Dialog xác nhận cancel */}
                         <Dialog open={openConfirm} onClose={handleCloseConfirm}>
-                            <DialogTitle sx={{color: 'red', fontWeight:'bold'}}>
+                            <DialogTitle sx={{color: 'red', fontWeight: 'bold'}}>
                                 Cancel Admission Form
                             </DialogTitle>
                             <DialogContent>
@@ -405,7 +404,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
 
 function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) {
     //Lưu id học sinh được chọn từ dropdown
-    const [selectedStudentId, setSelectedStudentId] = useState('');
+    const [selectedStudentId, setSelectedStudentId] = useState(0);
 
     //Hiển thị trạng thái đang xử lý (true khi submit, upload...)
     const [isLoading, setIsLoading] = useState(false);
@@ -421,11 +420,13 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
 
     //Lưu các file thô (ảnh, giấy tờ) được người dùng upload
     const [uploadedFile, setUploadedFile] = useState({
-        profile: '',
-        houseAddress: '',
-        birth: '',
+        childCharacteristicsForm: '',
         commit: ''
     });
+
+    const student = studentList.find(s => s.id === selectedStudentId) || null
+
+
 
     //Khi studentList thay đổi
     // Nếu chưa chọn học sinh (selectedStudentId rỗng), thì chọn học sinh đầu tiên chưa có đơn nhập học
@@ -438,11 +439,18 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         }
     }, [studentList, selectedStudentId]);
 
-    //Trả về thông tin của học sinh đang chọn theo selectedStudentId
-    const getSelectedStudent = () => {
-        if (!studentList || !selectedStudentId) return null;
-        return studentList.find(s => s.id === selectedStudentId) || null;
-    };
+    // Debug log khi studentList thay đổi
+    useEffect(() => {
+        console.log("Student List:", studentList);
+    }, [studentList]);
+
+    // Debug log khi selectedStudentId thay đổi
+    useEffect(() => {
+        if (selectedStudentId) {
+            console.log("Selected Student ID:", selectedStudentId);
+            console.log("Selected Student:", student);
+        }
+    }, [selectedStudentId]);
 
     const validateForm = () => {
         const newErrors = {};
@@ -456,14 +464,8 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         }
 
         // File validations
-        if (!uploadedFile.profile) {
-            newErrors.profile = "Profile image is required";
-        }
-        if (!uploadedFile.houseAddress) {
-            newErrors.houseAddress = "Household registration document is required";
-        }
-        if (!uploadedFile.birth) {
-            newErrors.birth = "Birth certificate is required";
+        if (!uploadedFile.childCharacteristicsForm) {
+            newErrors.childCharacteristicsForm = "Child characteristics form is required";
         }
         if (!uploadedFile.commit) {
             newErrors.commit = "Commitment form is required";
@@ -474,20 +476,50 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
     };
 
     const validateFileSize = (file) => {
+        const minSize = 10 * 1024; // 10KB
         const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!file) {
+            enqueueSnackbar(`Please select a file`, {variant: "error"});
+            return false;
+        }
+
+        if (file.size < minSize) {
+            enqueueSnackbar(`File size should not be less than 10KB`, {variant: "error"});
+            return false;
+        }
+
         if (file.size > maxSize) {
             enqueueSnackbar(`File size should not exceed 5MB`, {variant: "error"});
             return false;
         }
+
         return true;
     };
 
     const validateFileType = (file) => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        const allowedExtensions = ['.jpg', '.jpeg', '.png'];
+
+        if (!file) {
+            enqueueSnackbar(`Please select a file`, {variant: "error"});
+            return false;
+        }
+
+        // Check MIME type
         if (!allowedTypes.includes(file.type)) {
             enqueueSnackbar(`Only JPG, JPEG & PNG files are allowed`, {variant: "error"});
             return false;
         }
+
+        // Check file extension
+        const fileName = file.name.toLowerCase();
+        const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+        if (!hasValidExtension) {
+            enqueueSnackbar(`Invalid file extension. Only .jpg, .jpeg, .png are allowed`, {variant: "error"});
+            return false;
+        }
+
         return true;
     };
 
@@ -506,9 +538,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             const formData = {
                 studentId: selectedStudentId,
                 householdRegistrationAddress: input.address,
-                profileImage: uploadResult.profileLink,
-                birthCertificateImg: uploadResult.birthLink,
-                householdRegistrationImg: uploadResult.houseAddressLink,
+                childCharacteristicsFormImg: uploadResult.childCharacteristicsFormLink,
                 commitmentImg: uploadResult.commitLink,
                 note: input.note || ""
             };
@@ -542,23 +572,65 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
     }
 
     function HandleUploadFile(file, id) {
-        if (!validateFileSize(file) || !validateFileType(file)) {
-            return;
-        }
+        try {
+            // Check if file exists
+            if (!file) {
+                enqueueSnackbar("Please select a file to upload", {variant: "error"});
+                return;
+            }
 
-        switch (id) {
-            case 1:
-                setUploadedFile({...uploadedFile, profile: file});
-                break;
-            case 2:
-                setUploadedFile({...uploadedFile, houseAddress: file});
-                break;
-            case 3:
-                setUploadedFile({...uploadedFile, birth: file});
-                break;
-            default:
-                setUploadedFile({...uploadedFile, commit: file});
-                break;
+            // Basic file validation
+            if (!file.name || !file.type || !file.size) {
+                enqueueSnackbar("Invalid file format", {variant: "error"});
+                return;
+            }
+
+            // Validate file size and type
+            if (!validateFileSize(file) || !validateFileType(file)) {
+                return;
+            }
+
+            // Create a new FileReader
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                // Create an image object to check dimensions
+                const img = new Image();
+                img.onload = function () {
+                    // Check minimum dimensions (e.g., 200x200 pixels)
+                    if (this.width < 200 || this.height < 200) {
+                        enqueueSnackbar("Image dimensions should be at least 200x200 pixels", {variant: "error"});
+                        return;
+                    }
+
+                    // Check maximum dimensions (e.g., 4000x4000 pixels)
+                    if (this.width > 4000 || this.height > 4000) {
+                        enqueueSnackbar("Image dimensions should not exceed 4000x4000 pixels", {variant: "error"});
+                        return;
+                    }
+
+                    // If all validations pass, update the state
+                    switch (id) {
+                        case 1:
+                            setUploadedFile({...uploadedFile, childCharacteristicsForm: file});
+                            break;
+                        default:
+                            setUploadedFile({...uploadedFile, commit: file});
+                            break;
+                    }
+                };
+                img.onerror = function () {
+                    enqueueSnackbar("Invalid image file", {variant: "error"});
+                };
+                img.src = e.target.result;
+            };
+            reader.onerror = function () {
+                enqueueSnackbar("Error reading file", {variant: "error"});
+            };
+            reader.readAsDataURL(file);
+
+        } catch (error) {
+            console.error('Error handling file upload:', error);
+            enqueueSnackbar("Error processing file", {variant: "error"});
         }
     }
 
@@ -568,52 +640,63 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                 return null;
             }
 
-            const uploadPromises = [
-                uploadToCloudinary(uploadedFile.profile),
-                uploadToCloudinary(uploadedFile.houseAddress),
-                uploadToCloudinary(uploadedFile.birth),
-                uploadToCloudinary(uploadedFile.commit)
-            ];
+            // Upload each file to Cloudinary
+            const uploadFile = async (file) => {
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", "pes_swd");
+                formData.append("cloud_name", "dbrfnkrbh");
 
-            const [profileRes, houseAddressRes, birthRes, commitRes] = await Promise.all(uploadPromises);
+                const response = await axios.post(
+                    "https://api.cloudinary.com/v1_1/dbrfnkrbh/image/upload",
+                    formData
+                );
+
+                if (response.status === 200) {
+                    return response.data.secure_url;
+                }
+                throw new Error('Upload failed');
+            };
+
+            // Upload both files
+            const [childCharacteristicsFormUrl, commitUrl] = await Promise.all([
+                uploadFile(uploadedFile.childCharacteristicsForm),
+                uploadFile(uploadedFile.commit)
+            ]);
+
+            if (!childCharacteristicsFormUrl || !commitUrl) {
+                enqueueSnackbar("Failed to upload one or more images", {variant: "error"});
+                return null;
+            }
 
             return {
-                profileLink: profileRes.data.url,
-                houseAddressLink: houseAddressRes.data.url,
-                birthLink: birthRes.data.url,
-                commitLink: commitRes.data.url
+                childCharacteristicsFormLink: childCharacteristicsFormUrl,
+                commitLink: commitUrl
             };
         } catch (error) {
-            console.error('Error uploading images:', error);
-            enqueueSnackbar("Failed to upload images", {variant: "error"});
+            console.error('Error in handleUploadImage:', error);
+            enqueueSnackbar("Failed to process images", {variant: "error"});
             return null;
         }
     };
 
-    const uploadToCloudinary = async (file) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "pes_swd");
-        formData.append("api_key", "837117616828593");
-
-        return axios.post("https://api.cloudinary.com/v1_1/dbrfnkrbh/image/upload", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        });
-    };
-
     const validateFileUploads = () => {
         const requiredFiles = {
-            profile: 'Profile image',
-            houseAddress: 'Household registration document',
-            birth: 'Birth certificate',
+            childCharacteristicsForm: 'Child characteristics form',
             commit: 'Commitment form'
         };
 
         for (const [key, label] of Object.entries(requiredFiles)) {
-            if (!uploadedFile[key]) {
+            const file = uploadedFile[key];
+
+            if (!file) {
                 enqueueSnackbar(`${label} is required`, {variant: "error"});
+                return false;
+            }
+
+            // Revalidate files before upload
+            if (!validateFileSize(file) || !validateFileType(file)) {
+                enqueueSnackbar(`Invalid ${label.toLowerCase()}`, {variant: "error"});
                 return false;
             }
         }
@@ -702,6 +785,139 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         )}
                     </FormControl>
 
+                    {/* Student Information Display */}
+                    {student && (
+                        <Box sx={{
+                            p: 3,
+                            backgroundColor: 'rgba(7, 102, 58, 0.05)',
+                            borderRadius: 2,
+                            mb: 2
+                        }}>
+                            <Typography variant="h6" sx={{
+                                mb: 2,
+                                color: '#07663a',
+                                fontWeight: 600
+                            }}>
+                                Student Information
+                            </Typography>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Full Name"
+                                        value={student.name || ''}
+                                        InputProps={{readOnly: true}}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Gender"
+                                        value={student.gender || ''}
+                                        InputProps={{readOnly: true}}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Date of Birth"
+                                        value={student.dateOfBirth || ''}
+                                        InputProps={{readOnly: true}}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Place of Birth"
+                                        value={student.placeOfBirth || ''}
+                                        InputProps={{readOnly: true}}
+                                    />
+                                </Grid>
+
+                                {/* Student Documents */}
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle1" sx={{
+                                        mt: 2,
+                                        mb: 2,
+                                        color: '#07663a',
+                                        fontWeight: 600
+                                    }}>
+                                        Student Documents
+                                    </Typography>
+                                    <Grid container spacing={3}>
+                                        {[
+                                            {label: "Profile Image", src: student ? student.profileImage : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'},
+                                            {label: "Birth Certificate", src: student ? student.birthCertificateImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'},
+                                            {
+                                                label: "Household Registration",
+                                                src: student ? student.householdRegistrationImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
+                                            }
+                                        ].map((item, idx) => (
+                                            <Grid item xs={12} sm={6} md={4} key={idx}>
+                                                <Paper elevation={2} sx={{
+                                                    p: 2,
+                                                    borderRadius: 2,
+                                                    height: '100%',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: 1
+                                                }}>
+                                                    <Typography variant="body2" fontWeight="bold" sx={{
+                                                        color: '#07663a'
+                                                    }}>
+                                                        {item.label}
+                                                    </Typography>
+                                                    <Box sx={{
+                                                        width: '100%',
+                                                        height: 200,
+                                                        position: 'relative',
+                                                        overflow: 'hidden',
+                                                        borderRadius: 1,
+                                                        border: '1px solid rgba(7, 102, 58, 0.2)',
+                                                        bgcolor: '#f5f5f5',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}>
+                                                        {item.src ? (
+                                                            <img
+                                                                src={item.src}
+                                                                alt={item.label}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    objectFit: 'contain',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onClick={() => {
+                                                                    setSelectedImage(item.src);
+                                                                    setOpenImage(true);
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                No Image Available
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </Paper>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <Alert severity="info" sx={{mt: 1}}>
+                                        Please verify that all student information is correct before submitting the
+                                        form.
+                                        If any information needs to be updated, please contact the school
+                                        administration.
+                                    </Alert>
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    )}
+
                     {/* Form Fields */}
                     <TextField
                         fullWidth
@@ -741,14 +957,16 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         Upload Documents
                     </Typography>
 
-                    <Grid container spacing={3} sx={{ mt: 2 }}>
+                    <Grid container spacing={3} sx={{mt: 2}}>
                         {[
-                            {label: 'Profile Image', key: 'profile', error: errors.profile},
-                            {label: 'Household Registration', key: 'houseAddress', error: errors.houseAddress},
-                            {label: 'Birth Certificate', key: 'birth', error: errors.birth},
+                            {
+                                label: 'Child Characteristics Form',
+                                key: 'childCharacteristicsForm',
+                                error: errors.childCharacteristicsForm
+                            },
                             {label: 'Commitment', key: 'commit', error: errors.commit}
                         ].map((item) => (
-                            <Grid item xs={12} md={6} lg={3} key={item.key}>
+                            <Grid item xs={12} md={6} key={item.key}>
                                 <Box sx={{
                                     mb: 1,
                                     height: '100%',
@@ -777,7 +995,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                         <input
                                             type="file"
                                             hidden
-                                            onChange={(e) => HandleUploadFile(e.target.files[0], ['profile', 'houseAddress', 'birth', 'commit'].indexOf(item.key) + 1)}
+                                            onChange={(e) => HandleUploadFile(e.target.files[0], ['childCharacteristicsForm', 'commit'].indexOf(item.key) + 1)}
                                             accept="image/*"
                                         />
                                     </Button>
