@@ -98,7 +98,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                                         padding: '6px 12px',
                                         width: 'fit-content',
                                         margin: '0 auto'
-                                    }}> ></TableCell>
+                                    }}>{form.status}</TableCell>
                                     <TableCell align="center" sx={{minWidth: 120}}>{form.note}</TableCell>
                                     <TableCell align="center" sx={{minWidth: 80}}>
                                         <Tooltip title="View Detail">
