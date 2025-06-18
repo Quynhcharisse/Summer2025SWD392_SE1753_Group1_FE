@@ -36,3 +36,13 @@ export const updateLesson = async (id, data) => {
         throw error;
     }
 };
+
+export const getLessonSyllabuses = async (id) => {
+    try {
+        const response = await apiClient.get(`/education/lesson/assign/syllabuses?id=${id}`);
+        return response;
+    } catch (error) {
+        console.error("Get lesson syllabuses error:", error);
+        throw error;
+    }
+};

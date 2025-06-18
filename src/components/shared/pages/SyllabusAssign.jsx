@@ -28,6 +28,7 @@ import {
   useAssignLessons,
   useUnassignLessons,
 } from "@hooks/useSyllabusLesson";
+import { unassignLessons } from "@/api/services/syllabusLessonService";
 
 const SyllabusAssign = () => {
   const { id: syllabusId } = useParams();
@@ -79,8 +80,11 @@ const SyllabusAssign = () => {
     (sum, lesson) => sum + (Number(lesson.duration) || 0),
     0
   );
-  const totalHourAfterAssign = totalAssignedHours + totalSelectedUnassignedHours;
-  const isExceedMax = totalHourAfterAssign > (Number(syllabusData.maxHoursOfSyllabus) || 0);
+  const totalHourAfterAssign =
+    (totalAssignedHours + totalSelectedUnassignedHours) *
+    syllabusData.maxNumberOfWeek;
+  const isExceedMax =
+    totalHourAfterAssign > (Number(syllabusData.maxHoursOfSyllabus) || 0);
 
   // Debug logging for data fetching
   useEffect(() => {
@@ -255,7 +259,7 @@ const SyllabusAssign = () => {
           sx={{
             p: 2,
             borderBottom: "1px solid #e0e0e0",
-            background: "linear-gradient(to right, #f3e5f5, #e3f2fd)", // Tím nhạt -> xanh dương nhạt
+            background: "linear-gradient(to right, #f3e5f5, #e3f2fd)",
           }}
         >
           <Typography
@@ -279,25 +283,63 @@ const SyllabusAssign = () => {
           >
             Lesson Assignment Management
           </Typography>
+
+          {/* Dùng flex để 2 phần Hours và Weeks nằm trên 1 dòng */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center", // canh giữa cả nhóm; đổi thành "space-between" nếu muốn 2 đầu container
+              alignItems: "center",
+              gap: 4, // khoảng cách cố định giữa 2 Typography
+              mt: 1,
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#1976d2", fontWeight: 500, fontSize: "1rem" }}
+            >
+              Hours of Syllabus: {syllabusData.maxHoursOfSyllabus ?? "N/A"}
+            </Typography>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#1976d2", fontWeight: 500, fontSize: "1rem" }}
+            >
+              Weeks of Syllabus: {syllabusData.maxNumberOfWeek ?? "N/A"}
+            </Typography>
+          </Box>
+
+          {/* Total Assigned Hours vẫn trên dòng riêng */}
           <Typography
             variant="subtitle2"
             align="center"
-            sx={{ mt: 1, color: "#1976d2", fontWeight: 500,
-              fontSize: "1rem" }}
+            sx={{ mt: 1, color: "#388e3c", fontWeight: 500, fontSize: "1rem" }}
           >
-            Max Hours of Syllabus: {syllabusData.maxHoursOfSyllabus ?? "N/A"}
-          </Typography>
-          <Typography
-            variant="subtitle2"
-            align="center"
-            sx={{ mt: 1, color: "#388e3c", fontWeight: 500,
-              fontSize: "1rem" }}
-          >
-            Total Assigned Hours: {totalAssignedHours}
+            Total Assigned Hours:{" "}
+            {syllabusData.maxNumberOfWeek * totalAssignedHours}
           </Typography>
         </Box>
-
         {/* Tables Container */}
+        <Typography
+          sx={{
+            color: isExceedMax ? "#f44336" : "#388e3c",
+            fontWeight: 300,
+            fontSize: "0.9rem",
+            border: "1px solid",
+            borderColor: isExceedMax ? "#f44336" : "#388e3c",
+            borderRadius: 1,
+            px: 1.5,
+            py: 0.5,
+            background: isExceedMax ? "#ffebee" : "#e8f5e9",
+            display: "inline-block",
+            marginLeft: 2,
+            marginTop: 2,
+          }}
+        >
+          Total Hours After Assign:{" "}
+          {(totalAssignedHours + totalSelectedUnassignedHours) *
+            syllabusData.maxNumberOfWeek}{" "}
+          hours
+        </Typography>
         <Box
           sx={{
             display: "grid",
@@ -324,36 +366,6 @@ const SyllabusAssign = () => {
               >
                 Unassigned Lessons
               </Typography>
-
-              {selectedUnassigned.length > 0 && (
-                <Typography
-                  sx={{
-                    color: "text.secondary",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  ({selectedUnassigned.length} selected)
-                </Typography>
-              )}
-
-              {selectedUnassigned.length > 0 && (
-                <Typography
-                  sx={{
-                    color: isExceedMax ? "#f44336" : "#388e3c",
-                    fontWeight: 300,
-                    fontSize: "0.9rem",
-                    border: "1px solid",
-                    borderColor: isExceedMax ? "#f44336" : "#388e3c",
-                    borderRadius: 1,
-                    px: 1.5,
-                    py: 0.5,
-                    background: isExceedMax ? "#ffebee" : "#e8f5e9",
-                    display: "inline-block",
-                  }}
-                >
-                  Total Hours After Assign: {totalHourAfterAssign}
-                </Typography>
-              )}
             </Box>
 
             <TableContainer
@@ -374,18 +386,20 @@ const SyllabusAssign = () => {
                         indeterminate={
                           selectedUnassigned.length > 0 &&
                           selectedUnassigned.length <
-                          (unassignedData?.data?.data?.length || 0)
+                            (unassignedData?.data?.data?.length || 0)
                         }
                         checked={
                           (unassignedData?.data?.data?.length || 0) > 0 &&
                           selectedUnassigned.length ===
-                          (unassignedData?.data?.data?.length || 0)
+                            (unassignedData?.data?.data?.length || 0)
                         }
                         onChange={handleSelectAllUnassigned}
                       />
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Lesson Name</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Duration (Hours)</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      Duration per week (Hours)
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -551,18 +565,20 @@ const SyllabusAssign = () => {
                         indeterminate={
                           selectedAssigned.length > 0 &&
                           selectedAssigned.length <
-                          (assignedData?.data?.data?.length || 0)
+                            (assignedData?.data?.data?.length || 0)
                         }
                         checked={
                           (assignedData?.data?.data?.length || 0) > 0 &&
                           selectedAssigned.length ===
-                          (assignedData?.data?.data?.length || 0)
+                            (assignedData?.data?.data?.length || 0)
                         }
                         onChange={handleSelectAllAssigned}
                       />
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Lesson Name</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Duration (Hours)</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      Duration per week (Hours)
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>

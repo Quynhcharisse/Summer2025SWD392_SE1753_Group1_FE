@@ -7,6 +7,8 @@ export const lessonKeys = {
   lists: () => [...lessonKeys.all, 'getLessonList'],
   create: () => [...lessonKeys.all, 'createLesson'],
   update: (id) => [...lessonKeys.all, 'updateLesson', id],
+  detail: (id) => [...lessonKeys.all, 'getLessonDetail', id],
+  syllabuses: (id) => [...lessonKeys.all, 'getLessonSyllabuses', id],
 };
 
 // Custom hooks for lesson operations
@@ -71,5 +73,20 @@ export const useUpdateLesson = () => {
         };
       });
     },
+  });
+};
+
+export const useLessonSyllabuses = (id) => {
+  return useQuery({
+    queryKey: lessonKeys.syllabuses(id),
+    queryFn: () => lessonService.getLessonSyllabuses(id),
+    enabled: Boolean(id),
+    retry: (failureCount, error) => {
+      // Only retry once if it's not a 4xx error
+      return failureCount < 1 && !(error?.response?.status >= 400 && error?.response?.status < 500);
+    },
+    staleTime: 30000, // Data remains fresh for 30 seconds
+    cacheTime: 1000 * 60 * 5, // Cache data for 5 minutes
+    refetchOnWindowFocus: false,
   });
 };
