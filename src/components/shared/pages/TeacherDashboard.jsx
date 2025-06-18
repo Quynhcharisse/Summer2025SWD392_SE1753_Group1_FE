@@ -32,7 +32,7 @@ const TeacherDashboard = () => {
           navigate('/auth/login', { 
             state: { 
               returnUrl: '/user/teacher/dashboard',
-              message: 'Please log in to access teacher dashboard.'
+              message: 'Vui lòng đăng nhập để truy cập dashboard giáo viên.'
             }
           });
           return;
@@ -88,10 +88,10 @@ const TeacherDashboard = () => {
 
   if (loading) {
     return (
-      <PageTemplate title="Teacher Dashboard">
+      <PageTemplate title="Dashboard giáo viên">
         <div className="text-center py-8">
           <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Loading information...</p>
+          <p className="text-gray-600">Đang tải thông tin...</p>
         </div>
       </PageTemplate>
     );
@@ -99,8 +99,8 @@ const TeacherDashboard = () => {
 
   return (
     <PageTemplate
-      title={`Welcome, ${user?.name || 'Teacher'}`}
-      subtitle={`Class Management: ${classData.name}`}
+      title={`Chào mừng, ${user?.name || 'Cô giáo'}`}
+      subtitle={`Quản lý lớp học: ${classData.name}`}
       actions={
         <div className="flex gap-4">
           <Button 
@@ -109,7 +109,7 @@ const TeacherDashboard = () => {
             onClick={() => navigate('/user/teacher/attendance')}
           >
             <CheckSquare className="w-4 h-4 mr-2" />
-            Attendance
+            Điểm danh
           </Button>
           <Button 
             variant="primary" 
@@ -117,7 +117,7 @@ const TeacherDashboard = () => {
             onClick={() => navigate('/user/teacher/journal')}
           >
             <BookOpen className="w-4 h-4 mr-2" />
-            Class Journal
+            Nhật ký lớp
           </Button>
         </div>
       }
@@ -126,30 +126,30 @@ const TeacherDashboard = () => {
         {/* Quick Stats */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Total Students"
+            title="Tổng học sinh"
             value={classData.totalStudents}
-            description="In Class"
+            description="Trong lớp"
             icon={Users}
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="Present Today"
+            title="Có mặt hôm nay"
             value={todayAttendance.length}
-            description={`${getAttendanceRate()}% attendance`}
+            description={`${getAttendanceRate()}% điểm danh`}
             icon={UserCheck}
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="Today's Activities"
+            title="Hoạt động hôm nay"
             value={upcomingActivities.length}
-            description="Scheduled"
+            description="Đã lên lịch"
             icon={Calendar}
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="Messages"
+            title="Tin nhắn"
             value={0}
-            description="New Messages"
+            description="Tin mới"
             icon={MessageSquare}
             trend={{ value: 0, isPositive: true }}
           />
@@ -162,13 +162,13 @@ const TeacherDashboard = () => {
             {/* Today's Attendance */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Today's Attendance</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Điểm danh hôm nay</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/user/teacher/attendance')}
                 >
-                  Manage Attendance
+                  Quản lý điểm danh
                 </Button>
               </div>
               
@@ -182,21 +182,21 @@ const TeacherDashboard = () => {
                         </div>
                         <div>
                           <h4 className="font-medium text-gray-800">{record.name}</h4>
-                          <p className="text-sm text-gray-600">Present at: {record.checkIn}</p>
+                          <p className="text-sm text-gray-600">Có mặt lúc: {record.checkIn}</p>
                         </div>
                       </div>
-                      <Badge variant="success">Present</Badge>
+                      <Badge variant="success">Có mặt</Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">No attendance records today</p>
+                <p className="text-gray-500 text-center py-4">Chưa có điểm danh nào hôm nay</p>
               )}
             </div>
 
             {/* Today's Activities */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Today's Activities</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Hoạt động hôm nay</h3>
               {upcomingActivities.length > 0 ? (
                 <div className="space-y-3">
                   {upcomingActivities.map((activity) => (
@@ -213,7 +213,7 @@ const TeacherDashboard = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">No activities today</p>
+                <p className="text-gray-500 text-center py-4">Không có hoạt động nào hôm nay</p>
               )}
             </div>
           </div>
@@ -222,22 +222,22 @@ const TeacherDashboard = () => {
           <div className="space-y-6">
             {/* Class Information */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Class Information</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Thông tin lớp học</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Class Name:</span>
+                  <span className="text-gray-600">Tên lớp:</span>
                   <span className="font-medium">{classData.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Age Group:</span>
+                  <span className="text-gray-600">Độ tuổi:</span>
                   <span className="font-medium">{classData.ageGroup}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Capacity:</span>
+                  <span className="text-gray-600">Sĩ số:</span>
                   <span className="font-medium">{classData.enrolledStudents}/{classData.totalStudents}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Today's Attendance:</span>
+                  <span className="text-gray-600">Điểm danh hôm nay:</span>
                   <Badge variant={getAttendanceRate() >= 80 ? "success" : "warning"}>
                     {getAttendanceRate()}%
                   </Badge>
@@ -247,7 +247,7 @@ const TeacherDashboard = () => {
 
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Thao tác nhanh</h3>
               <div className="space-y-3">
                 <Button 
                   variant="outline" 
@@ -255,7 +255,7 @@ const TeacherDashboard = () => {
                   onClick={() => navigate('/user/teacher/attendance')}
                 >
                   <CheckSquare className="w-4 h-4 mr-3" />
-                  Take Attendance
+                  Điểm danh học sinh
                 </Button>
                 <Button 
                   variant="outline" 
@@ -263,7 +263,7 @@ const TeacherDashboard = () => {
                   onClick={() => navigate(`/user/teacher/class/${classData.id}/students`)}
                 >
                   <Users className="w-4 h-4 mr-3" />
-                  Student List
+                  Danh sách học sinh
                 </Button>
                 <Button 
                   variant="outline" 
@@ -271,7 +271,7 @@ const TeacherDashboard = () => {
                   onClick={() => navigate('/user/teacher/journal')}
                 >
                   <BookOpen className="w-4 h-4 mr-3" />
-                  Activity Journal
+                  Nhật ký hoạt động
                 </Button>
                 <Button 
                   variant="outline" 
@@ -279,7 +279,7 @@ const TeacherDashboard = () => {
                   onClick={() => navigate('/user/teacher/messages')}
                 >
                   <MessageSquare className="w-4 h-4 mr-3" />
-                  Send Notification
+                  Gửi thông báo
                 </Button>
               </div>
             </div>

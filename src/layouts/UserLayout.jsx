@@ -46,38 +46,25 @@ const UserLayout = ({ children }) => {
           {
             key: "/user/parent/calendar",
             icon: Calendar,
-            label: "Class Schedule",
+            label: "Lịch học",
             path: "/user/parent/calendar",
           },
           {
-<<<<<<< Updated upstream
             key: "/user/parent/forms",
             icon: ListTodo,
             label: "Đơn nhâp học",
             path: "/user/parent/forms",
-=======
-            key: "/user/parent/meals",
-            icon: FileText,
-            label: "Meal Menu",
-            path: "/user/parent/meals",
-          },
-          {
-            key: "/user/parent/gallery",
-            icon: BookOpen,
-            label: "Photo Gallery",
-            path: "/user/parent/gallery",
->>>>>>> Stashed changes
           },
           {
             key: "/user/parent/messages",
             icon: MessageSquare,
-            label: "Messages",
+            label: "Tin nhắn",
             path: "/user/parent/messages",
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Profile",
+            label: "Thông tin cá nhân",
             path: "/user/shared/profile",
           },
         ];
@@ -93,25 +80,25 @@ const UserLayout = ({ children }) => {
           {
             key: "/user/teacher/attendance",
             icon: UserCheck,
-            label: "Attendance",
+            label: "Điểm danh",
             path: "/user/teacher/attendance",
           },
           {
             key: "/user/teacher/journal",
             icon: BookOpen,
-            label: "Class Journal",
+            label: "Nhật ký lớp",
             path: "/user/teacher/journal",
           },
           {
             key: "/user/teacher/messages",
             icon: MessageSquare,
-            label: "Messages",
+            label: "Tin nhắn",
             path: "/user/teacher/messages",
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Profile",
+            label: "Thông tin cá nhân",
             path: "/user/shared/profile",
           },
         ];
@@ -124,7 +111,6 @@ const UserLayout = ({ children }) => {
             label: 'Dashboard',
             path: '/user/admission/dashboard'
           },
-<<<<<<< Updated upstream
           {
             key: '/user/admission/terms',
             icon: Calendar,
@@ -140,23 +126,6 @@ const UserLayout = ({ children }) => {
             key: '/user/shared/profile',
             icon: User,
             label: 'Thông tin cá nhân',
-=======
-          { 
-            key: '/user/admission/registrations', 
-            icon: FileText, 
-            label: 'Registration Records',
-            path: '/user/admission/registrations'
-          },          { 
-            key: '/user/admission/reports', 
-            icon: TrendingUp, 
-            label: 'Reports',
-            path: '/user/admission/reports'
-          },
-          { 
-            key: '/user/shared/profile', 
-            icon: User, 
-            label: 'Profile',
->>>>>>> Stashed changes
             path: '/user/shared/profile'
           }        ];
         
@@ -171,19 +140,19 @@ const UserLayout = ({ children }) => {
           { 
             key: '/user/hr/staff', 
             icon: Users, 
-            label: 'Staff Management',
+            label: 'Quản lý nhân viên',
             path: '/user/hr/staff'
           },
           { 
             key: '/user/hr/reports', 
             icon: TrendingUp, 
-            label: 'HR Reports',
+            label: 'Báo cáo HR',
             path: '/user/hr/reports'
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Profile",
+            label: "Thông tin cá nhân",
             path: "/user/shared/profile",
           },
         ];
@@ -199,37 +168,37 @@ const UserLayout = ({ children }) => {
           { 
             key: '/user/education/syllabus', 
             icon: BookOpen, 
-            label: 'Curriculum',
+            label: 'Chương trình học',
             path: '/user/education/syllabus'
           },
           { 
             key: '/user/education/lesson', 
             icon: BookOpen, 
-            label: 'Lessons',
+            label: 'Bài giảng',
             path: '/user/education/lesson'
           },
           { 
             key: '/user/education/event', 
             icon: BookOpen, 
-            label: 'Events',
+            label: 'Sự kiện',
             path: '/user/education/event'
           },
           { 
             key: '/user/education/classes', 
             icon: Users, 
-            label: 'Class Management',
+            label: 'Quản lý lớp học',
             path: '/user/education/classes'
           },
           { 
             key: '/user/education/reports', 
             icon: TrendingUp, 
-            label: 'Education Reports',
+            label: 'Báo cáo giáo dục',
             path: '/user/education/reports'
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Profile",
+            label: "Thông tin cá nhân",
             path: "/user/shared/profile",
           },
         ];
@@ -245,31 +214,31 @@ const UserLayout = ({ children }) => {
           {
             key: "/user/admin/users",
             icon: Users,
-            label: "User Management",
+            label: "Quản lý người dùng",
             path: "/user/admin/users",
           },
           {
             key: "/user/admin/classes",
             icon: BookOpen,
-            label: "Class Management",
+            label: "Quản lý lớp học",
             path: "/user/admin/classes",
           },
           {
             key: "/user/admin/statistics",
             icon: TrendingUp,
-            label: "Statistics",
+            label: "Thống kê",
             path: "/user/admin/statistics",
           },
           {
             key: "/user/admin/settings",
             icon: Settings,
-            label: "Settings",
+            label: "Cài đặt",
             path: "/user/admin/settings",
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Profile",
+            label: "Thông tin cá nhân",
             path: "/user/shared/profile",
           },
         ];
@@ -307,19 +276,19 @@ const UserLayout = ({ children }) => {
   const getRoleDisplayName = () => {
     switch (userRole) {
       case "parent":
-        return "Parent";
+        return "Phụ huynh";
       case "teacher":
-        return "Teacher";
+        return "Giáo viên";
       case "admission":
-        return "Admission Staff";
+        return "Tuyển sinh";
       case "hr":
-        return "HR Staff";
+        return "Nhân sự";
       case "education":
-        return "Education Staff";
+        return "Giáo dục";
       case "admin":
-        return "Administrator";
+        return "Quản trị viên";
       default:
-        return "User";
+        return "Người dùng";
     }
   };
 
@@ -423,7 +392,7 @@ const UserLayout = ({ children }) => {
             className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
+            <span className="font-medium">Đăng xuất</span>
           </button>
         </div>
       </div>

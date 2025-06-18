@@ -27,8 +27,7 @@ const ParentDashboard = () => {
 
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
-      try {
-        if (!isAuthenticated()) {
+      try {        if (!isAuthenticated()) {
           navigate("/auth/login", {
             state: {
               returnUrl: "/user/parent/dashboard",
@@ -36,7 +35,7 @@ const ParentDashboard = () => {
             },
           });
           return;
-        } // Get current user
+        }        // Get current user
         const tokenData = getCurrentTokenData();
         setUser(tokenData);
 
@@ -105,10 +104,10 @@ const ParentDashboard = () => {
   };
 
   const handleViewApplication = (applicationId) => {
-    navigate(`/user/parent/enrollment-list`); // Xem danh sách đơn
+    navigate(`/user/parent/enrollment/application/${applicationId}`);
   };
   const handleNewApplication = () => {
-    navigate("/user/parent/child-list"); // Đăng ký mới: chuyển sang danh sách child để chọn hoặc thêm child
+    navigate("/user/parent/enrollment");
   };
 
   if (loading) {
@@ -124,21 +123,21 @@ const ParentDashboard = () => {
 
   return (
     <PageTemplate
-      title={`Welcome, ${user?.name || "Parent"}`}
-      subtitle="Manage information and track enrollment application process"
+      title={`Chào mừng, ${user?.name || "Phụ huynh"}`}
+      subtitle="Quản lý thông tin và theo dõi quá trình đăng ký nhập học"
       actions={
         <div className="flex gap-4">
           <Button
             variant="outline"
             size="md"
-            onClick={() => navigate("/user/parent/enrollment-list")}
+            onClick={() => navigate("/user/parent/enrollment/my-applications")}
           >
             <FileText className="w-4 h-4 mr-2" />
-            My Applications
+            Đơn đăng ký
           </Button>
           <Button variant="primary" size="md" onClick={handleNewApplication}>
             <Baby className="w-4 h-4 mr-2" />
-            New Enrollment
+            Đăng ký mới
           </Button>
         </div>
       }
@@ -341,22 +340,23 @@ const ParentDashboard = () => {
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Thao tác nhanh
               </h3>
-              <div className="space-y-3">
-                <Button
+              <div className="space-y-3">                <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/user/parent/child-list")}
+                  onClick={() => navigate("/user/parent/enrollment")}
                 >
                   <Baby className="w-4 h-4 mr-3" />
-                  Manage Children
+                  Đăng ký nhập học mới
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/user/parent/enrollment-list")}
+                  onClick={() =>
+                    navigate("/user/parent/enrollment/my-applications")
+                  }
                 >
                   <FileText className="w-4 h-4 mr-3" />
-                  My Applications
+                  Quản lý đơn đăng ký
                 </Button>
                 <Button
                   variant="outline"
