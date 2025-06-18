@@ -116,7 +116,13 @@ const UserLayout = ({ children }) => {
             icon: Calendar,
             label: 'Kỳ tuyển sinh',
             path: '/user/admission/terms'
-          },          {
+          },
+          {
+            key: '/user/admission/extra/terms',
+            icon: RotateCcw,
+            label: 'Đơn bổ sung thêm cho kì tuyển sinh',
+            path: '/user/admission/extra/terms'
+          },{
             key: '/user/admission/forms',
             icon: RotateCcw,
             label: 'Đơn xét duyệt',

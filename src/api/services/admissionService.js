@@ -83,3 +83,27 @@ export const cancelAdmission = async (id, reason) => {
     }
 }
 
+// Extra Term APIs
+export const createExtraTerm = async (admissionTermId, startDate, endDate, reason) => {
+    try {
+        const response = await apiClient.post('/admission/extra/term', {
+            admissionTermId,
+            startDate,
+            endDate,
+            reason
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getExtraTermList = async () => {
+    try {
+        const response = await apiClient.get('/admission/extra/term');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+

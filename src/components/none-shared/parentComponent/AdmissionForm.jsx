@@ -767,15 +767,27 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                             }}
                         >
                             {studentList && studentList.length > 0 ? (
-                                studentList.map((student) => (
-                                    <MenuItem
-                                        key={student.id}
-                                        value={student.id}
-                                        disabled={student.hadForm}
-                                    >
-                                        {student.name} {student.hadForm ? '(Already has form)' : ''}
-                                    </MenuItem>
-                                ))
+                                studentList.map((student) => {
+                                    // Kiểm tra xem học sinh có form đang pending approval hoặc approved không
+                                    const hasActiveForm = student.hadForm && 
+                                        student.admissionForms?.some(form => 
+                                            form.status === 'approved' ||
+                                            form.status === 'pending approval'
+                                        );
+                                    
+                                    return (
+                                        <MenuItem
+                                            key={student.id}
+                                            value={student.id}
+                                            disabled={hasActiveForm}
+                                        >
+                                            {student.name} 
+                                            {hasActiveForm ? ' (Has active form)' : ''}
+                                            {student.admissionForms?.some(form => form.status === 'rejected') ? ' (Previously rejected)' : ''}
+                                            {student.admissionForms?.some(form => form.status === 'cancelled') ? ' (Previously cancelled)' : ''}
+                                        </MenuItem>
+                                    );
+                                })
                             ) : (
                                 <MenuItem disabled>No available students</MenuItem>
                             )}
