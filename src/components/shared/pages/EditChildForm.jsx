@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { parentService } from "../../../api/services/parentService";
 import { Button, Spinner } from "@atoms";
 import { PageTemplate } from "@templates";
 

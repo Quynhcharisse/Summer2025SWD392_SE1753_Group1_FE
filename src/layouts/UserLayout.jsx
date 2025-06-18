@@ -50,23 +50,19 @@ const UserLayout = ({ children }) => {
             path: "/user/parent/calendar",
           },
           {
-<<<<<<< Updated upstream
+
             key: "/user/parent/forms",
             icon: ListTodo,
             label: "Đơn nhâp học",
             path: "/user/parent/forms",
-=======
-            key: "/user/parent/meals",
-            icon: FileText,
-            label: "Meal Menu",
-            path: "/user/parent/meals",
+
           },
           {
             key: "/user/parent/gallery",
             icon: BookOpen,
             label: "Photo Gallery",
             path: "/user/parent/gallery",
->>>>>>> Stashed changes
+
           },
           {
             key: "/user/parent/messages",
@@ -124,13 +120,13 @@ const UserLayout = ({ children }) => {
             label: 'Dashboard',
             path: '/user/admission/dashboard'
           },
-<<<<<<< Updated upstream
           {
             key: '/user/admission/terms',
             icon: Calendar,
             label: 'Kỳ tuyển sinh',
             path: '/user/admission/terms'
-          },          {
+          },          
+          {
             key: '/user/admission/forms',
             icon: RotateCcw,
             label: 'Đơn xét duyệt',
@@ -140,25 +136,15 @@ const UserLayout = ({ children }) => {
             key: '/user/shared/profile',
             icon: User,
             label: 'Thông tin cá nhân',
-=======
-          { 
-            key: '/user/admission/registrations', 
-            icon: FileText, 
-            label: 'Registration Records',
-            path: '/user/admission/registrations'
-          },          { 
-            key: '/user/admission/reports', 
-            icon: TrendingUp, 
-            label: 'Reports',
-            path: '/user/admission/reports'
           },
           { 
             key: '/user/shared/profile', 
             icon: User, 
             label: 'Profile',
->>>>>>> Stashed changes
+
             path: '/user/shared/profile'
-          }        ];
+          }        
+        ];
         
       case 'hr':
         return [

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Spinner, Badge } from "@atoms";
 import { PageTemplate } from "@templates";
-import { parentService } from "../../../api/services/parentService";
 import { AlertCircle, CheckCircle, FileText, Filter, Search } from "lucide-react";
 
 const EnrollmentApplicationList = () => {
