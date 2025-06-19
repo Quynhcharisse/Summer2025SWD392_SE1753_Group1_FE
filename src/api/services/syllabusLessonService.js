@@ -33,15 +33,3 @@ export const assignLessons = async (id, lessonNames) => {
     }
 };
 
-export const unassignLessons = async (id, lessonNames) => {
-    try {
-        console.log('Unassigning lessons:', { id, lessonNames });
-        const response = await apiClient.put(`/education/syllabus/unassign/lessons?id=${id}`, {
-            lessonNames: lessonNames
-        });
-        return response;
-    } catch (error) {
-        console.error("Unassign lessons error:", error);
-        throw error;
-    }
-}; 

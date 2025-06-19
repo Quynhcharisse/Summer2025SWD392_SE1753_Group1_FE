@@ -56,16 +56,19 @@ export const useAssignLessons = () => {
 
     return useMutation({
         mutationFn: async ({ id, lessonNames }) => {
-            if (!id || !lessonNames?.length) {
+            // Chỉ kiểm id; lessonNames phải được truyền (có thể là []), không cần kiểm length > 0
+            if (!id || lessonNames == null || !Array.isArray(lessonNames)) {
                 throw new Error('Invalid parameters: id and lessonNames are required');
             }
 
             try {
+                // Nếu backend không hỗ trợ mảng rỗng (clear assignments), bạn có thể:
+                // - Nếu lessonNames.length === 0, gọi API unassign toàn bộ trong hook useUnassignLessons
+                // - Hoặc backend tự xử lý mảng rỗng như "clear all"
                 const response = await syllabusLessonService.assignLessons(id, lessonNames);
                 return response.data;
             } catch (error) {
                 console.error('Error assigning lessons:', error);
-                // Enhance error message for client
                 if (error.response?.status === 404) {
                     throw new Error('Syllabus or lessons not found');
                 } else if (error.response?.status === 403) {
@@ -75,11 +78,10 @@ export const useAssignLessons = () => {
             }
         },
         onSuccess: (_, { id }) => {
-            // Invalidate relevant queries
-            queryClient.invalidateQueries({ 
+            queryClient.invalidateQueries({
                 queryKey: syllabusLessonKeys.assigned(id)
             });
-            queryClient.invalidateQueries({ 
+            queryClient.invalidateQueries({
                 queryKey: syllabusLessonKeys.unassigned(id)
             });
         },
@@ -89,6 +91,7 @@ export const useAssignLessons = () => {
         }
     });
 };
+
 
 /**
  * Hook to unassign lessons from a syllabus
@@ -118,10 +121,10 @@ export const useUnassignLessons = () => {
         },
         onSuccess: (_, { id }) => {
             // Invalidate relevant queries
-            queryClient.invalidateQueries({ 
+            queryClient.invalidateQueries({
                 queryKey: syllabusLessonKeys.assigned(id)
             });
-            queryClient.invalidateQueries({ 
+            queryClient.invalidateQueries({
                 queryKey: syllabusLessonKeys.unassigned(id)
             });
         },
