@@ -29,6 +29,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 const LessonManage = () => {
+  // State quản lý modal, paging, search, sort, snackbar
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [viewDetailId, setViewDetailId] = useState(null);
@@ -43,20 +44,25 @@ const LessonManage = () => {
     severity: "success",
   });
 
+  // Refs for form inputs
   const topicRef = useRef();
   const descriptionRef = useRef();
   const objectiveRef = useRef();
   const toolsRequiredRef = useRef();
   const durationRef = useRef();
 
+  // Hooks API
   const { data: lessonResponse, isLoading, error } = useLessonList();
   const createLessonMutation = useCreateLesson();
   const updateLessonMutation = useUpdateLesson();
-  const { data: syllabusesData, isLoading: isLoadingSyllabuses } = useLessonSyllabuses(viewDetailId);
+  const { data: syllabusesData, isLoading: isLoadingSyllabuses } =
+    useLessonSyllabuses(viewDetailId);
 
+  // Extract lessonList safely
   const lessonList = lessonResponse?.data?.data || [];
-  const totalItems = lessonList.length || 0;
+  const totalItems = lessonList.length;
 
+  // Handle fetch error (e.g., 403)
   useEffect(() => {
     if (error?.response?.status === 403) {
       setSnackbar({
@@ -67,9 +73,10 @@ const LessonManage = () => {
     }
   }, [error]);
 
+  // Handle mutation errors
   useEffect(() => {
-    const handleMutationError = (error) => {
-      if (error?.response?.status === 403) {
+    const handleMutationError = (err) => {
+      if (err?.response?.status === 403) {
         setSnackbar({
           open: true,
           message: "You do not have permission to perform this action.",
@@ -83,14 +90,17 @@ const LessonManage = () => {
       handleMutationError(updateLessonMutation.error);
   }, [createLessonMutation.error, updateLessonMutation.error]);
 
+  // Mở modal Create/Edit, gán giá trị vào refs
   const showModal = (record = null) => {
+    // Delay 0 cho refs tồn tại
     setTimeout(() => {
       if (record) {
         topicRef.current.value = record.topic ?? "";
         descriptionRef.current.value = record.description ?? "";
         objectiveRef.current.value = record.objective ?? "";
         toolsRequiredRef.current.value = record.toolsRequired ?? "";
-        durationRef.current.value = record.duration ?? "";
+        durationRef.current.value =
+          record.duration != null ? String(record.duration) : "";
         setEditingId(record.id);
       } else {
         topicRef.current.value = "";
@@ -119,15 +129,39 @@ const LessonManage = () => {
     setViewDetailId(null);
   };
 
+  // Submit Create/Edit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const topic = topicRef.current.value.trim();
+    const description = descriptionRef.current.value.trim();
+    const objective = objectiveRef.current.value.trim();
+    const toolsRequired = toolsRequiredRef.current.value.trim();
+    const durationVal = Number(durationRef.current.value);
+
+    // Validate cơ bản
+    if (!topic) {
+      setSnackbar({
+        open: true,
+        message: "Topic is required",
+        severity: "error",
+      });
+      return;
+    }
+    if (isNaN(durationVal) || durationVal <= 0) {
+      setSnackbar({
+        open: true,
+        message: "Duration must be a positive number",
+        severity: "error",
+      });
+      return;
+    }
 
     const data = {
-      topic: topicRef.current.value.trim(),
-      description: descriptionRef.current.value.trim(),
-      objective: objectiveRef.current.value.trim(),
-      toolsRequired: toolsRequiredRef.current.value.trim(),
-      duration: Number(durationRef.current.value),
+      topic,
+      description,
+      objective,
+      toolsRequired,
+      duration: durationVal,
     };
 
     try {
@@ -147,10 +181,10 @@ const LessonManage = () => {
         });
       }
       handleClose();
-    } catch (error) {
+    } catch (err) {
       setSnackbar({
         open: true,
-        message: error?.response?.data?.message || "Failed to process request",
+        message: err?.response?.data?.message || "Failed to process request",
         severity: "error",
       });
     }
@@ -161,27 +195,28 @@ const LessonManage = () => {
     setRowsPerPage(parseInt(e.target.value, 10));
     setPage(0);
   };
-  const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
+  const handleCloseSnackbar = () =>
+    setSnackbar((prev) => ({ ...prev, open: false }));
 
-  // Filter and sort logic
-  const filteredAndSortedData = lessonList
-    ?.filter(lesson => {
-      const searchLower = searchQuery.toLowerCase();
+  // Filter + Sort: guard null và optional chaining
+  const filteredAndSortedData = (lessonList || [])
+    .filter((lesson) => {
+      if (!lesson) return false;
+      const searchLower = searchQuery.trim().toLowerCase();
+      if (!searchLower) return true;
       return (
-        searchQuery === "" ||
-        lesson.topic.toLowerCase().includes(searchLower) ||
-        lesson.description.toLowerCase().includes(searchLower) ||
-        lesson.objective.toLowerCase().includes(searchLower) ||
-        lesson.toolsRequired.toLowerCase().includes(searchLower)
+        lesson.topic?.toLowerCase().includes(searchLower) ||
+        lesson.description?.toLowerCase().includes(searchLower) ||
+        lesson.objective?.toLowerCase().includes(searchLower) ||
+        lesson.toolsRequired?.toLowerCase().includes(searchLower)
       );
     })
     .sort((a, b) => {
-      if (sortOrder === "asc") {
-        return a.duration - b.duration;
-      } else {
-        return b.duration - a.duration;
-      }
-    }) || [];
+      // Nếu duration không number, gán Infinity để xếp cuối
+      const da = typeof a.duration === "number" ? a.duration : Infinity;
+      const db = typeof b.duration === "number" ? b.duration : Infinity;
+      return sortOrder === "asc" ? da - db : db - da;
+    });
 
   const displayedData = filteredAndSortedData.slice(
     page * rowsPerPage,
@@ -189,11 +224,17 @@ const LessonManage = () => {
   );
 
   const handleSortClick = () => {
-    setSortOrder(prev => prev === "asc" ? "desc" : "asc");
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
+
+  // Tìm detail dựa trên toàn bộ lessonList, guard null
+  const lessonDetail = (lessonList || []).find(
+    (l) => l && l.id === viewDetailId
+  );
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* Header + Create */}
       <Box
         sx={{
           mb: 3,
@@ -236,20 +277,20 @@ const LessonManage = () => {
             px: 3,
           }}
           color="primary"
-          onClick={() => showModal()}
+          onClick={() => showModal(null)}
         >
           Create New Lesson
         </Button>
       </Box>
 
-      {/* Add Search and Sort Controls */}
+      {/* Search */}
       <Box
         sx={{
           mb: 3,
           display: "flex",
           gap: 2,
           alignItems: "center",
-          flexWrap: "wrap"
+          flexWrap: "wrap",
         }}
       >
         <TextField
@@ -257,7 +298,10 @@ const LessonManage = () => {
           label="Search lessons"
           variant="outlined"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(0);
+          }}
           sx={{ minWidth: 300 }}
           placeholder="Search by topic, description, objective, or tools..."
         />
@@ -275,6 +319,7 @@ const LessonManage = () => {
         </Typography>
       </Box>
 
+      {/* Table */}
       {isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
           <CircularProgress />
@@ -283,109 +328,137 @@ const LessonManage = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-                <TableCell 
+              <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
+                <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Topic</TableCell>
-                <TableCell 
+                >
+                  Topic
+                </TableCell>
+                <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Description</TableCell>
-                <TableCell 
+                >
+                  Description
+                </TableCell>
+                <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Objective</TableCell>
-                <TableCell 
+                >
+                  Objective
+                </TableCell>
+                <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Required Tools</TableCell>
-                <TableCell 
+                >
+                  Required Tools
+                </TableCell>
+                <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 0.5
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 0.5,
                   }}
                   onClick={handleSortClick}
                 >
                   Duration per week (Hours)
-                  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <Box
+                    component="span"
+                    sx={{ display: "inline-flex", alignItems: "center" }}
+                  >
                     {sortOrder === "asc" ? "↑" : "↓"}
                   </Box>
                 </TableCell>
-                <TableCell 
+                <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Actions</TableCell>
+                >
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {displayedData.filter(Boolean).map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell align="center">{row.topic}</TableCell>
-                  <TableCell align="center">{row.description}</TableCell>
-                  <TableCell align="center">{row.objective}</TableCell>
-                  <TableCell align="center">{row.toolsRequired}</TableCell>
-                  <TableCell align="center">{row.duration}</TableCell>
-                  <TableCell align="center">
-                    <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                      <Button
-                        variant="outlined"
-                        color="info"
-                        onClick={() => handleViewDetail(row.id)}
-                        size="small"
+              {displayedData.map((row) => {
+                if (!row) return null;
+                return (
+                  <TableRow key={row.id}>
+                    <TableCell align="center">{row.topic ?? "-"}</TableCell>
+                    <TableCell align="center">
+                      {row.description ?? "-"}
+                    </TableCell>
+                    <TableCell align="center">{row.objective ?? "-"}</TableCell>
+                    <TableCell align="center">
+                      {row.toolsRequired ?? "-"}
+                    </TableCell>
+                    <TableCell align="center">
+                      {typeof row.duration === "number" ? row.duration : "-"}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          justifyContent: "center",
+                        }}
                       >
-                        View
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => showModal(row)}
-                      >
-                        Edit
-                      </Button>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        <Button
+                          variant="outlined"
+                          color="info"
+                          onClick={() => handleViewDetail(row.id)}
+                          size="small"
+                        >
+                          View
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => showModal(row)}
+                        >
+                          Edit
+                        </Button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
           <TablePagination
@@ -404,16 +477,15 @@ const LessonManage = () => {
 
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingId ? "Edit Lesson" : "Create New Lesson"}</DialogTitle>
+        <DialogTitle>
+          {editingId ? "Edit Lesson" : "Create New Lesson"}
+        </DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-              <TextField
-                label="Topic"
-                inputRef={topicRef}
-                fullWidth
-                required
-              />
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}
+            >
+              <TextField label="Topic" inputRef={topicRef} fullWidth required />
               <TextField
                 label="Description"
                 inputRef={descriptionRef}
@@ -434,15 +506,14 @@ const LessonManage = () => {
                 label="Required Tools"
                 inputRef={toolsRequiredRef}
                 fullWidth
-                required
               />
               <TextField
-                label="Duration (Hours)"
+                label="Duration per week (Hours)"
                 inputRef={durationRef}
                 type="number"
                 fullWidth
                 required
-                inputProps={{ min: 1 }}
+                inputProps={{ min: 1, max: 1000 }}
               />
             </Box>
           </DialogContent>
@@ -452,9 +523,12 @@ const LessonManage = () => {
               type="submit"
               variant="contained"
               color="primary"
-              disabled={createLessonMutation.isPending || updateLessonMutation.isPending}
+              disabled={
+                createLessonMutation.isPending || updateLessonMutation.isPending
+              }
             >
-              {createLessonMutation.isPending || updateLessonMutation.isPending ? (
+              {createLessonMutation.isPending ||
+              updateLessonMutation.isPending ? (
                 <CircularProgress size={24} />
               ) : editingId ? (
                 "Update"
@@ -493,80 +567,124 @@ const LessonManage = () => {
         </DialogTitle>
         <DialogContent>
           {isLoadingSyllabuses ? (
-            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "300px" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "300px",
+              }}
+            >
               <CircularProgress size={40} />
             </Box>
-          ) : syllabusesData?.data?.data ? (
+          ) : (
             <Box sx={{ p: 3 }}>
               {/* Lesson Info */}
-              <TableContainer 
-                component={Paper} 
+              <TableContainer
+                component={Paper}
                 elevation={0}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
-                  overflow: 'hidden',
+                  overflow: "hidden",
                   mb: 3,
-                  border: '1px solid #e0e0e0',
-                  '& .MuiTableCell-root': {
-                    borderColor: '#e0e0e0',
+                  border: "1px solid #e0e0e0",
+                  "& .MuiTableCell-root": {
+                    borderColor: "#e0e0e0",
                     py: 2.5,
                     px: 3,
                   },
-                  '& .MuiTableRow-root': {
-                    '&:last-child td, &:last-child th': {
-                      borderBottom: 0
-                    }
-                  }
+                  "& .MuiTableRow-root": {
+                    "&:last-child td, &:last-child th": {
+                      borderBottom: 0,
+                    },
+                  },
                 }}
               >
                 <Table>
                   <TableBody>
-                    {displayedData.find(lesson => lesson.id === viewDetailId) && (
+                    {lessonDetail ? (
                       <>
                         <TableRow>
-                          <TableCell 
-                            sx={{ 
-                              width: '20%',
-                              bgcolor: '#f8f9fa',
+                          <TableCell
+                            sx={{
+                              width: "20%",
+                              bgcolor: "#f8f9fa",
                               fontWeight: 600,
-                              color: '#1976d2'
+                              color: "#1976d2",
                             }}
                           >
                             Topic
                           </TableCell>
-                          <TableCell sx={{ whiteSpace: 'pre-wrap' }}>
-                            {displayedData.find(lesson => lesson.id === viewDetailId).topic}
+                          <TableCell sx={{ whiteSpace: "pre-wrap" }}>
+                            {lessonDetail.topic ?? "-"}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell 
-                            sx={{ 
-                              bgcolor: '#f8f9fa',
+                          <TableCell
+                            sx={{
+                              bgcolor: "#f8f9fa",
                               fontWeight: 600,
-                              color: '#1976d2'
+                              color: "#1976d2",
                             }}
                           >
                             Description
                           </TableCell>
-                          <TableCell sx={{ whiteSpace: 'pre-wrap' }}>
-                            {displayedData.find(lesson => lesson.id === viewDetailId).description}
+                          <TableCell sx={{ whiteSpace: "pre-wrap" }}>
+                            {lessonDetail.description ?? "-"}
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell 
-                            sx={{ 
-                              bgcolor: '#f8f9fa',
+                          <TableCell
+                            sx={{
+                              bgcolor: "#f8f9fa",
                               fontWeight: 600,
-                              color: '#1976d2'
+                              color: "#1976d2",
+                            }}
+                          >
+                            Objective
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "pre-wrap" }}>
+                            {lessonDetail.objective ?? "-"}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell
+                            sx={{
+                              bgcolor: "#f8f9fa",
+                              fontWeight: 600,
+                              color: "#1976d2",
+                            }}
+                          >
+                            Required Tools
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "pre-wrap" }}>
+                            {lessonDetail.toolsRequired ?? "-"}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell
+                            sx={{
+                              bgcolor: "#f8f9fa",
+                              fontWeight: 600,
+                              color: "#1976d2",
                             }}
                           >
                             Duration
                           </TableCell>
                           <TableCell>
-                            {displayedData.find(lesson => lesson.id === viewDetailId).duration} hours
+                            {typeof lessonDetail.duration === "number"
+                              ? lessonDetail.duration
+                              : "-"}{" "}
+                            hours
                           </TableCell>
                         </TableRow>
                       </>
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={2} align="center">
+                          Lesson not found.
+                        </TableCell>
+                      </TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -574,80 +692,87 @@ const LessonManage = () => {
 
               {/* Syllabuses Section */}
               <Box sx={{ mt: 4 }}>
-                <Paper 
-                  elevation={0} 
-                  sx={{ 
+                <Paper
+                  elevation={0}
+                  sx={{
                     p: 3,
-                    border: '1px solid #e0e0e0',
-                    borderRadius: 2
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
                   }}
                 >
                   <Typography
                     variant="h6"
                     sx={{
-                      color: '#1976d2',
+                      color: "#1976d2",
                       fontWeight: 600,
                       mb: 3,
                       pb: 2,
-                      borderBottom: '2px solid #e3f2fd',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1
+                      borderBottom: "2px solid #e3f2fd",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
                     }}
                   >
-                    <Box 
-                      component="span" 
-                      sx={{ 
-                        width: 6, 
-                        height: 24, 
-                        bgcolor: '#1976d2', 
-                        display: 'inline-block',
+                    <Box
+                      component="span"
+                      sx={{
+                        width: 6,
+                        height: 24,
+                        bgcolor: "#1976d2",
+                        display: "inline-block",
                         borderRadius: 1,
-                        mr: 1
+                        mr: 1,
                       }}
                     />
                     Syllabuses Using This Lesson
                   </Typography>
 
-                  {syllabusesData.data.data.length > 0 ? (
-                    <Grid 
-                      container 
-                      spacing={2.5} 
-                      sx={{ 
+                  {syllabusesData?.data?.data?.length > 0 ? (
+                    <Grid
+                      container
+                      spacing={2.5}
+                      sx={{
                         px: { xs: 0, sm: 2 },
-                        mx: { xs: -1, sm: -2 }
+                        mx: { xs: -1, sm: -2 },
                       }}
                     >
                       {syllabusesData.data.data.map((syllabus) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={syllabus.id}>
+                        <Grid
+                          item
+                          xs={12}
+                          sm={6}
+                          md={4}
+                          lg={3}
+                          key={syllabus.id}
+                        >
                           <Paper
                             elevation={0}
                             sx={{
                               p: 2.5,
-                              height: '100%',
-                              bgcolor: '#fff',
-                              border: '1px solid #e0e0e0',
+                              height: "100%",
+                              bgcolor: "#fff",
+                              border: "1px solid #e0e0e0",
                               borderRadius: 2,
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              '&:hover': {
-                                bgcolor: '#f5f5f5',
-                                borderColor: '#1976d2',
-                                transform: 'translateY(-2px)',
-                                boxShadow: '0 4px 8px rgba(0,0,0,0.05)'
-                              }
+                              transition: "all 0.2s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                              "&:hover": {
+                                bgcolor: "#f5f5f5",
+                                borderColor: "#1976d2",
+                                transform: "translateY(-2px)",
+                                boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+                              },
                             }}
                           >
                             <Typography
                               sx={{
                                 fontWeight: 500,
-                                color: '#2c3e50',
-                                textAlign: 'center',
+                                color: "#2c3e50",
+                                textAlign: "center",
                                 lineHeight: 1.3,
-                                fontSize: '0.95rem'
+                                fontSize: "0.95rem",
                               }}
                             >
                               {syllabus.subject}
@@ -661,10 +786,10 @@ const LessonManage = () => {
                       elevation={0}
                       sx={{
                         p: 3,
-                        textAlign: 'center',
-                        bgcolor: '#f8f9fa',
-                        border: '1px solid #e0e0e0',
-                        borderRadius: 2
+                        textAlign: "center",
+                        bgcolor: "#f8f9fa",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 2,
                       }}
                     >
                       <Typography color="text.secondary">
@@ -674,12 +799,6 @@ const LessonManage = () => {
                   )}
                 </Paper>
               </Box>
-            </Box>
-          ) : (
-            <Box sx={{ p: 4, textAlign: "center" }}>
-              <Typography color="error" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
-                Failed to load lesson details.
-              </Typography>
             </Box>
           )}
         </DialogContent>
@@ -707,11 +826,12 @@ const LessonManage = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
           onClose={handleCloseSnackbar}

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import * as teacherService from '@api/services/teacherService';
+import * as teacherService from '@api/services/getteacherService';
 
 // Query keys
 export const teacherKeys = {

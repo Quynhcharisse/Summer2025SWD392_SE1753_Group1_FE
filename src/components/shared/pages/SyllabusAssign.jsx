@@ -1,8 +1,8 @@
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
   Paper,
-  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -13,22 +13,19 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
-  Divider,
-  Tooltip,
   Button,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 import {
   useUnassignedLessons,
   useAssignedLessons,
   useAssignLessons,
-  useUnassignLessons,
 } from "@hooks/useSyllabusLesson";
-import { unassignLessons } from "@/api/services/syllabusLessonService";
 
 const SyllabusAssign = () => {
   const { id: syllabusId } = useParams();
@@ -36,27 +33,28 @@ const SyllabusAssign = () => {
   const navigate = useNavigate();
   const syllabusData = location.state?.syllabusData;
 
-  // States for selected lessons
-  const [selectedUnassigned, setSelectedUnassigned] = useState([]);
-  const [selectedAssigned, setSelectedAssigned] = useState([]);
+  // UI lists and original topics (for diffing new assignments)
+  const [uiAssignedLessons, setUiAssignedLessons] = useState([]);
+  const [uiUnassignedLessons, setUiUnassignedLessons] = useState([]);
+
+  // Selection state in UI tables
+  const [selectedUIUnassigned, setSelectedUIUnassigned] = useState([]);
+  const [selectedUIAssigned, setSelectedUIAssigned] = useState([]);
+
+  // Snackbar state
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
 
-  // Debug logging
-  useEffect(() => {
-    console.log("Component mounted with syllabusId:", syllabusId);
-    console.log("Syllabus data:", syllabusData);
-  }, [syllabusId, syllabusData]);
-
-  // Fetch lessons data
+  // Fetch from API via custom hooks (React Query or similar)
   const {
     data: unassignedData,
     isLoading: isLoadingUnassigned,
     isError: isErrorUnassigned,
     error: errorUnassigned,
+    refetch: refetchUnassigned,
   } = useUnassignedLessons(syllabusId);
 
   const {
@@ -66,49 +64,23 @@ const SyllabusAssign = () => {
     error: errorAssigned,
   } = useAssignedLessons(syllabusId);
 
-  // Tính tổng số giờ của các lesson đã assign
-  const totalAssignedHours = (assignedData?.data?.data || []).reduce(
-    (sum, lesson) => sum + (Number(lesson.duration) || 0),
-    0
-  );
-
-  // Tính tổng số giờ của các lesson đang được chọn để assign
-  const selectedUnassignedLessons = (unassignedData?.data?.data || []).filter(
-    (lesson) => selectedUnassigned.includes(lesson.topic)
-  );
-  const totalSelectedUnassignedHours = selectedUnassignedLessons.reduce(
-    (sum, lesson) => sum + (Number(lesson.duration) || 0),
-    0
-  );
-  const totalHourAfterAssign =
-    (totalAssignedHours + totalSelectedUnassignedHours) *
-    syllabusData.maxNumberOfWeek;
-  const isExceedMax =
-    totalHourAfterAssign > (Number(syllabusData.maxHoursOfSyllabus) || 0);
-
-  // Debug logging for data fetching
+  // Initialize UI lists when assignedData/unassignedData arrive
   useEffect(() => {
-    if (unassignedData) {
-      console.log("Unassigned lessons data:", unassignedData);
-    }
-    if (errorUnassigned) {
-      console.error("Unassigned lessons error:", errorUnassigned);
-    }
-  }, [unassignedData, errorUnassigned]);
+    refetchUnassigned();
+  }, [syllabusId]);
 
   useEffect(() => {
-    if (assignedData) {
-      console.log("Assigned lessons data:", assignedData);
+    if (assignedData?.data?.data && unassignedData?.data?.data) {
+      const assignedLessons = assignedData.data.data;
+      const unassignedLessons = unassignedData.data.data;
+      setUiAssignedLessons(assignedLessons);
+      setUiUnassignedLessons(unassignedLessons);
+      setSelectedUIAssigned([]);
+      setSelectedUIUnassigned([]);
     }
-    if (errorAssigned) {
-      console.error("Assigned lessons error:", errorAssigned);
-    }
-  }, [assignedData, errorAssigned]);
+  }, [assignedData, unassignedData]);
 
-  // Mutations for assigning/unassigning lessons
-  const assignLessonsMutation = useAssignLessons();
-  const unassignLessonsMutation = useUnassignLessons();
-
+  // If no syllabusId or missing syllabusData, show an error
   if (!syllabusId || !syllabusData) {
     return (
       <Box sx={{ p: 3 }}>
@@ -119,63 +91,54 @@ const SyllabusAssign = () => {
     );
   }
 
-  const handleRefresh = () => {
-    // Implement refresh logic
-  };
+  // Compute totals and checks:
+  // totalAssignedHoursPerWeek from current UI-assigned lessons
+  const totalAssignedHoursPerWeek = useMemo(
+    () =>
+      uiAssignedLessons.reduce(
+        (sum, lesson) => sum + (Number(lesson.duration) || 0),
+        0
+      ),
+    [uiAssignedLessons]
+  );
 
-  const handleAssign = async () => {
-    if (selectedUnassigned.length === 0) return;
+  const numberOfWeek = Number(syllabusData.numberOfWeek) || 0;
+  const maxHoursAllowed = Number(syllabusData.maxHoursOfSyllabus) || 0;
+  // Total hours after current UI changes (per week sum * weeks)
+  const totalHourAfterUI = totalAssignedHoursPerWeek * numberOfWeek;
+  const isExceedMax = totalHourAfterUI != maxHoursAllowed;
+
+  // Mutation hook for assign
+  const assignLessonsMutation = useAssignLessons();
+
+  // Save handler: only assign new lessons (those in uiAssignedLessons that were not in originalAssignedTopics)
+  const handleSave = async () => {
+    const uiAssignedTopics = uiAssignedLessons.map((l) => l.topic);
+
+    // (Nếu không cần dùng totalHourAfterUI, có thể bỏ phần tính toán này luôn)
+    // const totalAssignedHoursPerWeek = uiAssignedLessons.reduce(
+    //   (sum, lesson) => sum + (Number(lesson.duration) || 0), 0
+    // );
+    // const totalHourAfterUI = totalAssignedHoursPerWeek * maxWeeks;
 
     try {
-      console.log("Attempting to assign lessons:", {
+      const result = await assignLessonsMutation.mutateAsync({
         id: syllabusId,
-        lessonNames: selectedUnassigned,
+        lessonNames: uiAssignedTopics,
       });
-
-      await assignLessonsMutation.mutateAsync({
-        id: syllabusId,
-        lessonNames: selectedUnassigned,
-      });
-      setSelectedUnassigned([]);
+      const successMsg = result?.message || "Assignment saved successfully";
       setSnackbar({
         open: true,
-        message: "Lessons assigned successfully",
+        message: successMsg,
         severity: "success",
       });
+      setSelectedUIAssigned([]);
+      setSelectedUIUnassigned([]);
     } catch (error) {
       console.error("Assignment error:", error);
       setSnackbar({
         open: true,
-        message: error?.response?.data?.message || "Failed to assign lessons",
-        severity: "error",
-      });
-    }
-  };
-
-  const handleUnassign = async () => {
-    if (selectedAssigned.length === 0) return;
-
-    try {
-      console.log("Attempting to unassign lessons:", {
-        id: syllabusId,
-        lessonNames: selectedAssigned,
-      });
-
-      await unassignLessonsMutation.mutateAsync({
-        id: syllabusId,
-        lessonNames: selectedAssigned,
-      });
-      setSelectedAssigned([]);
-      setSnackbar({
-        open: true,
-        message: "Lessons unassigned successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Unassignment error:", error);
-      setSnackbar({
-        open: true,
-        message: error?.response?.data?.message || "Failed to unassign lessons",
+        message: error.response?.data?.message || "Failed to save assignment",
         severity: "error",
       });
     }
@@ -185,44 +148,62 @@ const SyllabusAssign = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
-  const handleSelectAllUnassigned = (event) => {
+  // Handlers for selecting in Unassigned UI table
+  const handleSelectAllUIUnassigned = (event) => {
     if (event.target.checked) {
-      setSelectedUnassigned(
-        unassignedData?.data?.data?.map((lesson) => lesson.topic) || []
-      );
+      setSelectedUIUnassigned(uiUnassignedLessons.map((l) => l.topic));
     } else {
-      setSelectedUnassigned([]);
+      setSelectedUIUnassigned([]);
     }
   };
+  const handleSelectUIUnassigned = (lesson) => {
+    setSelectedUIUnassigned((prev) =>
+      prev.includes(lesson.topic)
+        ? prev.filter((t) => t !== lesson.topic)
+        : [...prev, lesson.topic]
+    );
+  };
 
-  const handleSelectAllAssigned = (event) => {
+  // Handlers for selecting in Assigned UI table
+  const handleSelectAllUIAssigned = (event) => {
     if (event.target.checked) {
-      setSelectedAssigned(
-        assignedData?.data?.data?.map((lesson) => lesson.topic) || []
-      );
+      setSelectedUIAssigned(uiAssignedLessons.map((l) => l.topic));
     } else {
-      setSelectedAssigned([]);
+      setSelectedUIAssigned([]);
     }
   };
-
-  const handleSelectUnassigned = (lesson) => {
-    setSelectedUnassigned((prev) => {
-      if (prev.includes(lesson.topic)) {
-        return prev.filter((topic) => topic !== lesson.topic);
-      } else {
-        return [...prev, lesson.topic];
-      }
-    });
+  const handleSelectUIAssigned = (lesson) => {
+    setSelectedUIAssigned((prev) =>
+      prev.includes(lesson.topic)
+        ? prev.filter((t) => t !== lesson.topic)
+        : [...prev, lesson.topic]
+    );
   };
 
-  const handleSelectAssigned = (lesson) => {
-    setSelectedAssigned((prev) => {
-      if (prev.includes(lesson.topic)) {
-        return prev.filter((topic) => topic !== lesson.topic);
-      } else {
-        return [...prev, lesson.topic];
-      }
-    });
+  // Move UI: assign selected from Unassigned -> Assigned
+  const handleAssignUI = () => {
+    if (selectedUIUnassigned.length === 0) return;
+    const toMove = uiUnassignedLessons.filter((l) =>
+      selectedUIUnassigned.includes(l.topic)
+    );
+    setUiAssignedLessons((prev) => [...prev, ...toMove]);
+    setUiUnassignedLessons((prev) =>
+      prev.filter((l) => !selectedUIUnassigned.includes(l.topic))
+    );
+    setSelectedUIUnassigned([]);
+  };
+
+  // Move UI: unassign selected from Assigned -> Unassigned (UI only)
+  const handleUnassignUI = () => {
+    if (selectedUIAssigned.length === 0) return;
+    const toMove = uiAssignedLessons.filter((l) =>
+      selectedUIAssigned.includes(l.topic)
+    );
+    setUiUnassignedLessons((prev) => [...prev, ...toMove]);
+    setUiAssignedLessons((prev) =>
+      prev.filter((l) => !selectedUIAssigned.includes(l.topic))
+    );
+    setSelectedUIAssigned([]);
   };
 
   return (
@@ -246,14 +227,7 @@ const SyllabusAssign = () => {
         </Button>
       </Box>
 
-      <Paper
-        sx={{
-          width: "100%",
-          mb: 2,
-          borderRadius: 2,
-          boxShadow: 3,
-        }}
-      >
+      <Paper sx={{ width: "100%", mb: 2, borderRadius: 2, boxShadow: 3 }}>
         {/* Header */}
         <Box
           sx={{
@@ -266,31 +240,24 @@ const SyllabusAssign = () => {
             variant="h5"
             component="h1"
             align="center"
-            sx={{
-              color: "#1976d2",
-              fontWeight: 600,
-            }}
+            sx={{ color: "#1976d2", fontWeight: 600 }}
           >
             {syllabusData.subject}
           </Typography>
           <Typography
             variant="subtitle1"
             align="center"
-            sx={{
-              mt: 1,
-              color: "text.secondary",
-            }}
+            sx={{ mt: 1, color: "text.secondary" }}
           >
             Lesson Assignment Management
           </Typography>
 
-          {/* Dùng flex để 2 phần Hours và Weeks nằm trên 1 dòng */}
           <Box
             sx={{
               display: "flex",
-              justifyContent: "center", // canh giữa cả nhóm; đổi thành "space-between" nếu muốn 2 đầu container
+              justifyContent: "center",
               alignItems: "center",
-              gap: 4, // khoảng cách cố định giữa 2 Typography
+              gap: 4,
               mt: 1,
             }}
           >
@@ -298,27 +265,32 @@ const SyllabusAssign = () => {
               variant="subtitle2"
               sx={{ color: "#1976d2", fontWeight: 500, fontSize: "1rem" }}
             >
-              Hours of Syllabus: {syllabusData.maxHoursOfSyllabus ?? "N/A"}
+              Hours Per Week of Syllabus: 30
             </Typography>
             <Typography
               variant="subtitle2"
               sx={{ color: "#1976d2", fontWeight: 500, fontSize: "1rem" }}
             >
-              Weeks of Syllabus: {syllabusData.maxNumberOfWeek ?? "N/A"}
+              Weeks of Syllabus: {syllabusData.numberOfWeek ?? "N/A"}
             </Typography>
           </Box>
 
-          {/* Total Assigned Hours vẫn trên dòng riêng */}
-          <Typography
-            variant="subtitle2"
-            align="center"
-            sx={{ mt: 1, color: "#388e3c", fontWeight: 500, fontSize: "1rem" }}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              mt: 1,
+            }}
           >
-            Total Assigned Hours:{" "}
-            {syllabusData.maxNumberOfWeek * totalAssignedHours}
-          </Typography>
+            <Typography
+              variant="subtitle2"
+              sx={{ color: "#1976d2", fontWeight: 500, fontSize: "1rem" }}
+            >
+              Min Lessons Required Per Week: 3 lessons
+            </Typography>
+          </Box>
         </Box>
-        {/* Tables Container */}
+
         <Typography
           sx={{
             color: isExceedMax ? "#f44336" : "#388e3c",
@@ -335,11 +307,10 @@ const SyllabusAssign = () => {
             marginTop: 2,
           }}
         >
-          Total Hours After Assign:{" "}
-          {(totalAssignedHours + totalSelectedUnassignedHours) *
-            syllabusData.maxNumberOfWeek}{" "}
-          hours
+          Current Assigned Hours Per Week: {totalAssignedHoursPerWeek}
         </Typography>
+
+        {/* Grid: Unassigned & Assigned with arrow UI */}
         <Box
           sx={{
             display: "grid",
@@ -351,23 +322,12 @@ const SyllabusAssign = () => {
         >
           {/* Unassigned Lessons Table */}
           <Box>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                mb: 2,
-                flexWrap: "wrap", // thêm nếu muốn xuống dòng gọn gàng khi nhỏ
-              }}
+            <Typography
+              variant="h6"
+              sx={{ color: "#2196f3", fontWeight: 500, mb: 2 }}
             >
-              <Typography
-                variant="h6"
-                sx={{ color: "#2196f3", fontWeight: 500 }}
-              >
-                Unassigned Lessons
-              </Typography>
-            </Box>
-
+              Unassigned Lessons
+            </Typography>
             <TableContainer
               component={Paper}
               variant="outlined"
@@ -384,16 +344,16 @@ const SyllabusAssign = () => {
                     <TableCell padding="checkbox">
                       <Checkbox
                         indeterminate={
-                          selectedUnassigned.length > 0 &&
-                          selectedUnassigned.length <
-                            (unassignedData?.data?.data?.length || 0)
+                          selectedUIUnassigned.length > 0 &&
+                          selectedUIUnassigned.length <
+                            uiUnassignedLessons.length
                         }
                         checked={
-                          (unassignedData?.data?.data?.length || 0) > 0 &&
-                          selectedUnassigned.length ===
-                            (unassignedData?.data?.data?.length || 0)
+                          uiUnassignedLessons.length > 0 &&
+                          selectedUIUnassigned.length ===
+                            uiUnassignedLessons.length
                         }
-                        onChange={handleSelectAllUnassigned}
+                        onChange={handleSelectAllUIUnassigned}
                       />
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Lesson Name</TableCell>
@@ -405,32 +365,32 @@ const SyllabusAssign = () => {
                 <TableBody>
                   {isLoadingUnassigned ? (
                     <TableRow>
-                      <TableCell colSpan={2} align="center" sx={{ py: 3 }}>
+                      <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
                         <CircularProgress size={24} />
                       </TableCell>
                     </TableRow>
                   ) : isErrorUnassigned ? (
                     <TableRow>
-                      <TableCell colSpan={2}>
+                      <TableCell colSpan={3}>
                         <Alert severity="error">
                           {errorUnassigned?.message ||
                             "Error loading unassigned lessons"}
                         </Alert>
                       </TableCell>
                     </TableRow>
-                  ) : (unassignedData?.data?.data || []).length === 0 ? (
+                  ) : uiUnassignedLessons.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={2} align="center" sx={{ py: 3 }}>
+                      <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
                         <Typography color="text.secondary">
                           No unassigned lessons available
                         </Typography>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    (unassignedData?.data?.data || []).map((lesson) => (
+                    uiUnassignedLessons.map((lesson) => (
                       <TableRow
                         key={lesson.id}
-                        selected={selectedUnassigned.includes(lesson.topic)}
+                        selected={selectedUIUnassigned.includes(lesson.topic)}
                         hover
                         sx={{
                           "&.Mui-selected": {
@@ -443,8 +403,10 @@ const SyllabusAssign = () => {
                       >
                         <TableCell padding="checkbox">
                           <Checkbox
-                            checked={selectedUnassigned.includes(lesson.topic)}
-                            onChange={() => handleSelectUnassigned(lesson)}
+                            checked={selectedUIUnassigned.includes(
+                              lesson.topic
+                            )}
+                            onChange={() => handleSelectUIUnassigned(lesson)}
                           />
                         </TableCell>
                         <TableCell>{lesson.topic}</TableCell>
@@ -457,7 +419,7 @@ const SyllabusAssign = () => {
             </TableContainer>
           </Box>
 
-          {/* Arrow Buttons */}
+          {/* Arrow Buttons UI */}
           <Box
             sx={{
               display: "flex",
@@ -466,14 +428,11 @@ const SyllabusAssign = () => {
               gap: 2,
             }}
           >
-            <Tooltip title="Assign selected lessons">
+            <Tooltip title="Move to Assigned (UI)">
               <span>
                 <IconButton
-                  onClick={handleAssign}
-                  disabled={
-                    selectedUnassigned.length === 0 ||
-                    assignLessonsMutation.isPending
-                  }
+                  onClick={handleAssignUI}
+                  disabled={selectedUIUnassigned.length === 0}
                   color="primary"
                   sx={{
                     border: "1px solid",
@@ -492,14 +451,11 @@ const SyllabusAssign = () => {
                 </IconButton>
               </span>
             </Tooltip>
-            <Tooltip title="Unassign selected lessons">
+            <Tooltip title="Move to Unassigned (UI)">
               <span>
                 <IconButton
-                  onClick={handleUnassign}
-                  disabled={
-                    selectedAssigned.length === 0 ||
-                    unassignLessonsMutation.isPending
-                  }
+                  onClick={handleUnassignUI}
+                  disabled={selectedUIAssigned.length === 0}
                   color="primary"
                   sx={{
                     border: "1px solid",
@@ -534,18 +490,6 @@ const SyllabusAssign = () => {
               }}
             >
               Assigned Lessons
-              {selectedAssigned.length > 0 && (
-                <Typography
-                  component="span"
-                  sx={{
-                    ml: 1,
-                    color: "text.secondary",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  ({selectedAssigned.length} selected)
-                </Typography>
-              )}
             </Typography>
             <TableContainer
               component={Paper}
@@ -563,16 +507,14 @@ const SyllabusAssign = () => {
                     <TableCell padding="checkbox">
                       <Checkbox
                         indeterminate={
-                          selectedAssigned.length > 0 &&
-                          selectedAssigned.length <
-                            (assignedData?.data?.data?.length || 0)
+                          selectedUIAssigned.length > 0 &&
+                          selectedUIAssigned.length < uiAssignedLessons.length
                         }
                         checked={
-                          (assignedData?.data?.data?.length || 0) > 0 &&
-                          selectedAssigned.length ===
-                            (assignedData?.data?.data?.length || 0)
+                          uiAssignedLessons.length > 0 &&
+                          selectedUIAssigned.length === uiAssignedLessons.length
                         }
-                        onChange={handleSelectAllAssigned}
+                        onChange={handleSelectAllUIAssigned}
                       />
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Lesson Name</TableCell>
@@ -584,32 +526,32 @@ const SyllabusAssign = () => {
                 <TableBody>
                   {isLoadingAssigned ? (
                     <TableRow>
-                      <TableCell colSpan={2} align="center" sx={{ py: 3 }}>
+                      <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
                         <CircularProgress size={24} />
                       </TableCell>
                     </TableRow>
                   ) : isErrorAssigned ? (
                     <TableRow>
-                      <TableCell colSpan={2}>
+                      <TableCell colSpan={3}>
                         <Alert severity="error">
                           {errorAssigned?.message ||
                             "Error loading assigned lessons"}
                         </Alert>
                       </TableCell>
                     </TableRow>
-                  ) : (assignedData?.data?.data || []).length === 0 ? (
+                  ) : uiAssignedLessons.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={2} align="center" sx={{ py: 3 }}>
+                      <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
                         <Typography color="text.secondary">
                           No assigned lessons available
                         </Typography>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    (assignedData?.data?.data || []).map((lesson) => (
+                    uiAssignedLessons.map((lesson) => (
                       <TableRow
                         key={lesson.id}
-                        selected={selectedAssigned.includes(lesson.topic)}
+                        selected={selectedUIAssigned.includes(lesson.topic)}
                         hover
                         sx={{
                           "&.Mui-selected": {
@@ -622,8 +564,8 @@ const SyllabusAssign = () => {
                       >
                         <TableCell padding="checkbox">
                           <Checkbox
-                            checked={selectedAssigned.includes(lesson.topic)}
-                            onChange={() => handleSelectAssigned(lesson)}
+                            checked={selectedUIAssigned.includes(lesson.topic)}
+                            onChange={() => handleSelectUIAssigned(lesson)}
                           />
                         </TableCell>
                         <TableCell>{lesson.topic}</TableCell>
@@ -636,13 +578,33 @@ const SyllabusAssign = () => {
             </TableContainer>
           </Box>
         </Box>
+
+        <Box
+          sx={{
+            p: 2,
+            display: "flex",
+            justifyContent: "flex-end",
+            borderTop: "1px solid #e0e0e0",
+            background: "#f9f9f9",
+          }}
+        >
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSave}
+            disabled={assignLessonsMutation.isLoading || isExceedMax}
+          >
+            {assignLessonsMutation.isLoading ? "Saving..." : "Save"}
+          </Button>
+        </Box>
       </Paper>
 
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
           onClose={handleCloseSnackbar}

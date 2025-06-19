@@ -10,6 +10,7 @@ import EditChildForm from "@pages/EditChildForm";
 import AddChildForm from "@pages/AddChildForm";
 import EnrollmentApplicationList from "@pages/EnrollmentApplicationList";
 
+
 // Lazy import pages
 const Home = lazy(() => import("@pages/Home"));
 const Login = lazy(() => import("@pages/Login"));
@@ -651,30 +652,27 @@ const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            <AdmissionDashboard />
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
+            <EducationDashboard />
           </UserPageWrapper>
         ),
       },
-      {
-        path: "registrations",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            <ComingSoon
-              title="Registrations List"
-              description="View and manage all student registrations."
-            />
-          </UserPageWrapper>
-        ),
-      },
+      // {
+      //   path: "registrations",
+      //   element: (
+      //     <UserPageWrapper requiredRoles={["ADMISSION"]}>
+      //       <ComingSoon
+      //         title="Registrations List"
+      //         description="View and manage all student registrations."
+      //       />
+      //     </UserPageWrapper>
+      //   ),
+      // },
       {
         path: "syllabus",
         element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            <ComingSoon
-              title="Registration Detail"
-              description="View detailed information about a registration."
-            />
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
+            <Syllabus />
           </UserPageWrapper>
         ),
       },

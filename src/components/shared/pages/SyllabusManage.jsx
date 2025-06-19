@@ -44,7 +44,7 @@ import { useNavigate } from "react-router-dom";
 import { useAssignedLessons } from "@hooks/useSyllabusLesson";
 import { useLessonList } from "@hooks/useLesson";
 
-const HOURS_PER_WEEK = 40;
+const HOURS_PER_WEEK = 30;
 
 const SyllabusManage = () => {
   const [grade, setGrade] = useState("LEAF");
@@ -61,7 +61,7 @@ const SyllabusManage = () => {
   const [formData, setFormData] = useState({
     subject: "",
     description: "",
-    maxNumberOfWeek: "",
+    numberOfWeek: "",
     grade: "LEAF",
     lessonNames: [],
   });
@@ -76,8 +76,7 @@ const SyllabusManage = () => {
   const [maxWeekInput, setMaxWeekInput] = useState(16);
   const subjectRef = useRef();
   const descriptionRef = useRef();
-  const maxWeekRef = useRef(16);
-  const gradeRef = useRef("LEAF");
+  const numberOfWeekRef = useRef(16);
 
   // TanStack Query hooks
   const {
@@ -128,15 +127,18 @@ const SyllabusManage = () => {
   const totalItems = syllabusList.length || 0;
 
   // Filter and search logic
-  const filteredData = syllabusList?.filter(syllabus => {
-    const matchesSearch = searchQuery === "" ||
-      syllabus.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      syllabus.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredData =
+    syllabusList?.filter((syllabus) => {
+      const matchesSearch =
+        searchQuery === "" ||
+        syllabus.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        syllabus.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesGrade = gradeFilter === "ALL" || syllabus.grade === gradeFilter;
+      const matchesGrade =
+        gradeFilter === "ALL" || syllabus.grade === gradeFilter;
 
-    return matchesSearch && matchesGrade;
-  }) || [];
+      return matchesSearch && matchesGrade;
+    }) || [];
 
   const displayedData = filteredData.slice(
     page * rowsPerPage,
@@ -148,20 +150,24 @@ const SyllabusManage = () => {
       const recordData = {
         subject: record.subject ?? "",
         description: record.description ?? "",
-        maxNumberOfWeek: record.maxNumberOfWeek ?? "",
+        numberOfWeek: record.numberOfWeek ?? "",
         grade: record.grade ?? "LEAF",
-        lessonNames: Array.isArray(record.lessonNames) ? record.lessonNames : [],
+        lessonNames: Array.isArray(record.lessonNames)
+          ? record.lessonNames
+          : [],
       };
 
       setFormData(recordData);
       setGrade(recordData.grade);
       setSelectedLessons(recordData.lessonNames);
-      setMaxWeekInput(Number(recordData.maxNumberOfWeek) || 0);
+      setMaxWeekInput(Number(recordData.numberOfWeek) || 16);
 
       setTimeout(() => {
         if (subjectRef.current) subjectRef.current.value = recordData.subject;
-        if (descriptionRef.current) descriptionRef.current.value = recordData.description;
-        if (maxWeekRef.current) maxWeekRef.current.value = recordData.maxNumberOfWeek;
+        if (descriptionRef.current)
+          descriptionRef.current.value = recordData.description;
+        if (numberOfWeekRef.current)
+          numberOfWeekRef.current.value = recordData.numberOfWeek;
       }, 0);
 
       setEditingId(record.id);
@@ -169,7 +175,7 @@ const SyllabusManage = () => {
       const emptyData = {
         subject: "",
         description: "",
-        maxNumberOfWeek: "",
+        numberOfWeek: "",
         grade: "LEAF",
         lessonNames: [],
       };
@@ -177,12 +183,12 @@ const SyllabusManage = () => {
       setFormData(emptyData);
       setGrade("LEAF");
       setSelectedLessons([]);
-      setMaxWeekInput(0);
+      setMaxWeekInput(16);
 
       setTimeout(() => {
         if (subjectRef.current) subjectRef.current.value = "";
         if (descriptionRef.current) descriptionRef.current.value = "";
-        if (maxWeekRef.current) maxWeekRef.current.value = "";
+        if (numberOfWeekRef.current) numberOfWeekRef.current.value = 16;
       }, 0);
 
       setEditingId(null);
@@ -201,7 +207,7 @@ const SyllabusManage = () => {
     setFormData({
       subject: "",
       description: "",
-      maxNumberOfWeek: "",
+      numberOfWeek: "",
       grade: "LEAF",
       lessonNames: [],
     });
@@ -211,7 +217,7 @@ const SyllabusManage = () => {
     // Only validate basic fields in step 1
     const subject = subjectRef.current?.value?.trim();
     const description = descriptionRef.current?.value?.trim();
-    const maxWeeks = Number(maxWeekRef.current?.value);
+    const numberWeeks = Number(numberOfWeekRef.current?.value);
 
     if (!subject) {
       setSnackbar({
@@ -231,20 +237,11 @@ const SyllabusManage = () => {
       return;
     }
 
-    if (!maxWeeks || maxWeeks < 1 || maxWeeks > 53) {
-      setSnackbar({
-        open: true,
-        message: "Max Number of Week must be between 1 and 53",
-        severity: "error",
-      });
-      return;
-    }
-
     // Save form data
     setFormData({
       subject,
       description,
-      maxNumberOfWeek: maxWeeks,
+      numberOfWeek: numberWeeks,
       grade,
     });
 
@@ -257,8 +254,10 @@ const SyllabusManage = () => {
       // Restore form data when going back to step 1
       setTimeout(() => {
         if (subjectRef.current) subjectRef.current.value = formData.subject;
-        if (descriptionRef.current) descriptionRef.current.value = formData.description;
-        if (maxWeekRef.current) maxWeekRef.current.value = formData.maxNumberOfWeek;
+        if (descriptionRef.current)
+          descriptionRef.current.value = formData.description;
+        if (numberOfWeekRef.current)
+          numberOfWeekRef.current.value = formData.numberOfWeek;
       }, 0);
     }
     setActiveStep((prevStep) => prevStep - 1);
@@ -306,15 +305,15 @@ const SyllabusManage = () => {
 
     const data = editingId
       ? {
-        subject: subjectRef.current.value.trim(),
-        description: descriptionRef.current.value.trim(),
-        maxNumberOfWeek: Number(maxWeekRef.current.value),
-        grade,
-      }
+          subject: subjectRef.current.value.trim(),
+          description: descriptionRef.current.value.trim(),
+          numberOfWeek: Number(numberOfWeekRef.current.value),
+          grade,
+        }
       : {
-        ...formData,
-        lessonNames: selectedLessons,
-      };
+          ...formData,
+          lessonNames: selectedLessons,
+        };
 
     try {
       if (editingId) {
@@ -335,7 +334,8 @@ const SyllabusManage = () => {
       handleClose();
     } catch (error) {
       console.error("Error submitting syllabus:", error);
-      const errorMessage = error?.response?.data?.message || "Operation failed. Please try again.";
+      const errorMessage =
+        error?.response?.data?.message || "Operation failed. Please try again.";
       setSnackbar({
         open: true,
         message: errorMessage,
@@ -350,8 +350,9 @@ const SyllabusManage = () => {
         <Alert severity="error">
           {error?.response?.status === 403
             ? "You do not have permission to access this resource. Please log in with appropriate permissions."
-            : `Error loading syllabus data: ${error?.message || "Please try again later."
-            }`}
+            : `Error loading syllabus data: ${
+                error?.message || "Please try again later."
+              }`}
         </Alert>
       </Box>
     );
@@ -420,7 +421,7 @@ const SyllabusManage = () => {
           display: "flex",
           gap: 2,
           alignItems: "center",
-          flexWrap: "wrap"
+          flexWrap: "wrap",
         }}
       >
         <TextField
@@ -468,67 +469,79 @@ const SyllabusManage = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+              <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
                 <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Subject</TableCell>
+                >
+                  Subject
+                </TableCell>
                 <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Description</TableCell>
+                >
+                  Description
+                </TableCell>
                 <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Number of Week</TableCell>
+                >
+                  Number of Week
+                </TableCell>
                 <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Hours of Syllabuses</TableCell>
+                >
+                  Hours of Syllabuses
+                </TableCell>
                 <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Grade</TableCell>
+                >
+                  Grade
+                </TableCell>
                 <TableCell
                   align="center"
                   sx={{
-                    color: '#1976d2',
+                    color: "#1976d2",
                     fontWeight: 600,
-                    fontSize: '0.95rem',
-                    borderBottom: '2px solid #e3f2fd',
-                    whiteSpace: 'nowrap'
+                    fontSize: "0.95rem",
+                    borderBottom: "2px solid #e3f2fd",
+                    whiteSpace: "nowrap",
                   }}
-                >Actions</TableCell>
+                >
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -536,11 +549,17 @@ const SyllabusManage = () => {
                 <TableRow key={row.id}>
                   <TableCell align="center">{row.subject || "-"}</TableCell>
                   <TableCell align="center">{row.description || "-"}</TableCell>
-                  <TableCell align="center">{row.maxNumberOfWeek || "-"}</TableCell>
-                  <TableCell align="center">{row.maxHoursOfSyllabus || "-"}</TableCell>
+                  <TableCell align="center">
+                    {row.numberOfWeek || "-"}
+                  </TableCell>
+                  <TableCell align="center">
+                    {row.maxHoursOfSyllabus || "-"}
+                  </TableCell>
                   <TableCell align="center">{row.grade || "-"}</TableCell>
                   <TableCell align="center">
-                    <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                    <Box
+                      sx={{ display: "flex", gap: 1, justifyContent: "center" }}
+                    >
                       <Button
                         variant="outlined"
                         color="info"
@@ -569,7 +588,7 @@ const SyllabusManage = () => {
                         }
                         size="small"
                       >
-                        Assign Page
+                        Assign Lessons
                       </Button>
                     </Box>
                   </TableCell>
@@ -632,6 +651,7 @@ const SyllabusManage = () => {
                   <Select
                     labelId="max-week-label"
                     value={maxWeekInput}
+                    inputRef={numberOfWeekRef}
                     label="Number of Week"
                     onChange={(e) => setMaxWeekInput(Number(e.target.value))}
                   >
@@ -768,52 +788,56 @@ const SyllabusManage = () => {
           ) : (
             // Create Form with Stepper
             <Box sx={{ width: "100%", mt: 2 }}>
-              <Box sx={{
-                width: "70%",
-                margin: "0 auto",
-                display: "flex",
-                justifyContent: "center"
-              }}>
+              <Box
+                sx={{
+                  width: "70%",
+                  margin: "0 auto",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
                 <Stepper
                   activeStep={activeStep}
                   sx={{
                     width: "100%",
-                    '& .MuiStepLabel-root': {
-                      padding: '24px 12px',
+                    "& .MuiStepLabel-root": {
+                      padding: "24px 12px",
                     },
-                    '& .MuiStepIcon-root': {
-                      width: '35px',
-                      height: '35px',
-                      color: '#e3f2fd',
-                      '&.Mui-active': {
-                        color: '#1976d2',
+                    "& .MuiStepIcon-root": {
+                      width: "35px",
+                      height: "35px",
+                      color: "#e3f2fd",
+                      "&.Mui-active": {
+                        color: "#1976d2",
                       },
-                      '&.Mui-completed': {
-                        color: '#2e7d32',
+                      "&.Mui-completed": {
+                        color: "#2e7d32",
                       },
                     },
-                    '& .MuiStepLabel-label': {
-                      fontSize: '1.1rem',
+                    "& .MuiStepLabel-label": {
+                      fontSize: "1.1rem",
                       fontWeight: 500,
-                      '&.Mui-active': {
-                        color: '#1976d2',
+                      "&.Mui-active": {
+                        color: "#1976d2",
                         fontWeight: 600,
                       },
-                      '&.Mui-completed': {
-                        color: '#2e7d32',
+                      "&.Mui-completed": {
+                        color: "#2e7d32",
                         fontWeight: 600,
                       },
                     },
-                    '& .MuiStepConnector-line': {
-                      borderColor: '#e3f2fd',
-                      borderWidth: '3px',
+                    "& .MuiStepConnector-line": {
+                      borderColor: "#e3f2fd",
+                      borderWidth: "3px",
                     },
-                    '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
-                      borderColor: '#1976d2',
-                    },
-                    '& .MuiStepConnector-root.Mui-completed .MuiStepConnector-line': {
-                      borderColor: '#2e7d32',
-                    },
+                    "& .MuiStepConnector-root.Mui-active .MuiStepConnector-line":
+                      {
+                        borderColor: "#1976d2",
+                      },
+                    "& .MuiStepConnector-root.Mui-completed .MuiStepConnector-line":
+                      {
+                        borderColor: "#2e7d32",
+                      },
                   }}
                 >
                   <Step>
@@ -846,21 +870,29 @@ const SyllabusManage = () => {
                     />
 
                     <FormControl fullWidth required>
-                      <InputLabel id="max-week-label">Number of Week</InputLabel>
+                      <InputLabel id="max-week-label">
+                        Number of Week
+                      </InputLabel>
                       <Select
                         labelId="max-week-label"
-                        inputRef={maxWeekRef}
+                        inputRef={numberOfWeekRef}
                         value={maxWeekInput}
-                        
                         label="Number of Week"
-                        onChange={(e) => setMaxWeekInput(Number(e.target.value))}
+                        onChange={(e) =>
+                          setMaxWeekInput(Number(e.target.value))
+                        }
                       >
                         <MenuItem value={16}>16</MenuItem>
                         <MenuItem value={32}>32</MenuItem>
                       </Select>
                     </FormControl>
 
-                    <Grid container alignItems="center" spacing={4} sx={{ py: 1 }}>
+                    <Grid
+                      container
+                      alignItems="center"
+                      spacing={4}
+                      sx={{ py: 1 }}
+                    >
                       <Grid item>
                         <Typography variant="subtitle2" color="text.secondary">
                           Hours Per Week
@@ -975,6 +1007,29 @@ const SyllabusManage = () => {
                     <Typography variant="h6" sx={{ mb: 2 }}>
                       Select Lessons for Syllabus
                     </Typography>
+                    <Grid
+                      container
+                      alignItems="center"
+                      spacing={4}
+                      sx={{ mb: 2 }}
+                    >
+                      <Grid item>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Hours Per Week
+                        </Typography>
+                        <Typography variant="body1" fontWeight={600}>
+                          30 hours
+                        </Typography>
+                      </Grid>
+                      <Grid item>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Min Lessons Required Per Week
+                        </Typography>
+                        <Typography variant="body1" fontWeight={600}>
+                          3 lessons
+                        </Typography>
+                      </Grid>
+                    </Grid>
                     {isLoadingLessons ? (
                       <Box
                         sx={{
@@ -1011,20 +1066,26 @@ const SyllabusManage = () => {
                               </TableCell>
                               <TableCell>Topic</TableCell>
                               <TableCell>Description</TableCell>
-                              <TableCell>Duration (Hours)</TableCell>
+                              <TableCell>Duration Per Week (Hours)</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
                             {lessonList.map((lesson) => (
                               <TableRow
                                 key={lesson.id}
-                                selected={selectedLessons.includes(lesson.topic)}
+                                selected={selectedLessons.includes(
+                                  lesson.topic
+                                )}
                                 hover
                               >
                                 <TableCell padding="checkbox">
                                   <Checkbox
-                                    checked={selectedLessons.includes(lesson.topic)}
-                                    onChange={() => handleLessonSelect(lesson.topic)}
+                                    checked={selectedLessons.includes(
+                                      lesson.topic
+                                    )}
+                                    onChange={() =>
+                                      handleLessonSelect(lesson.topic)
+                                    }
                                   />
                                 </TableCell>
                                 <TableCell>{lesson.topic}</TableCell>
@@ -1047,13 +1108,11 @@ const SyllabusManage = () => {
         {!editingId && (
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            {activeStep > 0 && (
-              <Button onClick={handleBack}>Back</Button>
-            )}
+            {activeStep > 0 && <Button onClick={handleBack}>Back</Button>}
             {activeStep === 0 ? (
               <Button onClick={handleNext}>Next</Button>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: 'inline' }}>
+              <form onSubmit={handleSubmit} style={{ display: "inline" }}>
                 <Button
                   type="submit"
                   variant="contained"
@@ -1076,7 +1135,7 @@ const SyllabusManage = () => {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
           onClose={handleCloseSnackbar}
@@ -1115,7 +1174,14 @@ const SyllabusManage = () => {
         </DialogTitle>
         <DialogContent>
           {isLoadingDetail ? (
-            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "300px" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "300px",
+              }}
+            >
               <CircularProgress size={40} />
             </Box>
           ) : detailData?.data?.data ? (
@@ -1125,19 +1191,19 @@ const SyllabusManage = () => {
                 elevation={0}
                 sx={{
                   borderRadius: 2,
-                  overflow: 'hidden',
+                  overflow: "hidden",
                   mb: 3,
-                  border: '1px solid #e0e0e0',
-                  '& .MuiTableCell-root': {
-                    borderColor: '#e0e0e0',
+                  border: "1px solid #e0e0e0",
+                  "& .MuiTableCell-root": {
+                    borderColor: "#e0e0e0",
                     py: 2.5,
                     px: 3,
                   },
-                  '& .MuiTableRow-root': {
-                    '&:last-child td, &:last-child th': {
-                      borderBottom: 0
-                    }
-                  }
+                  "& .MuiTableRow-root": {
+                    "&:last-child td, &:last-child th": {
+                      borderBottom: 0,
+                    },
+                  },
                 }}
               >
                 <Table>
@@ -1145,10 +1211,10 @@ const SyllabusManage = () => {
                     <TableRow>
                       <TableCell
                         sx={{
-                          width: '20%',
-                          bgcolor: '#f8f9fa',
+                          width: "20%",
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Grade
@@ -1158,26 +1224,28 @@ const SyllabusManage = () => {
                     <TableRow>
                       <TableCell
                         sx={{
-                          bgcolor: '#f8f9fa',
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Duration
                       </TableCell>
-                      <TableCell>{detailData.data.data.maxNumberOfWeek} weeks</TableCell>
+                      <TableCell>
+                        {detailData.data.data.numberOfWeek} weeks
+                      </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell
                         sx={{
-                          bgcolor: '#f8f9fa',
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Description
                       </TableCell>
-                      <TableCell sx={{ whiteSpace: 'pre-wrap' }}>
+                      <TableCell sx={{ whiteSpace: "pre-wrap" }}>
                         {detailData.data.data.description}
                       </TableCell>
                     </TableRow>
@@ -1191,21 +1259,21 @@ const SyllabusManage = () => {
                   elevation={0}
                   sx={{
                     p: 3,
-                    border: '1px solid #e0e0e0',
-                    borderRadius: 2
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
                   }}
                 >
                   <Typography
                     variant="h6"
                     sx={{
-                      color: '#1976d2',
+                      color: "#1976d2",
                       fontWeight: 600,
                       mb: 3,
                       pb: 2,
-                      borderBottom: '2px solid #e3f2fd',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1
+                      borderBottom: "2px solid #e3f2fd",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
                     }}
                   >
                     <Box
@@ -1213,17 +1281,19 @@ const SyllabusManage = () => {
                       sx={{
                         width: 6,
                         height: 24,
-                        bgcolor: '#1976d2',
-                        display: 'inline-block',
+                        bgcolor: "#1976d2",
+                        display: "inline-block",
                         borderRadius: 1,
-                        mr: 1
+                        mr: 1,
                       }}
                     />
                     Lessons
                   </Typography>
 
                   {isLoadingAssignedLessons ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", p: 3 }}
+                    >
                       <CircularProgress size={24} />
                     </Box>
                   ) : assignedLessonsData?.data?.data?.length > 0 ? (
@@ -1232,7 +1302,7 @@ const SyllabusManage = () => {
                       spacing={2.5}
                       sx={{
                         px: { xs: 0, sm: 2 },
-                        mx: { xs: -1, sm: -2 }
+                        mx: { xs: -1, sm: -2 },
                       }}
                     >
                       {assignedLessonsData.data.data.map((lesson) => (
@@ -1241,30 +1311,30 @@ const SyllabusManage = () => {
                             elevation={0}
                             sx={{
                               p: 2.5,
-                              height: '100%',
-                              bgcolor: '#fff',
-                              border: '1px solid #e0e0e0',
+                              height: "100%",
+                              bgcolor: "#fff",
+                              border: "1px solid #e0e0e0",
                               borderRadius: 2,
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              '&:hover': {
-                                bgcolor: '#f5f5f5',
-                                borderColor: '#1976d2',
-                                transform: 'translateY(-2px)',
-                                boxShadow: '0 4px 8px rgba(0,0,0,0.05)'
-                              }
+                              transition: "all 0.2s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                              "&:hover": {
+                                bgcolor: "#f5f5f5",
+                                borderColor: "#1976d2",
+                                transform: "translateY(-2px)",
+                                boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+                              },
                             }}
                           >
                             <Typography
                               sx={{
                                 fontWeight: 500,
-                                color: '#2c3e50',
-                                textAlign: 'center',
+                                color: "#2c3e50",
+                                textAlign: "center",
                                 lineHeight: 1.3,
-                                fontSize: '0.95rem'
+                                fontSize: "0.95rem",
                               }}
                             >
                               {lesson.topic}
@@ -1278,10 +1348,10 @@ const SyllabusManage = () => {
                       elevation={0}
                       sx={{
                         p: 3,
-                        textAlign: 'center',
-                        bgcolor: '#f8f9fa',
-                        border: '1px solid #e0e0e0',
-                        borderRadius: 2
+                        textAlign: "center",
+                        bgcolor: "#f8f9fa",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 2,
                       }}
                     >
                       <Typography color="text.secondary">
@@ -1294,7 +1364,10 @@ const SyllabusManage = () => {
             </Box>
           ) : (
             <Box sx={{ p: 4, textAlign: "center" }}>
-              <Typography color="error" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
+              <Typography
+                color="error"
+                sx={{ fontSize: "1.1rem", fontWeight: 500 }}
+              >
                 Failed to load syllabus details.
               </Typography>
             </Box>

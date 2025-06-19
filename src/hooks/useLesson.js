@@ -28,7 +28,7 @@ export const useCreateLesson = () => {
     onSuccess: (newLesson) => {
       // Invalidate and refetch lesson list
       queryClient.invalidateQueries({ queryKey: lessonKeys.lists() });
-      
+
       // Optionally update the cache directly
       queryClient.setQueryData(lessonKeys.lists(), (old) => {
         if (!old?.data?.data) return old;
@@ -62,7 +62,7 @@ export const useUpdateLesson = () => {
       // Optionally update the cache directly
       queryClient.setQueryData(lessonKeys.lists(), (old) => {
         if (!old?.data?.data) return old;
-        const updatedData = old.data.data.map((lesson) => 
+        const updatedData = old.data.data.map((lesson) =>
           lesson.id === id ? data.data : lesson
         );
         return {
