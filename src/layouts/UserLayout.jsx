@@ -46,25 +46,34 @@ const UserLayout = ({ children }) => {
           {
             key: "/user/parent/calendar",
             icon: Calendar,
-            label: "Lịch học",
+            label: "Class Schedule",
             path: "/user/parent/calendar",
           },
           {
+
             key: "/user/parent/forms",
             icon: ListTodo,
             label: "Đơn nhâp học",
             path: "/user/parent/forms",
+
+          },
+          {
+            key: "/user/parent/gallery",
+            icon: BookOpen,
+            label: "Photo Gallery",
+            path: "/user/parent/gallery",
+
           },
           {
             key: "/user/parent/messages",
             icon: MessageSquare,
-            label: "Tin nhắn",
+            label: "Messages",
             path: "/user/parent/messages",
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Thông tin cá nhân",
+            label: "Profile",
             path: "/user/shared/profile",
           },
         ];
@@ -80,25 +89,25 @@ const UserLayout = ({ children }) => {
           {
             key: "/user/teacher/attendance",
             icon: UserCheck,
-            label: "Điểm danh",
+            label: "Attendance",
             path: "/user/teacher/attendance",
           },
           {
             key: "/user/teacher/journal",
             icon: BookOpen,
-            label: "Nhật ký lớp",
+            label: "Class Journal",
             path: "/user/teacher/journal",
           },
           {
             key: "/user/teacher/messages",
             icon: MessageSquare,
-            label: "Tin nhắn",
+            label: "Messages",
             path: "/user/teacher/messages",
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Thông tin cá nhân",
+            label: "Profile",
             path: "/user/shared/profile",
           },
         ];
@@ -132,8 +141,15 @@ const UserLayout = ({ children }) => {
             key: '/user/shared/profile',
             icon: User,
             label: 'Thông tin cá nhân',
+          },
+          {
+            key: '/user/shared/profile',
+            icon: User,
+            label: 'Profile',
+
             path: '/user/shared/profile'
-          }        ];
+          }
+        ];
         
       case 'hr':
         return [
@@ -146,19 +162,19 @@ const UserLayout = ({ children }) => {
           { 
             key: '/user/hr/staff', 
             icon: Users, 
-            label: 'Quản lý nhân viên',
+            label: 'Staff Management',
             path: '/user/hr/staff'
           },
           { 
             key: '/user/hr/reports', 
             icon: TrendingUp, 
-            label: 'Báo cáo HR',
+            label: 'HR Reports',
             path: '/user/hr/reports'
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Thông tin cá nhân",
+            label: "Profile",
             path: "/user/shared/profile",
           },
         ];
@@ -174,37 +190,37 @@ const UserLayout = ({ children }) => {
           { 
             key: '/user/education/syllabus', 
             icon: BookOpen, 
-            label: 'Chương trình học',
+            label: 'Curriculum',
             path: '/user/education/syllabus'
           },
           { 
             key: '/user/education/lesson', 
             icon: BookOpen, 
-            label: 'Bài giảng',
+            label: 'Lessons',
             path: '/user/education/lesson'
           },
           { 
             key: '/user/education/event', 
             icon: BookOpen, 
-            label: 'Sự kiện',
+            label: 'Events',
             path: '/user/education/event'
           },
           { 
             key: '/user/education/classes', 
             icon: Users, 
-            label: 'Quản lý lớp học',
+            label: 'Class Management',
             path: '/user/education/classes'
           },
           { 
             key: '/user/education/reports', 
             icon: TrendingUp, 
-            label: 'Báo cáo giáo dục',
+            label: 'Education Reports',
             path: '/user/education/reports'
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Thông tin cá nhân",
+            label: "Profile",
             path: "/user/shared/profile",
           },
         ];
@@ -220,31 +236,31 @@ const UserLayout = ({ children }) => {
           {
             key: "/user/admin/users",
             icon: Users,
-            label: "Quản lý người dùng",
+            label: "User Management",
             path: "/user/admin/users",
           },
           {
             key: "/user/admin/classes",
             icon: BookOpen,
-            label: "Quản lý lớp học",
+            label: "Class Management",
             path: "/user/admin/classes",
           },
           {
             key: "/user/admin/statistics",
             icon: TrendingUp,
-            label: "Thống kê",
+            label: "Statistics",
             path: "/user/admin/statistics",
           },
           {
             key: "/user/admin/settings",
             icon: Settings,
-            label: "Cài đặt",
+            label: "Settings",
             path: "/user/admin/settings",
           },
           {
             key: "/user/shared/profile",
             icon: User,
-            label: "Thông tin cá nhân",
+            label: "Profile",
             path: "/user/shared/profile",
           },
         ];
@@ -282,19 +298,19 @@ const UserLayout = ({ children }) => {
   const getRoleDisplayName = () => {
     switch (userRole) {
       case "parent":
-        return "Phụ huynh";
+        return "Parent";
       case "teacher":
-        return "Giáo viên";
+        return "Teacher";
       case "admission":
-        return "Tuyển sinh";
+        return "Admission Staff";
       case "hr":
-        return "Nhân sự";
+        return "HR Staff";
       case "education":
-        return "Giáo dục";
+        return "Education Staff";
       case "admin":
-        return "Quản trị viên";
+        return "Administrator";
       default:
-        return "Người dùng";
+        return "User";
     }
   };
 
@@ -398,7 +414,7 @@ const UserLayout = ({ children }) => {
             className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            <span className="font-medium">Đăng xuất</span>
+            <span className="font-medium">Logout</span>
           </button>
         </div>
       </div>

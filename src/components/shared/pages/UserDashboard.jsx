@@ -55,12 +55,12 @@ const UserDashboard = () => {
   }, [navigate]);
 
   const getRoleDisplayName = (role) => {
-    switch (role?.toLowerCase()) {
-      case 'parent': return 'Phụ huynh';
-      case 'teacher': return 'Giáo viên';
-      case 'admission': return 'Tuyển sinh';
-      case 'admin': return 'Quản trị viên';
-      default: return 'Người dùng';
+    switch (role) {
+      case 'parent': return 'Parent';
+      case 'teacher': return 'Teacher';
+      case 'admission': return 'Admission Staff';
+      case 'admin': return 'Administrator';
+      default: return 'User';
     }
   };
 
@@ -69,32 +69,32 @@ const UserDashboard = () => {
     switch (role) {
       case 'parent':
         return [
-          { label: 'Đơn đăng ký', path: '/enrollment', icon: FileText },
-          { label: 'Lịch học', path: '/user/parent/calendar', icon: Calendar },
-          { label: 'Tin nhắn', path: '/user/parent/messages', icon: Bell }
+          { label: 'Application', path: '/enrollment', icon: FileText },
+          { label: 'Class Schedule', path: '/user/parent/calendar', icon: Calendar },
+          { label: 'Messages', path: '/user/parent/messages', icon: Bell }
         ];
       case 'teacher':
         return [
-          { label: 'Điểm danh', path: '/user/teacher/attendance', icon: Users },
-          { label: 'Nhật ký', path: '/user/teacher/journal', icon: FileText },
-          { label: 'Tin nhắn', path: '/user/teacher/messages', icon: Bell }
+          { label: 'Attendance', path: '/user/teacher/attendance', icon: Users },
+          { label: 'Journal', path: '/user/teacher/journal', icon: FileText },
+          { label: 'Messages', path: '/user/teacher/messages', icon: Bell }
         ];
       case 'admission':
         return [
-          { label: 'Hồ sơ đăng ký', path: '/user/admission/registrations', icon: FileText },
-          { label: 'Báo cáo', path: '/user/admission/reports', icon: TrendingUp },
-          { label: 'Cài đặt', path: '/user/shared/notifications', icon: Settings }
+          { label: 'Registration Records', path: '/user/admission/registrations', icon: FileText },
+          { label: 'Reports', path: '/user/admission/reports', icon: TrendingUp },
+          { label: 'Settings', path: '/user/shared/notifications', icon: Settings }
         ];
       case 'admin':
         return [
-          { label: 'Quản lý người dùng', path: '/user/admin/users', icon: Users },
-          { label: 'Thống kê', path: '/user/admin/statistics', icon: TrendingUp },
-          { label: 'Cài đặt', path: '/user/admin/settings', icon: Settings }
+          { label: 'User Management', path: '/user/admin/users', icon: Users },
+          { label: 'Statistics', path: '/user/admin/statistics', icon: TrendingUp },
+          { label: 'Settings', path: '/user/admin/settings', icon: Settings }
         ];
       default:
         return [
-          { label: 'Thông báo', path: '/user/shared/notifications', icon: Bell },
-          { label: 'Lịch chung', path: '/user/shared/calendar', icon: Calendar }
+          { label: 'Notifications', path: '/user/shared/notifications', icon: Bell },
+          { label: 'Shared Calendar', path: '/user/shared/calendar', icon: Calendar }
         ];
     }
   };
@@ -104,7 +104,7 @@ const UserDashboard = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -116,17 +116,17 @@ const UserDashboard = () => {
       <div className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-lg p-8">
         <div className="max-w-4xl">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Chào mừng, {user?.name || 'Người dùng'}!
+            Welcome, {user?.name || 'User'}!
           </h1>
           <p className="text-lg text-gray-600 mb-4">
-            Chào mừng bạn đến với hệ thống quản lý mầm non Sunshine
+            Welcome to Sunshine Preschool Management System
           </p>
           <div className="flex items-center gap-4">
             <Badge variant="primary" className="text-sm px-3 py-1">
               {getRoleDisplayName(user?.role)}
             </Badge>
             <span className="text-sm text-gray-500">
-              Đăng nhập lúc: {new Date().toLocaleString('vi-VN')}
+              Login time: {new Date().toLocaleString('en-US')}
             </span>
           </div>
         </div>
@@ -135,30 +135,30 @@ const UserDashboard = () => {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Thông báo mới"
-          value={0}
-          description="Chưa đọc"
+          title="New Notifications"
+          value="3"
+          description="Unread"
           icon={Bell}
           trend={{ value: 0, isPositive: true }}
         />
         <StatCard
-          title="Hoạt động hôm nay"
-          value={0}
-          description="Đã hoàn thành"
+          title="Today's Activities"
+          value="5"
+          description="Completed"
           icon={Calendar}
           trend={{ value: 0, isPositive: true }}
         />
         <StatCard
-          title="Tài liệu"
-          value={0}
-          description="Cần xử lý"
+          title="Documents"
+          value="12"
+          description="Need Processing"
           icon={FileText}
           trend={{ value: 0, isPositive: true }}
         />
         <StatCard
-          title="Hiệu suất"
-          value="100%"
-          description="Tuần này"
+          title="Performance"
+          value="85%"
+          description="This Week"
           icon={TrendingUp}
           trend={{ value: 0, isPositive: true }}
         />
@@ -166,7 +166,7 @@ const UserDashboard = () => {
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-6">Thao tác nhanh</h3>        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-6">Quick Actions</h3>        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {getQuickActions().map((action) => {
             const IconComponent = action.icon;
             return (
@@ -193,10 +193,10 @@ const UserDashboard = () => {
 
       {/* Recent Activity */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Hoạt động gần đây</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Activities</h3>
         <div className="text-center py-8">
           <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Chưa có hoạt động nào gần đây</p>
+          <p className="text-gray-500">No recent activities</p>
         </div>
       </div>
     </div>
