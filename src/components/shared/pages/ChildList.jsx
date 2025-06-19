@@ -4,7 +4,7 @@ import { Baby, Plus } from "lucide-react";
 import RenderFormPopUp from "./RenderFormPopUp";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { getChildren } from "@api/services/parentService";
 
 const ChildList = () => {
   const navigate = useNavigate();
@@ -19,9 +19,11 @@ const ChildList = () => {
     const fetchChildren = async () => {
       try {
         setLoading(true);
-        const response = await parentService.getChildren();
-        if (response.data && response.data.data) {
-          setChildren(response.data.data);
+        const response = await getChildren();
+        console.log(response);
+
+        if (response.data) {
+          setChildren(response.data);
         } else {
           setChildren([]);
           setError("No child information found");
@@ -37,9 +39,7 @@ const ChildList = () => {
     fetchChildren();
   }, []);
 
-  // Lấy danh sách kỳ tuyển sinh (giả sử có API hoặc hardcode)
   useEffect(() => {
-    // TODO: Thay bằng API thực tế nếu có
     setAdmissionTerms([
       { id: 1, name: "Fall 2025" },
       { id: 2, name: "Spring 2026" },
@@ -132,7 +132,9 @@ const ChildList = () => {
                 </div>
                 {child.placeOfBirth && (
                   <div className="flex space-x-2">
-                    <span className="text-gray-500 text-sm">Place of Birth:</span>
+                    <span className="text-gray-500 text-sm">
+                      Place of Birth:
+                    </span>
                     <span className="text-gray-700 text-sm">
                       {child.placeOfBirth}
                     </span>

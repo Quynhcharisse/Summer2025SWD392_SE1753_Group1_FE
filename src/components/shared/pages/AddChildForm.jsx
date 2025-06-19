@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Button, Spinner } from "@atoms";
 import { PageTemplate } from "@templates";
+import  {createChild} from "@api/services/parentService";
+
 
 const AddChildForm = () => {
   const navigate = useNavigate();
@@ -43,7 +45,7 @@ const AddChildForm = () => {
       const profileImage = uploadedFile.profile ? await uploadToCloudinary(uploadedFile.profile) : "";
       const birthCertificateImg = uploadedFile.birth ? await uploadToCloudinary(uploadedFile.birth) : "";
       const householdRegistrationImg = uploadedFile.house ? await uploadToCloudinary(uploadedFile.house) : "";
-      await parentService.createChild({
+      await createChild({
         ...data,
         profileImage,
         birthCertificateImg,

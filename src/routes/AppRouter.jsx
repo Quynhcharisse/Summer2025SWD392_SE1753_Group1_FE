@@ -1,4 +1,3 @@
-
 import ChildList from "@/components/shared/pages/ChildList";
 import { AUTH_ROUTES, ROUTES } from "@/constants/routes.js";
 import UserLayout from "@/layouts/UserLayout";
@@ -38,13 +37,10 @@ const UserProfile = lazy(() => import("@pages/UserProfile"));
 const ComingSoon = lazy(() => import("@pages/ComingSoon"));
 
 
-// Syllabus
-
 const Syllabus = lazy(() => import("@pages/SyllabusManage"));
 const Lesson = lazy(() => import("@pages/LessonManage"));
 const Event = lazy(() => import("@pages/EventManage"));
 const SyllabusAssign = lazy(() => import("@pages/SyllabusAssign"));
-
 const UserDashboard = lazy(() => import("@pages/UserDashboard"));
 
 const TermAdmission = lazy(() => import("@/components/none-shared/admissionComponent/TermAdmission.jsx"));
@@ -52,8 +48,6 @@ const ProcessForm = lazy(() => import("@/components/none-shared/admissionCompone
 const AdmissionForm = lazy(() => import("@/components/none-shared/parentComponent/AdmissionForm.jsx"));
 const ExtraTerm = lazy(() => import("@/components/none-shared/admissionComponent/ExtraTerm.jsx"));
 
-
-// Reusable component wrappers
 
 const PageWrapper = ({ children, isPublic = false, requiredRoles = [] }) => {
   const content = (
@@ -342,6 +336,116 @@ const router = createBrowserRouter([
         </UserPageWrapper>
       ),
     },
+    {
+    path: "/user/parent",
+    children: [
+      {
+        path: "dashboard",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <ParentDashboard />
+            1
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "child/:id/profile",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <ComingSoon
+              title="Child Profile"
+              description="View your child's progress."
+            />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "calendar",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <ComingSoon
+              title="Parent Calendar"
+              description="Your child's schedule."
+            />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "forms",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <AdmissionForm />
+           
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "gallery",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <ComingSoon
+              title="Photo Gallery"
+              description="Photos of activities."
+            />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "messages",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <ComingSoon
+              title="Parent Messages"
+              description="Communicate with teachers."
+            />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "feedback",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <ComingSoon
+              title="Parent Feedback"
+              description="Provide feedback."
+            />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "enrollment",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <EnrollmentApplication />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "enrollment/application",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <EnrollmentApplication />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "enrollment/my-applications",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <MyApplications />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "admission",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <Admission />
+          </UserPageWrapper>
+        ),
+      },
+    ],
+  },
     // Add other routes if needed, e.g.: feedback, messages, notifications...
   ],
 },
@@ -383,12 +487,10 @@ const router = createBrowserRouter([
       {
         path: "gallery",
         element: (
-
           <UserPageWrapper requiredRoles={["PARENT"]}>
             <ComingSoon
               title="Photo Gallery"
               description="View photos and videos of your child's activities."
-
             />
           </UserPageWrapper>
         ),
@@ -396,7 +498,6 @@ const router = createBrowserRouter([
       {
         path: "notifications",
         element: (
-
           <UserPageWrapper requiredRoles={["PARENT"]}>
             <ComingSoon
               title="Parent Messages"
@@ -549,60 +650,44 @@ const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-
-          <UserPageWrapper requiredRoles={["EDUCATION"]}>
-            <EducationDashboard />
+          <UserPageWrapper requiredRoles={["ADMISSION"]}>
+            <AdmissionDashboard />
           </UserPageWrapper>
         ),
       },
-      // {
-      //   path: "registrations",
-      //   element: (
-      //     <UserPageWrapper requiredRoles={["ADMISSION"]}>
-      //       <ComingSoon
-      //         title="Registrations List"
-      //         description="View and manage all student registrations."
-      //       />
-
-      //     </UserPageWrapper>
-      //   ),
-      // },
+      {
+        path: "registrations",
+        element: (
+          <UserPageWrapper requiredRoles={["ADMISSION"]}>
+            <ComingSoon
+              title="Registrations List"
+              description="View and manage all student registrations."
+            />
+          </UserPageWrapper>
+        ),
+      },
       {
         path: "syllabus",
         element: (
-
-          <UserPageWrapper requiredRoles={["EDUCATION"]}>
-            <Syllabus />
-
-          {/* <UserPageWrapper requiredRoles={["ADMISSION"]}>
+          <UserPageWrapper requiredRoles={["ADMISSION"]}>
             <ComingSoon
               title="Registration Detail"
               description="View detailed information about a registration."
-            /> */}
-
+            />
           </UserPageWrapper>
         ),
       },
       {
         path: "lesson",
         element: (
-
           <UserPageWrapper requiredRoles={["EDUCATION"]}>
             <Lesson />
-
-          {/* <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            <ComingSoon
-              title="Registration Review"
-              description="Review and process student applications."
-            /> */}
-
           </UserPageWrapper>
         ),
       },
       {
         path: "event",
         element: (
-
           <UserPageWrapper requiredRoles={["EDUCATION"]}>
             <Event />
           </UserPageWrapper>
@@ -623,12 +708,6 @@ const router = createBrowserRouter([
             <ComingSoon
               title="Student Assessment"
               description="Track and evaluate student progress."
-
-//           <UserPageWrapper requiredRoles={["ADMISSION"]}>
-//             <ComingSoon
-//               title="Admission Reports"
-//               description="Generate and view admission statistics and reports."
-// >>>>>>> Stashed changes
             />
           </UserPageWrapper>
         ),
@@ -654,11 +733,7 @@ const router = createBrowserRouter([
           <UserPageWrapper requiredRoles={["HR"]}>
             <ComingSoon
               title="Employee Management"
-
-              description="Manage staff information."
-
-              
-
+              description="Manage staff information and records."
             />
           </UserPageWrapper>
         ),
@@ -670,7 +745,6 @@ const router = createBrowserRouter([
             <ComingSoon
               title="Recruitment"
               description="Manage job postings and applications."
-
             />
           </UserPageWrapper>
         ),
@@ -681,9 +755,7 @@ const router = createBrowserRouter([
           <UserPageWrapper requiredRoles={["HR"]}>
             <ComingSoon
               title="HR Reports"
-
               description="Generate and view HR statistics and reports."
-
             />
           </UserPageWrapper>
         ),
@@ -759,24 +831,8 @@ const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-
           <UserPageWrapper requiredRoles={["TEACHER"]}>
             <TeacherDashboard />
-
-          {/* <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <AdminDashboard /> */}
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "users",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <ComingSoon
-              title="User Management"
-              description="Manage system users and their permissions."
-            />
-
           </UserPageWrapper>
         ),
       },
@@ -794,17 +850,10 @@ const router = createBrowserRouter([
       {
         path: "class/:id/students",
         element: (
-
           <UserPageWrapper requiredRoles={["TEACHER"]}>
             <ComingSoon
               title="Class Students"
               description="Manage students in your class."
-
-          // <UserPageWrapper requiredRoles={["ADMIN"]}>
-          //   <ComingSoon
-          //     title="Statistics"
-          //     description="View comprehensive system statistics and analytics."
-
             />
           </UserPageWrapper>
         ),
@@ -812,17 +861,10 @@ const router = createBrowserRouter([
       {
         path: "journal",
         element: (
-
           <UserPageWrapper requiredRoles={["TEACHER"]}>
             <ComingSoon
               title="Teacher Journal"
               description="Daily activities and observations."
-
-          // <UserPageWrapper requiredRoles={["ADMIN"]}>
-          //   <ComingSoon
-          //     title="Admin Settings"
-          //     description="Configure system settings and preferences."
-
             />
           </UserPageWrapper>
         ),
@@ -841,164 +883,28 @@ const router = createBrowserRouter([
     ],
   },
 
-  // ==== PARENT ROUTES ====
-  {
-    path: "/user/parent",
-    children: [
-      {
-        path: "dashboard",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <ParentDashboard />
-          </UserPageWrapper>
-        ),
-      },
-      {
-
-        path: "child/:id/profile",
-
-        path: "classes",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <Classes />
-          </UserPageWrapper>
-        ),
-      },
-    ],
-  },
-  // =====================================================
-  // SHARED ROUTES - Available to all authenticated users
-  // =====================================================
-  {
-    path: "/user/shared",
-    children: [
-      {
-        path: "profile",
-        element: (
-          <UserPageWrapper>
-            <UserProfile />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "meals",
-
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <ComingSoon
-              title="Child Profile"
-              description="View your child's progress."
-            />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "calendar",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <ComingSoon
-              title="Parent Calendar"
-              description="Your child's schedule."
-            />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "forms",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <AdmissionForm />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "gallery",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <ComingSoon
-              title="Photo Gallery"
-              description="Photos of activities."
-            />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "messages",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <ComingSoon
-              title="Parent Messages"
-              description="Communicate with teachers."
-            />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "feedback",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <ComingSoon
-              title="Parent Feedback"
-              description="Provide feedback."
-            />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "enrollment",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <EnrollmentApplication />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "enrollment/application",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <EnrollmentApplication />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "enrollment/my-applications",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <MyApplications />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "admission",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <Admission />
-          </UserPageWrapper>
-        ),
-      },
-    ],
-  }, // === LEGACY PARENT (compatibility) ===
-  {
-    path: "/parent",
-    children: [
-      {
-        path: "dashboard",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <ParentDashboard />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "admission",
-        element: (
-          <UserPageWrapper requiredRoles={["PARENT"]}>
-            <Admission />
-          </UserPageWrapper>
-        ),
-      },
-    ],
-  },
+ // === LEGACY PARENT (compatibility) ===
+  // {
+  //   path: "/parent",
+  //   children: [
+  //     {
+  //       path: "dashboard",
+  //       element: (
+  //         <UserPageWrapper requiredRoles={["PARENT"]}>
+  //           <ParentDashboard />
+  //         </UserPageWrapper>
+  //       ),
+  //     },
+  //     {
+  //       path: "admission",
+  //       element: (
+  //         <UserPageWrapper requiredRoles={["PARENT"]}>
+  //           <Admission />
+  //         </UserPageWrapper>
+  //       ),
+  //     },
+  //   ],
+  // },
 
   // ==== ERROR ROUTES ====
   {
