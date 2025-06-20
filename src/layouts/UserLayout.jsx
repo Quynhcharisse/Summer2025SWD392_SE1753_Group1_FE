@@ -53,7 +53,7 @@ const UserLayout = ({ children }) => {
 
             key: "/user/parent/forms",
             icon: ListTodo,
-            label: "Đơn nhâp học",
+            label: "Submit Form",
             path: "/user/parent/forms",
 
           },
@@ -123,18 +123,13 @@ const UserLayout = ({ children }) => {
           {
             key: '/user/admission/terms',
             icon: Calendar,
-            label: 'Kỳ tuyển sinh',
+            label: 'Admission Term',
             path: '/user/admission/terms'
           },
           {
-            key: '/user/admission/extra/terms',
-            icon: RotateCcw,
-            label: 'Đơn bổ sung thêm cho kì tuyển sinh',
-            path: '/user/admission/extra/terms'
-          },{
             key: '/user/admission/forms',
             icon: RotateCcw,
-            label: 'Đơn xét duyệt',
+            label: 'Process Form',
             path: '/user/admission/forms'
           },
           {

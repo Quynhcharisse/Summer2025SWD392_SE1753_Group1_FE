@@ -33,7 +33,7 @@ import {
     Toolbar,
     Typography
 } from "@mui/material";
-import {Add, Close, CloudUpload, Info} from '@mui/icons-material';
+import {Add, Close, CloudUpload} from '@mui/icons-material';
 import {useEffect, useState} from "react";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
@@ -41,12 +41,31 @@ import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {parseISO} from "date-fns";
 import {enqueueSnackbar} from "notistack";
 import axios from "axios";
-import {cancelAdmission, getFormInformation, submittedForm} from "@services/parentService.js";
+import {cancelAdmission, getFormInformation, refillForm, submittedForm} from "@api/services/parentService.js";
 
 
-function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
-    const [page, setPage] = useState(0); // Trang hiện tại
-    const [rowsPerPage, setRowsPerPage] = useState(5); //số dòng trang
+async function uploadToCloudinary(file) {
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "pes_swd");
+        formData.append("cloud_name", "dfx4miova");
+
+        const response = await axios.post(
+            "https://api.cloudinary.com/v1_1/dfx4miova/image/upload",
+            formData
+        );
+
+        return response.data.secure_url;
+    } catch (error) {
+        enqueueSnackbar("Failed to upload file", {variant: "error"});
+        return null;
+    }
+}
+
+function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefillPopUpFunc}) {
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -58,101 +77,195 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
     }
 
     const handleDetailClick = (form) => {
-        // Xử lý khi người dùng click vào nút "Detail"
         HandleSelectedForm(form)
         openDetailPopUpFunc();
+    }
+
+    const handleRefillClick = (form) => {
+        HandleSelectedForm(form);
+        openRefillPopUpFunc();
     }
 
     return (
         <Paper sx={{
             width: '100%',
-            height: 500,
-            borderRadius: 3,
             overflow: 'hidden',
-            backgroundColor: '#fff',
-            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
-            border: '2px solid rgb(254, 254, 253)'
+            borderRadius: '16px',
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+            border: '1px solid #e0e0e0'
         }}>
-
-            <TableContainer sx={{height: 500}}>
+            <TableContainer>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell align={"center"}>No</TableCell>
-                            <TableCell align={"center"}>Submit Date</TableCell>
-                            <TableCell align={"center"}>Cancel Reason</TableCell>
-                            <TableCell align={"center"}>Status</TableCell>
-                            <TableCell align={"center"}>Note</TableCell>
-                            <TableCell align={"center"}>Action</TableCell>
+                            <TableCell align="center" sx={{
+                                fontWeight: '600',
+                                color: '#07663a',
+                                backgroundColor: '#f8faf8',
+                                fontSize: '0.95rem',
+                                padding: '16px 8px',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>
+                                No
+                            </TableCell>
+                            <TableCell align="center" sx={{
+                                fontWeight: '600',
+                                color: '#07663a',
+                                backgroundColor: '#f8faf8',
+                                fontSize: '0.95rem',
+                                padding: '16px 8px',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>
+                                Submit Date
+                            </TableCell>
+                            <TableCell align="center" sx={{
+                                fontWeight: '600',
+                                color: '#07663a',
+                                backgroundColor: '#f8faf8',
+                                fontSize: '0.95rem',
+                                padding: '16px 8px',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>
+                                Cancel Reason
+                            </TableCell>
+                            <TableCell align="center" sx={{
+                                fontWeight: '600',
+                                color: '#07663a',
+                                backgroundColor: '#f8faf8',
+                                fontSize: '0.95rem',
+                                padding: '16px 8px',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>
+                                Status
+                            </TableCell>
+                            <TableCell align="center" sx={{
+                                fontWeight: '600',
+                                color: '#07663a',
+                                backgroundColor: '#f8faf8',
+                                fontSize: '0.95rem',
+                                padding: '16px 8px',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>
+                                Note
+                            </TableCell>
+                            <TableCell align="center" sx={{
+                                fontWeight: '600',
+                                color: '#07663a',
+                                backgroundColor: '#f8faf8',
+                                fontSize: '0.95rem',
+                                padding: '16px 8px',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>
+                                Action
+                            </TableCell>
                         </TableRow>
                     </TableHead>
-
                     <TableBody>
-                        {forms?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            .map((form, index) => {
-                                return (
-                                    <TableRow
-                                        key={index}
-                                    >
-                                        <TableCell align={"center"}>{index + 1}</TableCell>
-                                        <TableCell align={"center"}>{form.submittedDate}</TableCell>
-                                        <TableCell align={"center"}>{form.cancelReason || "N/A"}</TableCell>
-                                        <TableCell align="center" sx={{
-                                            color:
-                                                form.status === "approved"
-                                                    ? "#07663a"
-                                                    : form.status === "rejected" || form.status === "cancelled"
-                                                        ? "#dc3545"
-                                                        : form.status === "pending approval" || form.status === "pending"
-                                                            ? "#0d6efd"
-                                                            : "black",
-                                            fontWeight: "600",
-                                            padding: '6px 12px',
-                                            width: 'fit-content',
-                                            margin: '0 auto'
-                                        }}>
+                        {forms
+                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            .map((form, index) => (
+                                <TableRow
+                                    key={index}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: '#f8faf8',
+                                        },
+                                        transition: 'background-color 0.2s'
+                                    }}
+                                >
+                                    <TableCell align="center" sx={{padding: '12px 8px'}}>
+                                        {page * rowsPerPage + index + 1}
+                                    </TableCell>
+                                    <TableCell align="center" sx={{padding: '12px 8px'}}>
+                                        {form.submittedDate}
+                                    </TableCell>
+                                    <TableCell align="center" sx={{padding: '12px 8px'}}>
+                                        {form.cancelReason || "N/A"}
+                                    </TableCell>
+                                    <TableCell align="center" sx={{padding: '12px 8px'}}>
+                                        <Typography
+                                            component="span"
+                                            sx={{
+                                                color: form.status === "approved" ? "#07663a" :
+                                                    form.status === "rejected" || form.status === "cancelled" ? "#dc3545" :
+                                                        form.status === "pending approval" ? "#0d6efd" : "black",
+                                                fontWeight: "600",
+                                                padding: '6px 12px',
+                                                backgroundColor: form.status === "approved" ? "rgba(7, 102, 58, 0.1)" :
+                                                    form.status === "rejected" || form.status === "cancelled" ? "rgba(220, 53, 69, 0.1)" :
+                                                        form.status === "pending approval" ? "rgba(13, 110, 253, 0.1)" : "transparent",
+                                                borderRadius: '20px',
+                                                fontSize: '0.875rem'
+                                            }}
+                                        >
                                             {form.status}
-                                        </TableCell>
-                                        <TableCell align={"center"}>{form.note}</TableCell>
-                                        <TableCell align={"center"}>
-                                            <IconButton
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="center" sx={{padding: '12px 8px'}}>
+                                        {form.note || "N/A"}
+                                    </TableCell>
+                                    <TableCell align="center" sx={{padding: '12px 8px'}}>
+                                        <Stack direction="row" spacing={1} justifyContent="center">
+                                            <Button
+                                                variant="contained"
+                                                size="small"
                                                 onClick={() => handleDetailClick(form)}
                                                 sx={{
-                                                    backgroundColor: 'rgba(7, 102, 58, 0.1)',
-                                                    borderRadius: '12px',
-                                                    padding: '8px',
+                                                    backgroundColor: '#07663a',
                                                     '&:hover': {
-                                                        backgroundColor: 'rgba(7, 102, 58, 0.2)',
+                                                        backgroundColor: 'rgba(7, 102, 58, 0.85)'
                                                     },
-                                                    transition: 'all 0.2s'
+                                                    minWidth: '90px',
+                                                    borderRadius: '8px',
+                                                    textTransform: 'none',
+                                                    fontWeight: '600',
+                                                    boxShadow: 'none'
                                                 }}
                                             >
-                                                <Info sx={{
-                                                    color: '#07663a',
-                                                    fontSize: '1.2rem'
-                                                }}/>
-                                            </IconButton>
-                                        </TableCell>
-                                    </TableRow>
-                                )
-                            })
-                        }
+                                                Detail
+                                            </Button>
+                                            {(form.status === "cancelled" || form.status === "rejected") && (
+                                                <Button
+                                                    variant="contained"
+                                                    size="small"
+                                                    onClick={() => handleRefillClick(form)}
+                                                    sx={{
+                                                        backgroundColor: '#2196f3',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(33, 150, 243, 0.85)'
+                                                        },
+                                                        minWidth: '90px',
+                                                        borderRadius: '8px',
+                                                        textTransform: 'none',
+                                                        fontWeight: '600',
+                                                        boxShadow: 'none'
+                                                    }}
+                                                >
+                                                    Refill
+                                                </Button>
+                                            )}
+                                        </Stack>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                     </TableBody>
                 </Table>
             </TableContainer>
             <TablePagination
                 component="div"
                 rowsPerPageOptions={[5, 10, 15]}
-                count={forms?.length}
+                count={forms.length}
                 page={page}
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
                 sx={{
+                    borderTop: '1px solid #e0e0e0',
                     '.MuiTablePagination-select': {
                         backgroundColor: 'rgba(7, 102, 58, 0.1)',
                         borderRadius: '8px',
                         padding: '4px 8px',
+                        marginRight: '8px'
                     },
                     '.MuiTablePagination-selectIcon': {
                         color: '#07663a'
@@ -163,21 +276,44 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
     )
 }
 
-function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
+function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}) {
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isRefillOpen, setIsRefillOpen] = useState(false);
 
-    const [openConfirm, setOpenConfirm] = useState(false); // tạo usestate để mở dialog
+    const handleCloseConfirm = () => setIsConfirmOpen(false);
+    const handleOpenConfirm = () => setIsConfirmOpen(true);
 
-    const handleOpenConfirm = () => setOpenConfirm(true);
+    const handleOpenRefill = () => {
+        handleClosePopUp();
+        setIsRefillOpen(true);
+    };
 
-    /*handleCloseConfirm sẽ đặt lại openConfirm = false để đóng dialog khi người dùng nhấn Disagree hoặc đóng hộp thoại*/
-    const handleCloseConfirm = () => setOpenConfirm(false);
+    const handleCloseRefill = () => {
+        setIsRefillOpen(false);
+    };
+
+    const canRefill = selectedForm?.status?.toLowerCase() === 'cancelled' || selectedForm?.status?.toLowerCase() === 'rejected';
 
     //tạo state để hiển thị ảnh
-    const [openImage, setOpenImage] = useState(false);
+    const [openImageDialogs, setOpenImageDialogs] = useState({
+        profileImage: false,
+        birthCertificate: false,
+        householdRegistration: false,
+        childCharacteristics: false,
+        commitment: false
+    });
     const [selectedImage, setSelectedImage] = useState('');
 
+    const handleOpenImageDialog = (imageType, src) => {
+        setSelectedImage(src);
+        setOpenImageDialogs(prev => ({...prev, [imageType]: true}));
+    };
+
+    const handleCloseImageDialog = (imageType) => {
+        setOpenImageDialogs(prev => ({...prev, [imageType]: false}));
+    };
+
     async function HandleCancel() {
-        console.log(selectedForm.id)
         try {
             const response = await cancelAdmission(selectedForm.id);
             if (response && response.success) {
@@ -189,7 +325,6 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                 enqueueSnackbar(response?.message || "Failed to cancel admission form", {variant: "error"});
             }
         } catch (error) {
-            console.error("Error canceling form:", error);
             if (error.response?.status === 403) {
                 enqueueSnackbar("Your session has expired. Please login again.", {
                     variant: "error",
@@ -207,7 +342,6 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
         }
     }
 
-    console.log(selectedForm)
     return (
         <Dialog
             fullScreen
@@ -287,6 +421,43 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                         <TextField fullWidth label={'Cancel reason'} disabled value={selectedForm.cancelReason || ''}/>
                     </Stack>
 
+                    {/* Student Documents */}
+                    <Grid item xs={12}>
+                        <Typography variant="subtitle1" sx={{
+                            mt: 2,
+                            mb: 2,
+                            color: '#07663a',
+                            fontWeight: 600
+                        }}>
+                            Student Documents
+                        </Typography>
+
+                        <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
+                            {[
+                                {label: "Profile Image", src: selectedForm.profileImage, type: 'profileImage'},
+                                {label: "Birth Certificate", src: selectedForm.birthCertificateImg, type: 'birthCertificate'},
+                                {label: "Household Registration", src: selectedForm.householdRegistrationImg, type: 'householdRegistration'}
+                            ].map((item, idx) => (
+                                <Paper key={idx} elevation={2} sx={{p: 2, borderRadius: 2, width: 200}}>
+                                    <Typography variant="body2" fontWeight="bold" sx={{mb: 1}}>{item.label}</Typography>
+                                    <img
+                                        src={item.src}
+                                        alt={item.label}
+                                        style={{width: '100%', borderRadius: 8, cursor: 'pointer'}}
+                                        onClick={() => handleOpenImageDialog(item.type, item.src)}
+                                    />
+                                    <Dialog 
+                                        open={openImageDialogs[item.type]} 
+                                        onClose={() => handleCloseImageDialog(item.type)} 
+                                        maxWidth="md"
+                                    >
+                                        <img src={selectedImage} style={{width: '100%'}} alt="Zoom"/>
+                                    </Dialog>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    </Grid>
+
                     <Typography variant="subtitle1" sx={{
                         mt: 5,
                         mb: 2,
@@ -297,25 +468,22 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                     </Typography>
                     <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
                         {[
-                            {label: "Child Characteristics Form", src: selectedForm.childCharacteristicsFormImg},
-                            {label: "Commitment", src: selectedForm.commitmentImg}
+                            {label: "Child Characteristics Form", src: selectedForm.childCharacteristicsFormImg, type: 'childCharacteristics'},
+                            {label: "Commitment", src: selectedForm.commitmentImg, type: 'commitment'}
                         ].map((item, idx) => (
                             <Paper key={idx} elevation={2} sx={{p: 2, borderRadius: 2, width: 200}}>
                                 <Typography variant="body2" fontWeight="bold" sx={{mb: 1}}>{item.label}</Typography>
-
-                                {/*thay vì click="ảnh" redirect sang link khác*/}
-                                {/*vì giải quyết vấn đề hiện model thôi*/}
                                 <img
                                     src={item.src}
                                     alt={item.label}
                                     style={{width: '100%', borderRadius: 8, cursor: 'pointer'}}
-                                    onClick={() => {
-                                        setSelectedImage(item.src);
-                                        setOpenImage(true);
-                                    }}
+                                    onClick={() => handleOpenImageDialog(item.type, item.src)}
                                 />
-
-                                <Dialog open={openImage} onClose={() => setOpenImage(false)} maxWidth="md">
+                                <Dialog 
+                                    open={openImageDialogs[item.type]} 
+                                    onClose={() => handleCloseImageDialog(item.type)} 
+                                    maxWidth="md"
+                                >
                                     <img src={selectedImage} style={{width: '100%'}} alt="Zoom"/>
                                 </Dialog>
                             </Paper>
@@ -363,7 +531,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                         )}
 
                         {/* Dialog xác nhận cancel */}
-                        <Dialog open={openConfirm} onClose={handleCloseConfirm}>
+                        <Dialog open={isConfirmOpen} onClose={handleCloseConfirm}>
                             <DialogTitle sx={{color: 'red', fontWeight: 'bold'}}>
                                 Cancel Admission Form
                             </DialogTitle>
@@ -397,14 +565,41 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm}) {
                         </Dialog>
                     </Stack>
                 </Stack>
+
+                {/* Add Refill button */}
+                {canRefill && (
+                    <Button
+                        variant="contained"
+                        onClick={handleOpenRefill}
+                        sx={{
+                            backgroundColor: '#07663a',
+                            '&:hover': {backgroundColor: 'rgba(7, 102, 58, 0.85)'},
+                            position: 'absolute',
+                            right: '100px',
+                            top: '10px'
+                        }}
+                    >
+                        Refill Form
+                    </Button>
+                )}
             </Box>
+
+            {/* Refill Form Dialog */}
+            {isRefillOpen && (
+                <RenderRefillForm
+                    isPopUpOpen={isRefillOpen}
+                    handleClosePopUp={handleCloseRefill}
+                    selectedForm={selectedForm}
+                    GetForm={GetForm}
+                />
+            )}
         </Dialog>
     )
 }
 
 function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) {
     //Lưu id học sinh được chọn từ dropdown
-    const [selectedStudentId, setSelectedStudentId] = useState(0);
+    const [selectedStudentId, setSelectedStudentId] = useState(null);
 
     //Hiển thị trạng thái đang xử lý (true khi submit, upload...)
     const [isLoading, setIsLoading] = useState(false);
@@ -424,9 +619,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         commit: ''
     });
 
-    const student = studentList.find(s => s.id === selectedStudentId) || null
-
-
+    const student = studentList.find(s => s.id === selectedStudentId) || null;
 
     //Khi studentList thay đổi
     // Nếu chưa chọn học sinh (selectedStudentId rỗng), thì chọn học sinh đầu tiên chưa có đơn nhập học
@@ -439,24 +632,11 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         }
     }, [studentList, selectedStudentId]);
 
-    // Debug log khi studentList thay đổi
-    useEffect(() => {
-        console.log("Student List:", studentList);
-    }, [studentList]);
-
-    // Debug log khi selectedStudentId thay đổi
-    useEffect(() => {
-        if (selectedStudentId) {
-            console.log("Selected Student ID:", selectedStudentId);
-            console.log("Selected Student:", student);
-        }
-    }, [selectedStudentId]);
-
     const validateForm = () => {
         const newErrors = {};
 
         // Required field validations
-        if (!selectedStudentId) {
+        if (selectedStudentId === null) {
             newErrors.student = "Please select a student";
         }
         if (!input.address.trim()) {
@@ -475,8 +655,9 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         return Object.keys(newErrors).length === 0;
     };
 
-    const validateFileSize = (file) => {
-        const minSize = 10 * 1024; // 10KB
+    const validateFileType = (file) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', 'webp'];
         const maxSize = 5 * 1024 * 1024; // 5MB
 
         if (!file) {
@@ -484,31 +665,15 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             return false;
         }
 
-        if (file.size < minSize) {
-            enqueueSnackbar(`File size should not be less than 10KB`, {variant: "error"});
-            return false;
-        }
-
+        // Check file size
         if (file.size > maxSize) {
             enqueueSnackbar(`File size should not exceed 5MB`, {variant: "error"});
             return false;
         }
 
-        return true;
-    };
-
-    const validateFileType = (file) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-        const allowedExtensions = ['.jpg', '.jpeg', '.png'];
-
-        if (!file) {
-            enqueueSnackbar(`Please select a file`, {variant: "error"});
-            return false;
-        }
-
         // Check MIME type
         if (!allowedTypes.includes(file.type)) {
-            enqueueSnackbar(`Only JPG, JPEG & PNG files are allowed`, {variant: "error"});
+            enqueueSnackbar(`Only JPG, JPEG & PNG & WEBP files are allowed`, {variant: "error"});
             return false;
         }
 
@@ -516,7 +681,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         const fileName = file.name.toLowerCase();
         const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
         if (!hasValidExtension) {
-            enqueueSnackbar(`Invalid file extension. Only .jpg, .jpeg, .png are allowed`, {variant: "error"});
+            enqueueSnackbar(`Invalid file extension. Only .jpg, .jpeg, .png .webp are allowed`, {variant: "error"});
             return false;
         }
 
@@ -557,7 +722,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     variant: "error",
                     action: (
                         <Button color="inherit" size="small" onClick={() => {
-                            window.location.href = '/login';
+                            window.location.href = '/auth/login';
                         }}>
                             Login
                         </Button>
@@ -580,56 +745,27 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             }
 
             // Basic file validation
-            if (!file.name || !file.type || !file.size) {
+            if (!file.name || !file.type) {
                 enqueueSnackbar("Invalid file format", {variant: "error"});
                 return;
             }
 
-            // Validate file size and type
-            if (!validateFileSize(file) || !validateFileType(file)) {
+            // Validate file type
+            if (!validateFileType(file)) {
                 return;
             }
 
-            // Create a new FileReader
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                // Create an image object to check dimensions
-                const img = new Image();
-                img.onload = function () {
-                    // Check minimum dimensions (e.g., 200x200 pixels)
-                    if (this.width < 200 || this.height < 200) {
-                        enqueueSnackbar("Image dimensions should be at least 200x200 pixels", {variant: "error"});
-                        return;
-                    }
-
-                    // Check maximum dimensions (e.g., 4000x4000 pixels)
-                    if (this.width > 4000 || this.height > 4000) {
-                        enqueueSnackbar("Image dimensions should not exceed 4000x4000 pixels", {variant: "error"});
-                        return;
-                    }
-
-                    // If all validations pass, update the state
-                    switch (id) {
-                        case 1:
-                            setUploadedFile({...uploadedFile, childCharacteristicsForm: file});
-                            break;
-                        default:
-                            setUploadedFile({...uploadedFile, commit: file});
-                            break;
-                    }
-                };
-                img.onerror = function () {
-                    enqueueSnackbar("Invalid image file", {variant: "error"});
-                };
-                img.src = e.target.result;
-            };
-            reader.onerror = function () {
-                enqueueSnackbar("Error reading file", {variant: "error"});
-            };
-            reader.readAsDataURL(file);
+            // Update state based on file type
+            if (id === 1) {
+                setUploadedFile(prev => ({...prev, childCharacteristicsForm: file}));
+                enqueueSnackbar("Child characteristics form uploaded successfully", {variant: "success"});
+            } else {
+                setUploadedFile(prev => ({...prev, commit: file}));
+                enqueueSnackbar("Commitment form uploaded successfully", {variant: "success"});
+            }
 
         } catch (error) {
-            console.error('Error handling file upload:', error);
+            console.error("Error handling file upload:", error);
             enqueueSnackbar("Error processing file", {variant: "error"});
         }
     }
@@ -645,10 +781,10 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                 const formData = new FormData();
                 formData.append("file", file);
                 formData.append("upload_preset", "pes_swd");
-                formData.append("cloud_name", "dbrfnkrbh");
+                formData.append("cloud_name", "dfx4miova");
 
                 const response = await axios.post(
-                    "https://api.cloudinary.com/v1_1/dbrfnkrbh/image/upload",
+                    "https://api.cloudinary.com/v1_1/dfx4miova/image/upload",
                     formData
                 );
 
@@ -674,7 +810,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                 commitLink: commitUrl
             };
         } catch (error) {
-            console.error('Error in handleUploadImage:', error);
             enqueueSnackbar("Failed to process images", {variant: "error"});
             return null;
         }
@@ -695,7 +830,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             }
 
             // Revalidate files before upload
-            if (!validateFileSize(file) || !validateFileType(file)) {
+            if (!validateFileType(file)) {
                 enqueueSnackbar(`Invalid ${label.toLowerCase()}`, {variant: "error"});
                 return false;
             }
@@ -704,7 +839,13 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         return true;
     };
 
-    // bản chât luôn nằm trong hàm tổng, chỉ là ẩn nó thông qua cái nút
+    function CheckAge(dateOfBirth) {
+        const birthYear = new Date(dateOfBirth).getFullYear()
+        const currentYear = new Date().getFullYear()
+        const age = currentYear - birthYear
+        return age >= 3 && age <= 5
+    }
+
     return (
         <Dialog
             fullScreen
@@ -767,31 +908,40 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                             }}
                         >
                             {studentList && studentList.length > 0 ? (
-                                studentList.map((student) => {
-                                    // Kiểm tra xem học sinh có form đang pending approval hoặc approved không
-                                    const hasActiveForm = student.hadForm && 
-                                        student.admissionForms?.some(form => 
-                                            form.status === 'approved' ||
-                                            form.status === 'pending approval'
+                                studentList
+                                    .filter(student => CheckAge(student.dateOfBirth))
+                                    .map((student) => {
+                                        // Kiểm tra xem học sinh có form đang pending approval hoặc approved không
+                                        const hasActiveForm = student.hadForm &&
+                                            student.admissionForms?.some(form =>
+                                                form.status === 'approved' ||
+                                                form.status === 'pending approval'
+                                            );
+
+                                        return (
+                                            <MenuItem
+                                                key={student.id}
+                                                value={student.id}
+                                                disabled={hasActiveForm}
+                                            >
+                                                {student.name}
+                                                {hasActiveForm ? ' (Has active form)' : ''}
+                                                {student.admissionForms?.some(form => form.status === 'rejected') ? ' (Previously rejected)' : ''}
+                                                {student.admissionForms?.some(form => form.status === 'cancelled') ? ' (Previously cancelled)' : ''}
+                                            </MenuItem>
                                         );
-                                    
-                                    return (
-                                        <MenuItem
-                                            key={student.id}
-                                            value={student.id}
-                                            disabled={hasActiveForm}
-                                        >
-                                            {student.name} 
-                                            {hasActiveForm ? ' (Has active form)' : ''}
-                                            {student.admissionForms?.some(form => form.status === 'rejected') ? ' (Previously rejected)' : ''}
-                                            {student.admissionForms?.some(form => form.status === 'cancelled') ? ' (Previously cancelled)' : ''}
-                                        </MenuItem>
-                                    );
-                                })
+                                    })
                             ) : (
                                 <MenuItem disabled>No available students</MenuItem>
                             )}
                         </Select>
+                        <Typography
+                            variant={"subtitle2"}
+                            color={"error"}
+                        >
+                            * Only children with the age from 3 to 5 can be submitted to sunshine preschool
+                        </Typography>
+
                         {errors.student && (
                             <FormHelperText>{errors.student}</FormHelperText>
                         )}
@@ -858,8 +1008,14 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                     </Typography>
                                     <Grid container spacing={3}>
                                         {[
-                                            {label: "Profile Image", src: student ? student.profileImage : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'},
-                                            {label: "Birth Certificate", src: student ? student.birthCertificateImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'},
+                                            {
+                                                label: "Profile Image",
+                                                src: student ? student.profileImage : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
+                                            },
+                                            {
+                                                label: "Birth Certificate",
+                                                src: student ? student.birthCertificateImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
+                                            },
                                             {
                                                 label: "Household Registration",
                                                 src: student ? student.householdRegistrationImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
@@ -903,7 +1059,12 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                                                 }}
                                                                 onClick={() => {
                                                                     setSelectedImage(item.src);
-                                                                    setOpenImage(true);
+                                                                    setOpenImageDialogs(prev => ({
+                                                                        ...prev,
+                                                                        profileImage: true,
+                                                                        birthCertificate: false,
+                                                                        householdRegistration: false
+                                                                    }));
                                                                 }}
                                                             />
                                                         ) : (
@@ -969,14 +1130,22 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         Upload Documents
                     </Typography>
 
-                    <Grid container spacing={3} sx={{mt: 2}}>
+                    <Stack container spacing={3} sx={{mt: 2}}>
                         {[
                             {
                                 label: 'Child Characteristics Form',
                                 key: 'childCharacteristicsForm',
-                                error: errors.childCharacteristicsForm
+                                error: errors.childCharacteristicsFormImg,
+                                fileId: 1,
+                                file: uploadedFile.childCharacteristicsForm
                             },
-                            {label: 'Commitment', key: 'commit', error: errors.commit}
+                            {
+                                label: 'Commitment',
+                                key: 'commit',
+                                error: errors.commitmentImg,
+                                fileId: 2,
+                                file: uploadedFile.commit
+                            }
                         ].map((item) => (
                             <Grid item xs={12} md={6} key={item.key}>
                                 <Box sx={{
@@ -986,43 +1155,44 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                     flexDirection: 'column'
                                 }}>
                                     <Typography variant="subtitle2" sx={{mb: 1}}>
-                                        {item.label} {item.error && <span style={{color: 'red'}}>*</span>}
+                                        {item.label}{item.error && <span style={{color: 'red'}}>*</span>}
                                     </Typography>
-                                    <Button
-                                        variant="outlined"
-                                        component="label"
-                                        startIcon={<CloudUpload/>}
-                                        fullWidth
-                                        sx={{
-                                            height: '56px',
-                                            borderColor: '#07663a',
-                                            color: '#07663a',
-                                            '&:hover': {
-                                                borderColor: '#07663a',
-                                                backgroundColor: 'rgba(7, 102, 58, 0.04)'
-                                            }
-                                        }}
-                                    >
-                                        Upload
-                                        <input
-                                            type="file"
-                                            hidden
-                                            onChange={(e) => HandleUploadFile(e.target.files[0], ['childCharacteristicsForm', 'commit'].indexOf(item.key) + 1)}
-                                            accept="image/*"
-                                        />
-                                    </Button>
-                                    {uploadedFile[item.key] && (
-                                        <Typography variant="caption" sx={{mt: 1, display: 'block'}}>
-                                            Selected: {uploadedFile[item.key].name}
-                                        </Typography>
-                                    )}
+                                    <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+                                        <Button
+                                            component="label"
+                                            variant="outlined"
+                                            startIcon={<CloudUpload/>}
+                                            sx={{height: '60%', width: '25%'}}
+                                        >
+                                            Upload New
+                                            <input
+                                                type="file"
+                                                hidden
+                                                onChange={(e) => HandleUploadFile(e.target.files[0], item.fileId)}
+                                                accept="image/*"
+                                            />
+                                        </Button>
+                                        {item.file && (
+                                            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                                                <Typography variant="body2" color="success.main">
+                                                    Selected: {item.file.name}
+                                                </Typography>
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => setUploadedFile(prev => ({...prev, [item.key]: ''}))}
+                                                >
+                                                    <Close fontSize="small" />
+                                                </IconButton>
+                                            </Box>
+                                        )}
+                                    </Box>
                                     {item.error && (
                                         <FormHelperText error>{item.error}</FormHelperText>
                                     )}
                                 </Box>
                             </Grid>
                         ))}
-                    </Grid>
+                    </Stack>
 
                     {/* Action Buttons */}
                     <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{mt: 4}}>
@@ -1059,8 +1229,524 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
     );
 }
 
-function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, forms, HandleSelectedForm, studentList}) {
+function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [input, setInput] = useState({
+        address: selectedForm?.householdRegistrationAddress || '',
+        note: selectedForm?.note || ''
+    });
+    const [uploadedFile, setUploadedFile] = useState({
+        childCharacteristicsForm: '',
+        commit: ''
+    });
 
+    useEffect(() => {
+        if (selectedForm) {
+            setInput({
+                address: selectedForm.householdRegistrationAddress || '',
+                note: selectedForm.note || ''
+            });
+        }
+    }, [selectedForm]);
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!input.address?.trim()) {
+            newErrors.address = "Household registration address is required";
+        }
+
+        if (!uploadedFile.childCharacteristicsForm && !selectedForm?.childCharacteristicsFormImg) {
+            newErrors.childCharacteristicsForm = "Child characteristics form is required";
+        }
+
+        if (!uploadedFile.commit && !selectedForm?.commitmentImg) {
+            newErrors.commit = "Commitment form is required";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const validateFileType = (file) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', 'webp'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!file) {
+            enqueueSnackbar(`Please select a file`, {variant: "error"});
+            return false;
+        }
+
+        // Check file size
+        if (file.size > maxSize) {
+            enqueueSnackbar(`File size should not exceed 5MB`, {variant: "error"});
+            return false;
+        }
+
+        // Check MIME type
+        if (!allowedTypes.includes(file.type)) {
+            enqueueSnackbar(`Only JPG, JPEG & PNG & WEBP files are allowed`, {variant: "error"});
+            return false;
+        }
+
+        // Check file extension
+        const fileName = file.name.toLowerCase();
+        const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+        if (!hasValidExtension) {
+            enqueueSnackbar(`Invalid file extension. Only .jpg, .jpeg, .png .webp are allowed`, {variant: "error"});
+            return false;
+        }
+
+        return true;
+    };
+
+    function HandleUploadFile(file, id) {
+        try {
+            // Check if file exists
+            if (!file) {
+                enqueueSnackbar("Please select a file to upload", {variant: "error"});
+                return;
+            }
+
+            // Basic file validation
+            if (!file.name || !file.type) {
+                enqueueSnackbar("Invalid file format", {variant: "error"});
+                return;
+            }
+
+            // Validate file type
+            if (!validateFileType(file)) {
+                return;
+            }
+
+            // Update state based on file type
+            if (id === 1) {
+                setUploadedFile(prev => ({...prev, childCharacteristicsForm: file}));
+                enqueueSnackbar("Child characteristics form uploaded successfully", {variant: "success"});
+            } else {
+                setUploadedFile(prev => ({...prev, commit: file}));
+                enqueueSnackbar("Commitment form uploaded successfully", {variant: "success"});
+            }
+
+        } catch (error) {
+            console.error("Error handling file upload:", error);
+            enqueueSnackbar("Error processing file", {variant: "error"});
+        }
+    }
+
+    const handleUploadImage = async () => {
+        try {
+            if (!validateFileUploads()) {
+                return null;
+            }
+
+            // Upload each file to Cloudinary
+            const uploadFile = async (file) => {
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", "pes_swd");
+                formData.append("cloud_name", "dfx4miova");
+
+                const response = await axios.post(
+                    "https://api.cloudinary.com/v1_1/dfx4miova/image/upload",
+                    formData
+                );
+
+                if (response.status === 200) {
+                    return response.data.secure_url;
+                }
+                throw new Error('Upload failed');
+            };
+
+            // Upload both files
+            const [childCharacteristicsFormUrl, commitUrl] = await Promise.all([
+                uploadFile(uploadedFile.childCharacteristicsForm),
+                uploadFile(uploadedFile.commit)
+            ]);
+
+            if (!childCharacteristicsFormUrl || !commitUrl) {
+                enqueueSnackbar("Failed to upload one or more images", {variant: "error"});
+                return null;
+            }
+
+            return {
+                childCharacteristicsFormLink: childCharacteristicsFormUrl,
+                commitLink: commitUrl
+            };
+        } catch (error) {
+            enqueueSnackbar("Failed to process images", {variant: "error"});
+            return null;
+        }
+    };
+
+    const validateFileUploads = () => {
+        const requiredFiles = {
+            childCharacteristicsForm: 'Child characteristics form',
+            commit: 'Commitment form'
+        };
+
+        for (const [key, label] of Object.entries(requiredFiles)) {
+            const file = uploadedFile[key];
+
+            if (!file) {
+                enqueueSnackbar(`${label} is required`, {variant: "error"});
+                return false;
+            }
+
+            // Revalidate files before upload
+            if (!validateFileType(file)) {
+                enqueueSnackbar(`Invalid ${label.toLowerCase()}`, {variant: "error"});
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    async function HandleRefillSubmit() {
+        try {
+            if (!validateForm()) {
+                return;
+            }
+
+            setIsLoading(true);
+            const uploadResult = await handleUploadImage();
+            if (!uploadResult) {
+                return;
+            }
+
+            const formData = {
+                studentId: selectedForm.studentId,
+                householdRegistrationAddress: input.address.trim(),
+                childCharacteristicsFormImg: uploadResult.childCharacteristicsFormLink,
+                commitmentImg: uploadResult.commitLink,
+                note: input.note?.trim() || ""
+            };
+
+            const response = await refillForm(formData);
+
+            if (response && response.success) {
+                enqueueSnackbar(response.message || "Form resubmitted successfully", {variant: 'success'});
+                await GetForm();
+                handleClosePopUp();
+            } else {
+                enqueueSnackbar(response?.message || "Failed to resubmit form", {variant: "error"});
+            }
+        } catch (error) {
+            if (error.response?.status === 403) {
+                enqueueSnackbar("Your session has expired. Please login again.", {
+                    variant: "error",
+                    action: (
+                        <Button color="inherit" size="small" onClick={() => {
+                            window.location.href = '/auth/login';
+                        }}>
+                            Login
+                        </Button>
+                    )
+                });
+            } else {
+                enqueueSnackbar(error.response?.data?.message || "Failed to resubmit form", {variant: "error"});
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return (
+        <Dialog fullScreen open={isPopUpOpen} onClose={handleClosePopUp}>
+            <AppBar sx={{position: 'relative', backgroundColor: '#07663a'}}>
+                <Toolbar>
+                    <IconButton edge="start" color="inherit" onClick={handleClosePopUp}>
+                        <Close/>
+                    </IconButton>
+                    <Typography sx={{ml: 2, flex: 1}} variant="h6">
+                        Resubmit Admission Form
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+
+            <Box p={4}>
+                <Typography variant="h5" sx={{mb: 4, textAlign: "center", color: '#07663a'}}>
+                    Resubmit Form for {selectedForm?.studentName}
+                </Typography>
+
+                <Stack spacing={4} sx={{maxWidth: '800px', mx: 'auto'}}>
+                    {/* Student Information Display */}
+                    <Box sx={{p: 3, backgroundColor: 'rgba(7, 102, 58, 0.05)', borderRadius: 2}}>
+                        <Typography variant="h6" sx={{mb: 2, color: '#07663a'}}>
+                            Student Information
+                        </Typography>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Full Name"
+                                    value={selectedForm?.studentName || ''}
+                                    InputProps={{readOnly: true}}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Gender"
+                                    value={selectedForm?.studentGender || ''}
+                                    InputProps={{readOnly: true}}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Date of Birth"
+                                    value={selectedForm?.studentDateOfBirth || ''}
+                                    InputProps={{readOnly: true}}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Place of Birth"
+                                    value={selectedForm?.studentPlaceOfBirth || ''}
+                                    InputProps={{readOnly: true}}
+                                />
+                            </Grid>
+                        </Grid>
+                    </Box>
+
+                    {/* Student Documents */}
+                    <Grid item xs={12}>
+                        <Typography variant="subtitle1" sx={{
+                            mt: 2,
+                            mb: 2,
+                            color: '#07663a',
+                            fontWeight: 600
+                        }}>
+                            Student Documents
+                        </Typography>
+                        <Grid container spacing={3}>
+                            {[
+                                {
+                                    label: "Profile Image",
+                                    src: selectedForm ? selectedForm.profileImage : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
+                                },
+                                {
+                                    label: "Birth Certificate",
+                                    src: selectedForm ? selectedForm.birthCertificateImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
+                                },
+                                {
+                                    label: "Household Registration",
+                                    src: selectedForm ? selectedForm.householdRegistrationImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
+                                }
+                            ].map((item, idx) => (
+                                <Grid item xs={12} sm={6} md={4} key={idx}>
+                                    <Paper elevation={2} sx={{
+                                        p: 2,
+                                        borderRadius: 2,
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 1
+                                    }}>
+                                        <Typography variant="body2" fontWeight="bold" sx={{
+                                            color: '#07663a'
+                                        }}>
+                                            {item.label}
+                                        </Typography>
+                                        <Box sx={{
+                                            width: '100%',
+                                            height: 200,
+                                            position: 'relative',
+                                            overflow: 'hidden',
+                                            borderRadius: 1,
+                                            border: '1px solid rgba(7, 102, 58, 0.2)',
+                                            bgcolor: '#f5f5f5',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}>
+                                            {item.src ? (
+                                                <img
+                                                    src={item.src}
+                                                    alt={item.label}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'contain',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onClick={() => {
+                                                        setSelectedImage(item.src);
+                                                        setOpenImageDialogs(prev => ({
+                                                            ...prev,
+                                                            profileImage: true,
+                                                            birthCertificate: false,
+                                                            householdRegistration: false
+                                                        }));
+                                                    }}
+                                                />
+                                            ) : (
+                                                <Typography variant="body2" color="text.secondary">
+                                                    No Image Available
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <Alert severity="info" sx={{mt: 1}}>
+                            Please verify that all student information is correct before submitting the
+                            form.
+                            If any information needs to be updated, please contact the school
+                            administration.
+                        </Alert>
+                    </Grid>
+
+                    {/* Form Fields */}
+                    <TextField
+                        fullWidth
+                        label="Household Registration Address *"
+                        value={input.address}
+                        onChange={(e) => setInput({...input, address: e.target.value})}
+                        error={!!errors.address}
+                        helperText={errors.address}
+                    />
+
+                    <TextField
+                        fullWidth
+                        label="Note"
+                        value={input.note}
+                        onChange={(e) => setInput({...input, note: e.target.value})}
+                        multiline
+                        rows={4}
+                    />
+
+                    {/* File Upload Section */}
+                    <Box>
+                        <Typography variant="h6" sx={{mb: 2, color: '#07663a'}}>
+                            Required Documents
+                        </Typography>
+                        <Stack spacing={3}>
+                            <Box>
+                                <Typography variant="subtitle1" sx={{mb: 1}}>
+                                    Child Characteristics Form *
+                                </Typography>
+                                <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+                                    <Button
+                                        component="label"
+                                        variant="outlined"
+                                        startIcon={<CloudUpload/>}
+                                        sx={{height: '60%', width: '25%'}}
+                                    >
+                                        Upload New
+                                        <input
+                                            type="file"
+                                            hidden
+                                            onChange={(e) => HandleUploadFile(e.target.files[0], 1)}
+                                            accept="image/*"
+                                        />
+                                    </Button>
+                                    {uploadedFile.childCharacteristicsForm && (
+                                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between'}}>
+                                            <Typography variant="body2" color="success.main">
+                                                Selected: {uploadedFile.childCharacteristicsForm.name}
+                                            </Typography>
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => setUploadedFile(prev => ({...prev, childCharacteristicsForm: ''}))}
+                                            >
+                                                <Close fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+                                    )}
+                                </Box>
+                                {errors.childCharacteristicsForm && (
+                                    <Typography color="error" variant="caption">
+                                        {errors.childCharacteristicsForm}
+                                    </Typography>
+                                )}
+                            </Box>
+
+                            <Box>
+                                <Typography variant="subtitle1" sx={{mb: 1}}>
+                                    Commitment Form *
+                                </Typography>
+                                <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+                                    <Button
+                                        component="label"
+                                        variant="outlined"
+                                        startIcon={<CloudUpload/>}
+                                        sx={{height: '60%', width: '25%'}}
+                                    >
+                                        Upload New
+                                        <input
+                                            type="file"
+                                            hidden
+                                            onChange={(e) => HandleUploadFile(e.target.files[0], 2)}
+                                            accept="image/*"
+                                        />
+                                    </Button>
+                                    {uploadedFile.commit && (
+                                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'flex-end'}}>
+                                            <Typography variant="body2" color="success.main">
+                                                Selected: {uploadedFile.commit.name}
+                                            </Typography>
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => setUploadedFile(prev => ({...prev, commit: ''}))}
+                                            >
+                                                <Close fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+                                    )}
+                                </Box>
+                                {errors.commit && (
+                                    <Typography color="error" variant="caption">
+                                        {errors.commit}
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Stack>
+                    </Box>
+
+                    {/* Action Buttons */}
+                    <Stack direction="row" spacing={2} justifyContent="flex-end">
+                        <Button
+                            variant="contained"
+                            color="warning"
+                            onClick={handleClosePopUp}
+                            disabled={isLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={HandleRefillSubmit}
+                            disabled={isLoading}
+                            startIcon={isLoading ? <CircularProgress size={20}/> : null}
+                            sx={{backgroundColor: '#07663a'}}
+                        >
+                            {isLoading ? 'Resubmitting...' : 'Resubmit'}
+                        </Button>
+                    </Stack>
+                </Stack>
+            </Box>
+        </Dialog>
+    );
+}
+
+function RenderPage({
+                        openFormPopUpFunc,
+                        openDetailPopUpFunc,
+                        openRefillPopUpFunc,
+                        forms,
+                        HandleSelectedForm,
+                        studentList
+                    }) {
     return (
         <div className="container">
             {/*1.tiêu đề */}
@@ -1119,7 +1805,8 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, forms, HandleSelect
             <RenderTable
                 forms={forms}
                 openDetailPopUpFunc={openDetailPopUpFunc}
-                HandleSelectedForm={HandleSelectedForm}//selected form moi dc
+                openRefillPopUpFunc={openRefillPopUpFunc}
+                HandleSelectedForm={HandleSelectedForm}
             />
         </div>
     )
@@ -1163,7 +1850,6 @@ export default function AdmissionForm() {
                 enqueueSnackbar("Failed to fetch data", {variant: "error"});
             }
         } catch (error) {
-            console.error("Error fetching data:", error);
             enqueueSnackbar(error.message || "Failed to fetch data", {variant: "error"});
         }
     }
@@ -1178,12 +1864,13 @@ export default function AdmissionForm() {
                 forms={data.admissionFormList}
                 openFormPopUpFunc={() => handleOpenPopUp('form')}
                 openDetailPopUpFunc={() => handleOpenPopUp('detail')}
+                openRefillPopUpFunc={() => handleOpenPopUp('refill')}
                 HandleSelectedForm={HandleSelectedForm}
                 studentList={data.studentList}
             />
             {popUp.isOpen && popUp.type === 'form' && (
                 <RenderFormPopUp
-                    isPopUpOpen={popUp.isOpen}//chú ý
+                    isPopUpOpen={popUp.isOpen}
                     handleClosePopUp={handleClosePopUp}
                     studentList={data.studentList}
                     GetForm={GetForm}
@@ -1194,6 +1881,15 @@ export default function AdmissionForm() {
                     isPopUpOpen={popUp.isOpen}
                     handleClosePopUp={handleClosePopUp}
                     selectedForm={selectedForm}
+                    GetForm={GetForm}
+                />
+            )}
+            {popUp.isOpen && popUp.type === 'refill' && (
+                <RenderRefillForm
+                    isPopUpOpen={popUp.isOpen}
+                    handleClosePopUp={handleClosePopUp}
+                    selectedForm={selectedForm}
+                    GetForm={GetForm}
                 />
             )}
         </>

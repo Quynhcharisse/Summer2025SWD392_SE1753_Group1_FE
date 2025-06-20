@@ -49,7 +49,6 @@ const UserDashboard = lazy(() => import("@pages/UserDashboard"));
 const TermAdmission = lazy(() => import("@/components/none-shared/admissionComponent/TermAdmission.jsx"));
 const ProcessForm = lazy(() => import("@/components/none-shared/admissionComponent/ProcessForm.jsx"));
 const AdmissionForm = lazy(() => import("@/components/none-shared/parentComponent/AdmissionForm.jsx"));
-const ExtraTerm = lazy(() => import("@/components/none-shared/admissionComponent/ExtraTerm.jsx"));
 
 
 const PageWrapper = ({ children, isPublic = false, requiredRoles = [] }) => {
@@ -658,17 +657,6 @@ const router = createBrowserRouter([
           </UserPageWrapper>
         ),
       },
-      // {
-      //   path: "registrations",
-      //   element: (
-      //     <UserPageWrapper requiredRoles={["ADMISSION"]}>
-      //       <ComingSoon
-      //         title="Registrations List"
-      //         description="View and manage all student registrations."
-      //       />
-      //     </UserPageWrapper>
-      //   ),
-      // },
       {
         path: "syllabus",
         element: (
@@ -779,7 +767,7 @@ const router = createBrowserRouter([
         path: "terms",
         element: (
           <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            
+            <TermAdmission/>
           </UserPageWrapper>
         ),
       },
@@ -799,14 +787,6 @@ const router = createBrowserRouter([
               title="Review Registration"
               description="Review and process registrations."
             />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "extra/terms",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            <ExtraTerm />
           </UserPageWrapper>
         ),
       },

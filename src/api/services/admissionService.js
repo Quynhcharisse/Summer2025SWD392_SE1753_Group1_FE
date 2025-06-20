@@ -70,39 +70,32 @@ export const getDefaultGrade = async (grade) => {
     }
 };
 
-export const cancelAdmission = async (id, reason) => {
-    try {
-        const response = await apiClient.put("/admission/form/cancel", {
-            id: id,
-            reason: reason
-        });
-        return response ? response.data : null;
-    } catch (error) {
-        console.error("Cancel admission error:", error);
-        throw error;
-    }
-}
-
 // Extra Term APIs
-export const createExtraTerm = async (admissionTermId, startDate, endDate, reason) => {
+export const createExtraTerm = async (data) => {
     try {
-        const response = await apiClient.post('/admission/extra/term', {
-            admissionTermId,
-            startDate,
-            endDate,
-            reason
+        console.log('🚀 Creating Extra Term - Request Data:', {
+            admissionTermId: data.termId,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            maxNumberRegistration: data.maxNumberRegistration
         });
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
-};
 
-export const getExtraTermList = async () => {
-    try {
-        const response = await apiClient.get('/admission/extra/term');
+        const response = await apiClient.post('/admission/extra/term', {
+            admissionTermId: data.termId,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            maxNumberRegistration: data.maxNumberRegistration
+        });
+
+        console.log('✅ Extra Term Creation Response:', response.data);
         return response.data;
     } catch (error) {
+        console.error('❌ Extra Term Creation Error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            headers: error.response?.headers
+        });
         throw error;
     }
 };
