@@ -3,7 +3,7 @@ import {
   useEventList,
   useUpdateEvent,
   useEventDetail
-} from '@hooks/useEvent';
+} from "@hooks/useEvent";
 import {
   Alert,
   Box,
@@ -23,15 +23,25 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Typography
-} from '@mui/material';
+  Typography,
+  Grid,
+  Stack,
+  Stepper,
+  Step,
+  StepLabel,
+  Checkbox,
+  IconButton,
+  Autocomplete
+} from "@mui/material";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import dayjs from 'dayjs';
+import CloseIcon from '@mui/icons-material/Close';
+import { uploadImageToCloudinary, deleteImageFromCloudinary, getPublicIdFromUrl, validateImage } from '@utils/cloudinary';
+import { useTeacherList } from "@hooks/useTeacher";
 
 const EventManage = () => {
   const navigate = useNavigate();
@@ -39,19 +49,18 @@ const EventManage = () => {
   const [editingId, setEditingId] = useState(null);
   const [viewDetailId, setViewDetailId] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
-    date: null,
     startTime: null,
     endTime: null,
     location: '',
     description: '',
-    status: '',
-    registrationDeadline: '',
+    registrationDeadline: null,
     attachmentImg: '',
-    hostName: ''
+    hostName: '',
+    emails: []
   });
-  const [formErrors, setFormErrors] = useState({});
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [snackbar, setSnackbar] = useState({
@@ -59,6 +68,7 @@ const EventManage = () => {
     message: '',
     severity: 'success'
   });
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   // TanStack Query hooks
   const { data: eventResponse, isLoading, isError, error } = useEventList();
@@ -66,99 +76,43 @@ const EventManage = () => {
   const updateEventMutation = useUpdateEvent();
   const { data: detailData, isLoading: isLoadingDetail } = useEventDetail(viewDetailId);
 
-  // Handle 403 errors
-  useEffect(() => {
-    if (error?.response?.status === 403) {
-      setSnackbar({
-        open: true,
-        message: 'You do not have permission to access this resource. Please log in with appropriate permissions.',
-        severity: 'error'
-      });
-    }
-  }, [error]);
-
-  // Handle mutation errors
-  useEffect(() => {
-    const handleMutationError = (error) => {
-      if (error?.response?.status === 403) {
-        setSnackbar({
-          open: true,
-          message: 'You do not have permission to perform this action. Please log in with appropriate permissions.',
-          severity: 'error'
-        });
-      }
-    };
-
-    if (createEventMutation.error) handleMutationError(createEventMutation.error);
-    if (updateEventMutation.error) handleMutationError(updateEventMutation.error);
-  }, [createEventMutation.error, updateEventMutation.error]);
+  // Get teacher list for email selection
+  const { data: teacherResponse, isLoading: isLoadingTeachers } = useTeacherList();
+  const teacherList = teacherResponse?.data?.data || [];
+  const teacherEmails = teacherList.map(teacher => teacher.email);
 
   const eventList = eventResponse?.data?.data || [];
   const totalItems = eventList.length || 0;
 
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.name.trim()) {
-      errors.name = 'Name is required';
-    }
-    if (!formData.date) {
-      errors.date = 'Date is required';
-    }
-    if (!formData.startTime) {
-      errors.startTime = 'Start time is required';
-    }
-    if (!formData.endTime) {
-      errors.endTime = 'End time is required';
-    }
-    if (!formData.location.trim()) {
-      errors.location = 'Location is required';
-    }
-    if (!formData.description.trim()) {
-      errors.description = 'Description is required';
-    }
-    if (!formData.status.trim()) {
-      errors.status = 'Status is required';
-    }
-    if (!formData.registrationDeadline.trim()) {
-      errors.registrationDeadline = 'Registration deadline is required';
-    }
-    if (!formData.hostName.trim()) {
-      errors.hostName = 'Host name is required';
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
   const showModal = (record = null) => {
-    setFormErrors({});
     if (record) {
       setFormData({
         name: record.name ?? '',
-        date: record.date ? new Date(record.date) : null,
-        startTime: record.startTime ? new Date(record.startTime) : null,
-        endTime: record.endTime ? new Date(record.endTime) : null,
+        startTime: record.startTime ? dayjs(record.startTime) : null,
+        endTime: record.endTime ? dayjs(record.endTime) : null,
         location: record.location ?? '',
         description: record.description ?? '',
-        status: record.status ?? '',
-        registrationDeadline: record.registrationDeadline ?? '',
+        registrationDeadline: record.registrationDeadline ? dayjs(record.registrationDeadline) : null,
         attachmentImg: record.attachmentImg ?? '',
-        hostName: record.hostName ?? ''
+        hostName: record.hostName ?? '',
+        emails: record.emails ?? []
       });
       setEditingId(record.id);
+      setSelectedTeacher(record.teacherEmail);
     } else {
       setFormData({
         name: '',
-        date: null,
         startTime: null,
         endTime: null,
         location: '',
         description: '',
-        status: '',
-        registrationDeadline: '',
+        registrationDeadline: null,
         attachmentImg: '',
-        hostName: ''
+        hostName: '',
+        emails: []
       });
       setEditingId(null);
+      setSelectedTeacher(null);
     }
     setIsModalOpen(true);
   };
@@ -166,19 +120,18 @@ const EventManage = () => {
   const handleClose = () => {
     setIsModalOpen(false);
     setEditingId(null);
+    setSelectedTeacher(null);
     setFormData({
       name: '',
-      date: null,
       startTime: null,
       endTime: null,
       location: '',
       description: '',
-      status: '',
-      registrationDeadline: '',
+      registrationDeadline: null,
       attachmentImg: '',
-      hostName: ''
+      hostName: '',
+      emails: []
     });
-    setFormErrors({});
   };
 
   const handleInputChange = (e) => {
@@ -187,13 +140,6 @@ const EventManage = () => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user types
-    if (formErrors[name]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
   };
 
   const handleDateChange = (name, value) => {
@@ -201,32 +147,101 @@ const EventManage = () => {
       ...prev,
       [name]: value
     }));
-    if (formErrors[name]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+  };
+
+  const handleNext = () => {
+    // Validate basic fields in step 1
+    const name = formData.name.trim();
+    const startTime = formData.startTime;
+    const endTime = formData.endTime;
+    const location = formData.location.trim();
+    const description = formData.description.trim();
+    const registrationDeadline = formData.registrationDeadline;
+    const hostName = formData.hostName.trim();
+
+    if (!name) {
+      setSnackbar({
+        open: true,
+        message: "Event name is required",
+        severity: "error",
+      });
+      return;
     }
+
+    if (!startTime) {
+      setSnackbar({
+        open: true,
+        message: "Start time is required",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (!endTime) {
+      setSnackbar({
+        open: true,
+        message: "End time is required",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (!location) {
+      setSnackbar({
+        open: true,
+        message: "Location is required",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (!description) {
+      setSnackbar({
+        open: true,
+        message: "Description is required",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (!registrationDeadline) {
+      setSnackbar({
+        open: true,
+        message: "Registration deadline is required",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (!hostName) {
+      setSnackbar({
+        open: true,
+        message: "Host name is required",
+        severity: "error",
+      });
+      return;
+    }
+
+    setActiveStep((prevStep) => prevStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevStep) => prevStep - 1);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) {
-      return;
-    }
-
     try {
       const processedData = {
         name: formData.name.trim(),
-        date: formData.date.toISOString(),
         startTime: formData.startTime.toISOString(),
         endTime: formData.endTime.toISOString(),
         location: formData.location.trim(),
         description: formData.description.trim(),
-        status: formData.status.trim(),
-        registrationDeadline: formData.registrationDeadline.trim(),
+        registrationDeadline: formData.registrationDeadline.toISOString(),
         attachmentImg: formData.attachmentImg.trim(),
-        hostName: formData.hostName.trim()
+        hostName: formData.hostName.trim(),
+        emails: formData.emails
       };
 
       if (editingId) {
@@ -239,7 +254,6 @@ const EventManage = () => {
           message: 'Event updated successfully',
           severity: 'success'
         });
-        handleClose();
       } else {
         await createEventMutation.mutateAsync(processedData);
         setSnackbar({
@@ -247,8 +261,8 @@ const EventManage = () => {
           message: 'Event created successfully',
           severity: 'success'
         });
-        handleClose();
       }
+      handleClose();
     } catch (error) {
       console.error('Operation error:', error);
       setSnackbar({
@@ -282,6 +296,56 @@ const EventManage = () => {
     setViewDetailId(null);
   };
 
+  const handleImageUpload = async (file) => {
+    try {
+      // Validate the image file
+      validateImage(file);
+
+      // Show loading state
+      setSnackbar({
+        open: true,
+        message: 'Uploading image...',
+        severity: 'info'
+      });
+
+      // Upload the new image
+      const imageUrl = await uploadImageToCloudinary(file);
+      
+      // Update form data with the new image URL
+      setFormData(prev => ({
+        ...prev,
+        attachmentImg: imageUrl
+      }));
+
+      // Show success message
+      setSnackbar({
+        open: true,
+        message: 'Image uploaded successfully',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error handling image upload:', error);
+      setSnackbar({
+        open: true,
+        message: error.message || 'Failed to upload image. Please try again.',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleImageDelete = () => {
+    setFormData(prev => ({
+      ...prev,
+      attachmentImg: ''
+    }));
+    
+    setSnackbar({
+      open: true,
+      message: 'Image removed',
+      severity: 'success'
+    });
+  };
+
   if (isError) {
     return (
       <Box sx={{ p: 3 }}>
@@ -302,18 +366,47 @@ const EventManage = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box
+        sx={{
+          mb: 3,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: "2px solid #e3f2fd",
+          pb: 2,
+        }}
+      >
         <Box>
-          <Typography variant="h4" component="h1">
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
+              color: "#1976d2",
+              fontWeight: "bold",
+              mb: 1,
+            }}
+          >
             Event Management
           </Typography>
-          <Typography variant="subtitle1" color="textSecondary">
+          <Typography
+            variant="subtitle1"
+            sx={{
+              color: "#666",
+              fontWeight: "medium",
+            }}
+          >
             Total Events: {totalItems}
           </Typography>
         </Box>
         <Button
           variant="contained"
-          color="primary"
+          sx={{
+            backgroundColor: "#1976d2",
+            "&:hover": {
+              backgroundColor: "#1565c0",
+            },
+            px: 3,
+          }}
           onClick={() => showModal()}
         >
           Create New Event
@@ -325,14 +418,32 @@ const EventManage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer 
+          component={Paper}
+          elevation={0}
+          sx={{ 
+            borderRadius: 2,
+            overflow: 'hidden',
+            border: '1px solid #e0e0e0',
+            '& .MuiTableCell-root': {
+              borderColor: '#e0e0e0',
+              py: 2.5,
+              px: 3,
+            },
+            '& .MuiTableRow-root': {
+              '&:last-child td, &:last-child th': {
+                borderBottom: 0
+              }
+            }
+          }}
+        >
           <Table>
             <TableHead>
-              <TableRow>
+              <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
                 <TableCell>Name</TableCell>
-                <TableCell>Date</TableCell>
+                <TableCell>Start Time</TableCell>
+                <TableCell>End Time</TableCell>
                 <TableCell>Location</TableCell>
-                <TableCell>Status</TableCell>
                 <TableCell>Host Name</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -341,9 +452,9 @@ const EventManage = () => {
               {displayedData.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>{row.name || '-'}</TableCell>
-                  <TableCell>{new Date(row.date).toLocaleDateString() || '-'}</TableCell>
+                  <TableCell>{dayjs(row.startTime).format('DD/MM/YYYY HH:mm') || '-'}</TableCell>
+                  <TableCell>{dayjs(row.endTime).format('DD/MM/YYYY HH:mm') || '-'}</TableCell>
                   <TableCell>{row.location || '-'}</TableCell>
-                  <TableCell>{row.status || '-'}</TableCell>
                   <TableCell>{row.hostName || '-'}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -387,153 +498,559 @@ const EventManage = () => {
           onClose={handleClose}
           maxWidth="md"
           fullWidth
+          PaperProps={{
+            sx: {
+              minHeight: editingId ? "auto" : "70vh",
+              display: "flex",
+              flexDirection: "column",
+            },
+          }}
         >
-          <form onSubmit={handleSubmit}>
-            <DialogTitle>
-              {editingId ? 'Edit Event' : 'Create New Event'}
-            </DialogTitle>
-            <DialogContent>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-                <TextField
-                  name="name"
-                  label="Event Name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  fullWidth
-                  error={!!formErrors.name}
-                  helperText={formErrors.name}
-                />
-                
-                <DatePicker
-                  label="Date"
-                  value={formData.date}
-                  onChange={(newValue) => handleDateChange('date', newValue)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      required
-                      fullWidth
-                      error={!!formErrors.date}
-                      helperText={formErrors.date}
-                    />
+          {editingId ? (
+            // Edit Form
+            <form onSubmit={handleSubmit}>
+              <DialogTitle sx={{
+                borderBottom: '2px solid #e3f2fd',
+                backgroundColor: '#bbdefb',
+                color: '#1976d2',
+                fontWeight: 'bold',
+                py: 2
+              }}>
+                Edit Event
+              </DialogTitle>
+              <DialogContent>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2.5 }}>
+                  <TextField
+                    name="name"
+                    label="Event Name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    fullWidth
+                  />
+
+                  <DateTimePicker
+                    label="Start Time"
+                    value={formData.startTime}
+                    onChange={(newValue) => handleDateChange('startTime', newValue)}
+                    slotProps={{
+                      textField: {
+                        required: true,
+                        fullWidth: true
+                      }
+                    }}
+                  />
+
+                  <DateTimePicker
+                    label="End Time"
+                    value={formData.endTime}
+                    onChange={(newValue) => handleDateChange('endTime', newValue)}
+                    slotProps={{
+                      textField: {
+                        required: true,
+                        fullWidth: true
+                      }
+                    }}
+                  />
+
+                  <TextField
+                    name="location"
+                    label="Location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    required
+                    fullWidth
+                  />
+
+                  <TextField
+                    name="description"
+                    label="Description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    fullWidth
+                    multiline
+                    rows={4}
+                  />
+
+                  <DateTimePicker
+                    label="Registration Deadline"
+                    value={formData.registrationDeadline}
+                    onChange={(newValue) => handleDateChange('registrationDeadline', newValue)}
+                    slotProps={{
+                      textField: {
+                        required: true,
+                        fullWidth: true
+                      }
+                    }}
+                  />
+
+                  <TextField
+                    name="attachmentImg"
+                    label="Attachment Image URL"
+                    value={formData.attachmentImg}
+                    onChange={handleInputChange}
+                    fullWidth
+                  />
+
+                  <TextField
+                    name="hostName"
+                    label="Host Name"
+                    value={formData.hostName}
+                    onChange={handleInputChange}
+                    required
+                    fullWidth
+                  />
+
+                  <TextField
+                    name="emails"
+                    label="Emails (comma-separated)"
+                    value={formData.emails.join(', ')}
+                    onChange={(e) => {
+                      const emailsArray = e.target.value.split(',').map(email => email.trim());
+                      setFormData(prev => ({
+                        ...prev,
+                        emails: emailsArray
+                      }));
+                    }}
+                    fullWidth
+                    helperText="Enter email addresses separated by commas"
+                  />
+
+                  <Autocomplete
+                    value={selectedTeacher}
+                    onChange={(event, newValue) => {
+                      setSelectedTeacher(newValue);
+                    }}
+                    options={teacherEmails}
+                    loading={isLoadingTeachers}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Teacher Email"
+                        required
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              {isLoadingTeachers ? (
+                                <CircularProgress color="inherit" size={20} />
+                              ) : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                  />
+                </Box>
+              </DialogContent>
+              <DialogActions sx={{ 
+                borderTop: '2px solid #e3f2fd',
+                backgroundColor: '#f8f9fa',
+                p: 2,
+                justifyContent: 'center'
+              }}>
+                <Button onClick={handleClose}>Cancel</Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{
+                    minWidth: 120,
+                    backgroundColor: '#1976d2',
+                    '&:hover': {
+                      backgroundColor: '#1565c0'
+                    }
+                  }}
+                  disabled={updateEventMutation.isPending}
+                >
+                  {updateEventMutation.isPending ? (
+                    <CircularProgress size={24} />
+                  ) : (
+                    'Update'
                   )}
-                />
+                </Button>
+              </DialogActions>
+            </form>
+          ) : (
+            // Create Form with Stepper
+            <Box sx={{ width: "100%" }}>
+              <DialogTitle sx={{
+                borderBottom: '2px solid #e3f2fd',
+                backgroundColor: '#bbdefb',
+                color: '#1976d2',
+                fontWeight: 'bold',
+                py: 2
+              }}>
+                Create New Event
+              </DialogTitle>
+              <DialogContent>
+                <Box sx={{ width: "100%", mt: 2 }}>
+                  <Box sx={{ 
+                    width: "70%", 
+                    margin: "0 auto",
+                    display: "flex",
+                    justifyContent: "center"
+                  }}>
+                    <Stepper 
+                      activeStep={activeStep}
+                      sx={{
+                        width: "100%",
+                        '& .MuiStepLabel-root': {
+                          padding: '24px 12px',
+                        },
+                        '& .MuiStepIcon-root': {
+                          width: '35px',
+                          height: '35px',
+                          color: '#e3f2fd',
+                          '&.Mui-active': {
+                            color: '#1976d2',
+                          },
+                          '&.Mui-completed': {
+                            color: '#2e7d32',
+                          },
+                        },
+                        '& .MuiStepLabel-label': {
+                          fontSize: '1.1rem',
+                          fontWeight: 500,
+                          '&.Mui-active': {
+                            color: '#1976d2',
+                            fontWeight: 600,
+                          },
+                          '&.Mui-completed': {
+                            color: '#2e7d32',
+                            fontWeight: 600,
+                          },
+                        },
+                        '& .MuiStepConnector-line': {
+                          borderColor: '#e3f2fd',
+                          borderWidth: '3px',
+                        },
+                        '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
+                          borderColor: '#1976d2',
+                        },
+                        '& .MuiStepConnector-root.Mui-completed .MuiStepConnector-line': {
+                          borderColor: '#2e7d32',
+                        },
+                      }}
+                    >
+                      <Step>
+                        <StepLabel>Basic Information</StepLabel>
+                      </Step>
+                      <Step>
+                        <StepLabel>Teacher Emails</StepLabel>
+                      </Step>
+                    </Stepper>
+                  </Box>
 
-                <DateTimePicker
-                  label="Start Time"
-                  value={formData.startTime}
-                  onChange={(newValue) => handleDateChange('startTime', newValue)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      required
-                      fullWidth
-                      error={!!formErrors.startTime}
-                      helperText={formErrors.startTime}
-                    />
-                  )}
-                />
+                  <Box sx={{ mt: 4 }}>
+                    {activeStep === 0 ? (
+                      // Step 1 content
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                        <TextField
+                          name="name"
+                          label="Event Name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                          required
+                          fullWidth
+                        />
 
-                <DateTimePicker
-                  label="End Time"
-                  value={formData.endTime}
-                  onChange={(newValue) => handleDateChange('endTime', newValue)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      required
-                      fullWidth
-                      error={!!formErrors.endTime}
-                      helperText={formErrors.endTime}
-                    />
-                  )}
-                />
+                        <DateTimePicker
+                          label="Start Time"
+                          value={formData.startTime}
+                          onChange={(newValue) => handleDateChange('startTime', newValue)}
+                          slotProps={{
+                            textField: {
+                              required: true,
+                              fullWidth: true
+                            }
+                          }}
+                        />
 
-                <TextField
-                  name="location"
-                  label="Location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  required
-                  fullWidth
-                  error={!!formErrors.location}
-                  helperText={formErrors.location}
-                />
+                        <DateTimePicker
+                          label="End Time"
+                          value={formData.endTime}
+                          onChange={(newValue) => handleDateChange('endTime', newValue)}
+                          slotProps={{
+                            textField: {
+                              required: true,
+                              fullWidth: true
+                            }
+                          }}
+                        />
 
-                <TextField
-                  name="description"
-                  label="Description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                  fullWidth
-                  multiline
-                  rows={4}
-                  error={!!formErrors.description}
-                  helperText={formErrors.description}
-                />
+                        <TextField
+                          name="location"
+                          label="Location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                          required
+                          fullWidth
+                        />
 
-                <TextField
-                  name="status"
-                  label="Status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  required
-                  fullWidth
-                  error={!!formErrors.status}
-                  helperText={formErrors.status}
-                />
+                        <TextField
+                          name="description"
+                          label="Description"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          required
+                          fullWidth
+                          multiline
+                          rows={4}
+                        />
 
-                <TextField
-                  name="registrationDeadline"
-                  label="Registration Deadline"
-                  value={formData.registrationDeadline}
-                  onChange={handleInputChange}
-                  required
-                  fullWidth
-                  error={!!formErrors.registrationDeadline}
-                  helperText={formErrors.registrationDeadline}
-                />
+                        <DateTimePicker
+                          label="Registration Deadline"
+                          value={formData.registrationDeadline}
+                          onChange={(newValue) => handleDateChange('registrationDeadline', newValue)}
+                          slotProps={{
+                            textField: {
+                              required: true,
+                              fullWidth: true
+                            }
+                          }}
+                        />
 
-                <TextField
-                  name="attachmentImg"
-                  label="Attachment Image URL"
-                  value={formData.attachmentImg}
-                  onChange={handleInputChange}
-                  fullWidth
-                />
+                        <TextField
+                          name="hostName"
+                          label="Host Name"
+                          value={formData.hostName}
+                          onChange={handleInputChange}
+                          required
+                          fullWidth
+                        />
 
-                <TextField
-                  name="hostName"
-                  label="Host Name"
-                  value={formData.hostName}
-                  onChange={handleInputChange}
-                  required
-                  fullWidth
-                  error={!!formErrors.hostName}
-                  helperText={formErrors.hostName}
-                />
-              </Box>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose}>Cancel</Button>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                disabled={createEventMutation.isPending || updateEventMutation.isPending}
-              >
-                {createEventMutation.isPending || updateEventMutation.isPending ? (
-                  <CircularProgress size={24} />
-                ) : editingId ? (
-                  'Update'
-                ) : (
-                  'Create'
+                        {/* Image Upload Section */}
+                        <Box>
+                          <Typography
+                            variant="subtitle1"
+                            sx={{
+                              color: '#1976d2',
+                              fontWeight: 600,
+                              mb: 2
+                            }}
+                          >
+                            Event Image
+                          </Typography>
+                          <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center',
+                            gap: 2
+                          }}>
+                            <Button
+                              variant="outlined"
+                              component="label"
+                              sx={{
+                                borderColor: '#1976d2',
+                                color: '#1976d2',
+                                '&:hover': {
+                                  borderColor: '#1565c0',
+                                  backgroundColor: '#f8f9fa'
+                                }
+                              }}
+                            >
+                              Upload Image
+                              <input
+                                type="file"
+                                hidden
+                                accept="image/jpeg,image/png,image/gif,image/webp"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    handleImageUpload(file);
+                                  }
+                                }}
+                              />
+                            </Button>
+                            {formData.attachmentImg && (
+                              <Box sx={{ 
+                                position: 'relative',
+                                width: 100,
+                                height: 100,
+                                borderRadius: 1,
+                                overflow: 'hidden',
+                                border: '1px solid #e0e0e0'
+                              }}>
+                                <img
+                                  src={formData.attachmentImg}
+                                  alt="Event preview"
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                  }}
+                                />
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    position: 'absolute',
+                                    top: 4,
+                                    right: 4,
+                                    backgroundColor: 'rgba(255,255,255,0.8)',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(255,255,255,0.9)'
+                                    }
+                                  }}
+                                  onClick={handleImageDelete}
+                                >
+                                  <CloseIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+                      </Box>
+                    ) : (
+                      // Step 2 content - Teacher Emails only
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: '#1976d2',
+                            fontWeight: 600,
+                            mb: 3
+                          }}
+                        >
+                          Select Teachers
+                        </Typography>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            border: '1px solid #e0e0e0',
+                            borderRadius: 2,
+                            overflow: 'hidden'
+                          }}
+                        >
+                          <TableContainer>
+                            <Table>
+                              <TableHead>
+                                <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                                  <TableCell padding="checkbox">
+                                    <Checkbox
+                                      checked={formData.emails.length > 0}
+                                      indeterminate={formData.emails.length > 0 && formData.emails.length < teacherEmails.length}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            emails: teacherEmails
+                                          }));
+                                        } else {
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            emails: []
+                                          }));
+                                        }
+                                      }}
+                                    />
+                                  </TableCell>
+                                  <TableCell>Email</TableCell>
+                                  <TableCell>Name</TableCell>
+                                  <TableCell>Department</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {teacherList.map((teacher, index) => (
+                                  <TableRow
+                                    key={index}
+                                    hover
+                                    sx={{
+                                      '&:last-child td, &:last-child th': { border: 0 },
+                                      cursor: 'pointer',
+                                      '&:hover': {
+                                        backgroundColor: '#f5f5f5'
+                                      }
+                                    }}
+                                    onClick={() => {
+                                      const isSelected = formData.emails.includes(teacher.email);
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        emails: isSelected
+                                          ? prev.emails.filter(e => e !== teacher.email)
+                                          : [...prev.emails, teacher.email]
+                                      }));
+                                    }}
+                                  >
+                                    <TableCell padding="checkbox">
+                                      <Checkbox
+                                        checked={formData.emails.includes(teacher.email)}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setFormData(prev => ({
+                                              ...prev,
+                                              emails: [...prev.emails, teacher.email]
+                                            }));
+                                          } else {
+                                            setFormData(prev => ({
+                                              ...prev,
+                                              emails: prev.emails.filter(e => e !== teacher.email)
+                                            }));
+                                          }
+                                        }}
+                                      />
+                                    </TableCell>
+                                    <TableCell>{teacher.email}</TableCell>
+                                    <TableCell>{teacher.name}</TableCell>
+                                    <TableCell>{teacher.department}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Paper>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              </DialogContent>
+              <DialogActions sx={{ 
+                borderTop: '2px solid #e3f2fd',
+                backgroundColor: '#f8f9fa',
+                p: 2,
+                justifyContent: 'center'
+              }}>
+                <Button onClick={handleClose}>Cancel</Button>
+                {activeStep > 0 && (
+                  <Button onClick={handleBack}>Back</Button>
                 )}
-              </Button>
-            </DialogActions>
-          </form>
+                {activeStep === 0 ? (
+                  <Button 
+                    onClick={handleNext}
+                    variant="contained"
+                    sx={{
+                      minWidth: 120,
+                      backgroundColor: '#1976d2',
+                      '&:hover': {
+                        backgroundColor: '#1565c0'
+                      }
+                    }}
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    variant="contained"
+                    sx={{
+                      minWidth: 120,
+                      backgroundColor: '#1976d2',
+                      '&:hover': {
+                        backgroundColor: '#1565c0'
+                      }
+                    }}
+                    disabled={createEventMutation.isPending}
+                  >
+                    {createEventMutation.isPending ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      'Create'
+                    )}
+                  </Button>
+                )}
+              </DialogActions>
+            </Box>
+          )}
         </Dialog>
       </LocalizationProvider>
 
@@ -542,99 +1059,255 @@ const EventManage = () => {
         onClose={handleCloseDetail}
         maxWidth="md"
         fullWidth
+        sx={{
+          "& .MuiDialog-paper": {
+            borderRadius: 2,
+            background: "linear-gradient(to bottom, #ffffff, #f8f9fa)",
+          },
+        }}
       >
-        <DialogTitle sx={{ 
-          textAlign: 'center',
-          borderBottom: '2px solid #e3f2fd',
-          backgroundColor: '#bbdefb',
-          color: '#1976d2',
-          fontWeight: 'bold',
-          py: 2
-        }}>
+        <DialogTitle
+          sx={{
+            textAlign: "center",
+            borderBottom: "2px solid #e3f2fd",
+            backgroundColor: "#bbdefb",
+            color: "#1976d2",
+            fontWeight: "bold",
+            py: 2,
+          }}
+        >
           Event Details
         </DialogTitle>
         <DialogContent>
           {isLoadingDetail ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-              <CircularProgress />
+            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "300px" }}>
+              <CircularProgress size={40} />
             </Box>
           ) : detailData?.data?.data ? (
-            <Box sx={{ p: 4 }}>
-              <Box sx={{ mb: 4, textAlign: 'center' }}>
-                {detailData.data.data.attachmentImg && (
-                  <img 
-                    src={detailData.data.data.attachmentImg}
-                    alt="Event"
-                    style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '8px' }}
-                  />
-                )}
-              </Box>
-              
-              <Typography variant="h5" gutterBottom>
-                {detailData.data.data.name}
-              </Typography>
+            <Box sx={{ p: 3 }}>
+              <TableContainer 
+                component={Paper} 
+                elevation={0}
+                sx={{ 
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  mb: 3,
+                  border: '1px solid #e0e0e0',
+                  '& .MuiTableCell-root': {
+                    borderColor: '#e0e0e0',
+                    py: 2.5,
+                    px: 3,
+                  }
+                }}
+              >
+                <Table>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          width: '30%',
+                          bgcolor: '#f8f9fa',
+                          fontWeight: 600,
+                          color: '#1976d2'
+                        }}
+                      >
+                        Event Name
+                      </TableCell>
+                      <TableCell>{detailData.data.data.name}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          bgcolor: '#f8f9fa',
+                          fontWeight: 600,
+                          color: '#1976d2'
+                        }}
+                      >
+                        Start Time
+                      </TableCell>
+                      <TableCell>{dayjs(detailData.data.data.startTime).format('DD/MM/YYYY HH:mm')}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          bgcolor: '#f8f9fa',
+                          fontWeight: 600,
+                          color: '#1976d2'
+                        }}
+                      >
+                        End Time
+                      </TableCell>
+                      <TableCell>{dayjs(detailData.data.data.endTime).format('DD/MM/YYYY HH:mm')}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          bgcolor: '#f8f9fa',
+                          fontWeight: 600,
+                          color: '#1976d2'
+                        }}
+                      >
+                        Location
+                      </TableCell>
+                      <TableCell>{detailData.data.data.location}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          bgcolor: '#f8f9fa',
+                          fontWeight: 600,
+                          color: '#1976d2'
+                        }}
+                      >
+                        Description
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: 'pre-wrap' }}>
+                        {detailData.data.data.description}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          bgcolor: '#f8f9fa',
+                          fontWeight: 600,
+                          color: '#1976d2'
+                        }}
+                      >
+                        Registration Deadline
+                      </TableCell>
+                      <TableCell>
+                        {dayjs(detailData.data.data.registrationDeadline).format('DD/MM/YYYY HH:mm')}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          bgcolor: '#f8f9fa',
+                          fontWeight: 600,
+                          color: '#1976d2'
+                        }}
+                      >
+                        Host Name
+                      </TableCell>
+                      <TableCell>{detailData.data.data.hostName}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
-              <Box sx={{ display: 'grid', gap: 2 }}>
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary">Date</Typography>
-                  <Typography>{new Date(detailData.data.data.date).toLocaleDateString()}</Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary">Time</Typography>
-                  <Typography>
-                    {new Date(detailData.data.data.startTime).toLocaleTimeString()} - 
-                    {new Date(detailData.data.data.endTime).toLocaleTimeString()}
+              {detailData.data.data.attachmentImg && (
+                <Box sx={{ mt: 4 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: '#1976d2',
+                      fontWeight: 600,
+                      mb: 2,
+                      pb: 2,
+                      borderBottom: '2px solid #e3f2fd'
+                    }}
+                  >
+                    Event Image
                   </Typography>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      border: '1px solid #e0e0e0',
+                      borderRadius: 2,
+                      textAlign: 'center'
+                    }}
+                  >
+                    <img 
+                      src={detailData.data.data.attachmentImg}
+                      alt="Event"
+                      style={{ 
+                        maxWidth: '100%', 
+                        maxHeight: '300px', 
+                        borderRadius: '8px',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  </Paper>
                 </Box>
+              )}
 
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary">Location</Typography>
-                  <Typography>{detailData.data.data.location}</Typography>
+              {detailData.data.data.emails && detailData.data.data.emails.length > 0 && (
+                <Box sx={{ mt: 4 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: '#1976d2',
+                      fontWeight: 600,
+                      mb: 2,
+                      pb: 2,
+                      borderBottom: '2px solid #e3f2fd'
+                    }}
+                  >
+                    Participant Emails
+                  </Typography>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      border: '1px solid #e0e0e0',
+                      borderRadius: 2
+                    }}
+                  >
+                    <Grid container spacing={1}>
+                      {detailData.data.data.emails.map((email, index) => (
+                        <Grid item xs={12} sm={6} md={4} key={index}>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 1.5,
+                              textAlign: 'center',
+                              bgcolor: '#f8f9fa',
+                              border: '1px solid #e0e0e0',
+                              borderRadius: 1
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: '0.9rem',
+                                color: '#2c3e50'
+                              }}
+                            >
+                              {email}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Paper>
                 </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary">Description</Typography>
-                  <Typography>{detailData.data.data.description}</Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary">Status</Typography>
-                  <Typography>{detailData.data.data.status}</Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary">Registration Deadline</Typography>
-                  <Typography>{detailData.data.data.registrationDeadline}</Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary">Host</Typography>
-                  <Typography>{detailData.data.data.hostName}</Typography>
-                </Box>
-              </Box>
+              )}
             </Box>
           ) : (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <Typography color="error">Failed to load event details.</Typography>
+            <Box sx={{ p: 4, textAlign: "center" }}>
+              <Typography color="error" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
+                Failed to load event details.
+              </Typography>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ 
-          borderTop: '2px solid #e3f2fd',
-          backgroundColor: '#f8f9fa',
-          p: 2,
-          justifyContent: 'center'
-        }}>
-          <Button 
+        <DialogActions
+          sx={{
+            borderTop: "2px solid #e3f2fd",
+            backgroundColor: "#f8f9fa",
+            p: 2,
+            justifyContent: "center",
+          }}
+        >
+          <Button
             onClick={handleCloseDetail}
             variant="contained"
             sx={{
               minWidth: 120,
-              backgroundColor: '#1976d2',
-              '&:hover': {
-                backgroundColor: '#1565c0'
-              }
+              backgroundColor: "#1976d2",
+              "&:hover": {
+                backgroundColor: "#1565c0",
+              },
             }}
           >
             Close
@@ -646,11 +1319,13 @@ const EventManage = () => {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
-          sx={{ width: '100%' }}
+          variant="filled"
+          sx={{ width: "100%", whiteSpace: "pre-line" }}
         >
           {snackbar.message}
         </Alert>
