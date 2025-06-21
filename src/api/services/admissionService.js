@@ -58,42 +58,6 @@ export const createTerm = async (
     }
 }
 
-
-export const updateTerm = async (
-    id,
-    grade,
-    startDate,
-    endDate,
-    maxNumberRegistration,
-    reservationFee,
-    serviceFee,
-    uniformFee,
-    learningMaterialFee,
-    facilityFee
-) => {
-
-    try {
-        const response = await
-            apiClient.put("/admission/term", {
-                id: id,
-                grade: grade,
-                startDate: startDate,
-                endDate: endDate,
-                maxNumberRegistration: maxNumberRegistration,
-                reservationFee: reservationFee,
-                serviceFee: serviceFee,
-                uniformFee: uniformFee,
-                learningMaterialFee: learningMaterialFee,
-                facilityFee: facilityFee
-            }
-        );
-        return response.data;
-    } catch (error) {
-        console.error("Update term error:", error);
-        throw error;
-    }
-}
-
 export const getDefaultGrade = async (grade) => {
     try {
         const response = await apiClient.get(`/admission/default/fee`, {
@@ -106,16 +70,33 @@ export const getDefaultGrade = async (grade) => {
     }
 };
 
-export const cancelAdmission = async (id, reason) => {
+// Extra Term APIs
+export const createExtraTerm = async (data) => {
     try {
-        const response = await apiClient.put("/admission/form/cancel", {
-            id: id,
-            reason: reason
+        console.log('🚀 Creating Extra Term - Request Data:', {
+            admissionTermId: data.termId,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            maxNumberRegistration: data.maxNumberRegistration
         });
-        return response ? response.data : null;
+
+        const response = await apiClient.post('/admission/extra/term', {
+            admissionTermId: data.termId,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            maxNumberRegistration: data.maxNumberRegistration
+        });
+
+        console.log('✅ Extra Term Creation Response:', response.data);
+        return response.data;
     } catch (error) {
-        console.error("Cancel admission error:", error);
+        console.error('❌ Extra Term Creation Error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            headers: error.response?.headers
+        });
         throw error;
     }
-}
+};
 

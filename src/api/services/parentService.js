@@ -29,6 +29,7 @@ export const submittedForm = async (formData) => {
       profileImage: formData.profileImage,
       birthCertificateImg: formData.birthCertificateImg,
       householdRegistrationImg: formData.householdRegistrationImg,
+      childCharacteristicsFormImg: formData.childCharacteristicsFormImg,
       commitmentImg: formData.commitmentImg,
       note: formData.note,
     });
@@ -94,6 +95,30 @@ export const getChildren = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching children:", error);
+    throw error;
+  }
+};
+
+export const refillForm = async (formData) => {
+  try {
+    if (!formData || !formData.studentId || !formData.householdRegistrationAddress) {
+      throw new Error("Missing required form data");
+    }
+
+    const response = await apiClient.post("/parent/form/refill", {
+      studentId: formData.studentId,
+      householdRegistrationAddress: formData.householdRegistrationAddress,
+      childCharacteristicsFormImg: formData.childCharacteristicsFormImg,
+      commitmentImg: formData.commitmentImg,
+      note: formData.note || ""
+    });
+
+    if (!response || !response.data) {
+      throw new Error("Failed to resubmit form");
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error resubmitting form:", error);
     throw error;
   }
 };

@@ -87,7 +87,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                                     <TableCell align="center" sx={{minWidth: 160}}>{form.cancelReason || "N/A"}</TableCell>
                                     <TableCell align="center" sx={{
                                         color:
-                                            form.status === "approved"
+                                            form.status === "approved" || form.status === "pending approval" || form.status === "pending"
                                                 ? "#07663a"
                                                 : form.status === "rejected" || form.status === "cancelled"
                                                     ? "#dc3545"
@@ -98,12 +98,12 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                                         padding: '6px 12px',
                                         width: 'fit-content',
                                         margin: '0 auto'
-                                    }}> ></TableCell>
+                                    }}>{form.status}</TableCell>
                                     <TableCell align="center" sx={{minWidth: 120}}>{form.note}</TableCell>
                                     <TableCell align="center" sx={{minWidth: 80}}>
                                         <Tooltip title="View Detail">
                                             <IconButton
-                                                color="primary"
+                                                color="success"
                                                 onClick={() => handleDetailClick(form)}
                                                 sx={{mr: 1}}
                                             >
@@ -166,7 +166,7 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
-            <AppBar sx={{position: 'relative'}}>
+            <AppBar sx={{position: 'relative', bgcolor: '#07663a'}}>
                 <Toolbar>
                     <IconButton edge="start"
                                 color="inherit"
@@ -234,6 +234,7 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                             {label: "Profile Image", src: selectedForm.profileImage},
                             {label: "Household Registration", src: selectedForm.householdRegistrationImg},
                             {label: "Birth Certificate", src: selectedForm.birthCertificateImg},
+                            {label: "Child Characteristics Form", src: selectedForm.childCharacteristicsFormImg},
                             {label: "Commitment", src: selectedForm.commitmentImg}
                         ].map((item, idx) => (
                             <Paper key={idx} elevation={2} sx={{p: 2, borderRadius: 2, width: 200}}>

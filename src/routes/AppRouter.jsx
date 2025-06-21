@@ -657,17 +657,6 @@ const router = createBrowserRouter([
           </UserPageWrapper>
         ),
       },
-      // {
-      //   path: "registrations",
-      //   element: (
-      //     <UserPageWrapper requiredRoles={["ADMISSION"]}>
-      //       <ComingSoon
-      //         title="Registrations List"
-      //         description="View and manage all student registrations."
-      //       />
-      //     </UserPageWrapper>
-      //   ),
-      // },
       {
         path: "syllabus",
         element: (
@@ -778,7 +767,7 @@ const router = createBrowserRouter([
         path: "terms",
         element: (
           <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            
+            <TermAdmission/>
           </UserPageWrapper>
         ),
       },

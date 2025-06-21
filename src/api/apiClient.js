@@ -1,4 +1,5 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8080/api/v1",
@@ -10,10 +11,22 @@ const apiClient = axios.create({
 });
 
 // Debug function to check token
+const getToken = () => {
+  // Try to get from cookie first
+  let token = Cookies.get("access");
+  
+  // If not in cookie, try localStorage
+  if (!token) {
+    token = localStorage.getItem('accessToken');
+  }
+  
+  return token;
+};
+
 const validateToken = (token) => {
   try {
     if (!token) {
-      console.warn('No token found');
+      console.warn('No token found in both cookie and localStorage');
       return false;
     }
     // Log token info for debugging
@@ -28,7 +41,7 @@ const validateToken = (token) => {
 // Add request interceptor to handle token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = getToken();
     if (validateToken(token)) {
       config.headers.Authorization = `Bearer ${token}`;
       // Log request headers for debugging
