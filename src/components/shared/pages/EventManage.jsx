@@ -1,8 +1,9 @@
 import {
   useCreateEvent,
   useEventList,
-  useUpdateEvent,
-  useEventDetail
+  useCancelEvent,
+  useEventDetail,
+  useEventTeachers
 } from "@hooks/useEvent";
 import {
   Alert,
@@ -31,7 +32,8 @@ import {
   StepLabel,
   Checkbox,
   IconButton,
-  Autocomplete
+  Autocomplete,
+  Tooltip
 } from "@mui/material";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -69,12 +71,15 @@ const EventManage = () => {
     severity: 'success'
   });
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [hoveredEventId, setHoveredEventId] = useState(null);
 
   // TanStack Query hooks
   const { data: eventResponse, isLoading, isError, error } = useEventList();
   const createEventMutation = useCreateEvent();
-  const updateEventMutation = useUpdateEvent();
+  const cancelEventMutation = useCancelEvent();
   const { data: detailData, isLoading: isLoadingDetail } = useEventDetail(viewDetailId);
+  const { data: hoveredDetailData, isLoading: isLoadingHoveredDetail } = useEventDetail(hoveredEventId);
+  const { data: eventTeachers, isLoading: isLoadingEventTeachers } = useEventTeachers(viewDetailId);
 
   // Get teacher list for email selection
   const { data: teacherResponse, isLoading: isLoadingTeachers } = useTeacherList();
@@ -88,11 +93,11 @@ const EventManage = () => {
     if (record) {
       setFormData({
         name: record.name ?? '',
-        startTime: record.startTime ? dayjs(record.startTime) : null,
-        endTime: record.endTime ? dayjs(record.endTime) : null,
+        startTime: record.startTime ? dayjs(record.startTime, 'DD/MM/YYYY HH:mm') : null,
+        endTime: record.endTime ? dayjs(record.endTime, 'DD/MM/YYYY HH:mm') : null,
         location: record.location ?? '',
         description: record.description ?? '',
-        registrationDeadline: record.registrationDeadline ? dayjs(record.registrationDeadline) : null,
+        registrationDeadline: record.registrationDeadline ? dayjs(record.registrationDeadline, 'DD/MM/YYYY HH:mm') : null,
         attachmentImg: record.attachmentImg ?? '',
         hostName: record.hostName ?? '',
         emails: record.emails ?? []
@@ -121,6 +126,7 @@ const EventManage = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setSelectedTeacher(null);
+    setActiveStep(0);
     setFormData({
       name: '',
       startTime: null,
@@ -241,17 +247,14 @@ const EventManage = () => {
         registrationDeadline: formData.registrationDeadline.toISOString(),
         attachmentImg: formData.attachmentImg.trim(),
         hostName: formData.hostName.trim(),
-        emails: formData.emails
+        emails: Array.from(new Set(formData.emails)),
       };
 
       if (editingId) {
-        await updateEventMutation.mutateAsync({
-          id: editingId,
-          data: processedData
-        });
+        await cancelEventMutation.mutateAsync(editingId);
         setSnackbar({
           open: true,
-          message: 'Event updated successfully',
+          message: 'Event cancelled successfully',
           severity: 'success'
         });
       } else {
@@ -344,6 +347,46 @@ const EventManage = () => {
       message: 'Image removed',
       severity: 'success'
     });
+  };
+
+  // Hàm helper để render badge status
+  const renderStatusBadge = (status) => {
+    let label = '-';
+    let color = '#bdbdbd';
+    let borderColor = '#e0e0e0';
+    if (status === 'EVENT_REGISTRATION_ACTIVE') {
+      label = 'Open';
+      color = '#2e7d32';
+      borderColor = '#2e7d32';
+    } else if (status === 'EVENT_CANCELLED') {
+      label = 'Cancel';
+      color = '#d32f2f';
+      borderColor = '#d32f2f';
+    } else if (status === 'EVENT_REGISTRATION_CLOSED') {
+      label = 'Close';
+      color = '#1976d2';
+      borderColor = '#1976d2';
+    }
+    return (
+      <Box
+        component="span"
+        sx={{
+          display: 'inline-block',
+          px: 2,
+          py: 0.5,
+          borderRadius: 2,
+          border: `1.5px solid ${borderColor}`,
+          color,
+          fontWeight: 600,
+          fontSize: '0.95rem',
+          background: '#fff',
+          minWidth: 70,
+          textAlign: 'center',
+        }}
+      >
+        {label}
+      </Box>
+    );
   };
 
   if (isError) {
@@ -439,40 +482,54 @@ const EventManage = () => {
         >
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-                <TableCell>Name</TableCell>
-                <TableCell>Start Time</TableCell>
-                <TableCell>End Time</TableCell>
-                <TableCell>Location</TableCell>
-                <TableCell>Host Name</TableCell>
-                <TableCell>Actions</TableCell>
+              <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Name</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Start Time</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>End Time</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Location</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Host Name</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Status</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {displayedData.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell>{row.name || '-'}</TableCell>
-                  <TableCell>{dayjs(row.startTime).format('DD/MM/YYYY HH:mm') || '-'}</TableCell>
-                  <TableCell>{dayjs(row.endTime).format('DD/MM/YYYY HH:mm') || '-'}</TableCell>
-                  <TableCell>{row.location || '-'}</TableCell>
-                  <TableCell>{row.hostName || '-'}</TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TableCell align="center">{row.name || '-'}</TableCell>
+                  <TableCell align="center">{row.startTime || '-'}</TableCell>
+                  <TableCell align="center">{row.endTime || '-'}</TableCell>
+                  <TableCell align="center">{row.location || '-'}</TableCell>
+                  <TableCell align="center">{row.hostName || '-'}</TableCell>
+                  <TableCell align="center">{renderStatusBadge(row.status)}</TableCell>
+                  <TableCell align="center">
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                       <Button
-                        variant="outlined"
-                        color="info"
+                        variant="contained"
+                        sx={{
+                          backgroundColor: '#42a5f5',
+                          color: '#fff',
+                          minWidth: 80,
+                          '&:hover': { backgroundColor: '#1976d2' },
+                          fontWeight: 600
+                        }}
                         onClick={() => handleViewDetail(row.id)}
                         size="small"
                       >
                         View
                       </Button>
                       <Button
-                        variant="outlined"
-                        color="primary"
+                        variant="contained"
+                        sx={{
+                          backgroundColor: '#ef5350',
+                          color: '#fff',
+                          minWidth: 80,
+                          '&:hover': { backgroundColor: '#b71c1c' },
+                          fontWeight: 600
+                        }}
                         onClick={() => showModal(row)}
                         size="small"
                       >
-                        Edit
+                        Cancel
                       </Button>
                     </Box>
                   </TableCell>
@@ -507,7 +564,7 @@ const EventManage = () => {
           }}
         >
           {editingId ? (
-            // Edit Form
+            // Cancel Event Confirmation
             <form onSubmit={handleSubmit}>
               <DialogTitle sx={{
                 borderBottom: '2px solid #e3f2fd',
@@ -516,133 +573,16 @@ const EventManage = () => {
                 fontWeight: 'bold',
                 py: 2
               }}>
-                Edit Event
+                Cancel Event
               </DialogTitle>
               <DialogContent>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2.5 }}>
-                  <TextField
-                    name="name"
-                    label="Event Name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    fullWidth
-                  />
-
-                  <DateTimePicker
-                    label="Start Time"
-                    value={formData.startTime}
-                    onChange={(newValue) => handleDateChange('startTime', newValue)}
-                    slotProps={{
-                      textField: {
-                        required: true,
-                        fullWidth: true
-                      }
-                    }}
-                  />
-
-                  <DateTimePicker
-                    label="End Time"
-                    value={formData.endTime}
-                    onChange={(newValue) => handleDateChange('endTime', newValue)}
-                    slotProps={{
-                      textField: {
-                        required: true,
-                        fullWidth: true
-                      }
-                    }}
-                  />
-
-                  <TextField
-                    name="location"
-                    label="Location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    required
-                    fullWidth
-                  />
-
-                  <TextField
-                    name="description"
-                    label="Description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                    fullWidth
-                    multiline
-                    rows={4}
-                  />
-
-                  <DateTimePicker
-                    label="Registration Deadline"
-                    value={formData.registrationDeadline}
-                    onChange={(newValue) => handleDateChange('registrationDeadline', newValue)}
-                    slotProps={{
-                      textField: {
-                        required: true,
-                        fullWidth: true
-                      }
-                    }}
-                  />
-
-                  <TextField
-                    name="attachmentImg"
-                    label="Attachment Image URL"
-                    value={formData.attachmentImg}
-                    onChange={handleInputChange}
-                    fullWidth
-                  />
-
-                  <TextField
-                    name="hostName"
-                    label="Host Name"
-                    value={formData.hostName}
-                    onChange={handleInputChange}
-                    required
-                    fullWidth
-                  />
-
-                  <TextField
-                    name="emails"
-                    label="Emails (comma-separated)"
-                    value={formData.emails.join(', ')}
-                    onChange={(e) => {
-                      const emailsArray = e.target.value.split(',').map(email => email.trim());
-                      setFormData(prev => ({
-                        ...prev,
-                        emails: emailsArray
-                      }));
-                    }}
-                    fullWidth
-                    helperText="Enter email addresses separated by commas"
-                  />
-
-                  <Autocomplete
-                    value={selectedTeacher}
-                    onChange={(event, newValue) => {
-                      setSelectedTeacher(newValue);
-                    }}
-                    options={teacherEmails}
-                    loading={isLoadingTeachers}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Teacher Email"
-                        required
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <>
-                              {isLoadingTeachers ? (
-                                <CircularProgress color="inherit" size={20} />
-                              ) : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
-                        }}
-                      />
-                    )}
-                  />
+                  <Typography variant="h6" color="error" sx={{ mb: 2 }}>
+                    Are you sure you want to cancel this event?
+                  </Typography>
+                  <Typography variant="body1">
+                    This action cannot be undone. The event will be marked as cancelled and participants will be notified.
+                  </Typography>
                 </Box>
               </DialogContent>
               <DialogActions sx={{ 
@@ -651,23 +591,23 @@ const EventManage = () => {
                 p: 2,
                 justifyContent: 'center'
               }}>
-                <Button onClick={handleClose}>Cancel</Button>
+                <Button onClick={handleClose}>Close</Button>
                 <Button
                   type="submit"
                   variant="contained"
                   sx={{
                     minWidth: 120,
-                    backgroundColor: '#1976d2',
+                    backgroundColor: '#d32f2f',
                     '&:hover': {
-                      backgroundColor: '#1565c0'
+                      backgroundColor: '#b71c1c'
                     }
                   }}
-                  disabled={updateEventMutation.isPending}
+                  disabled={cancelEventMutation.isPending}
                 >
-                  {updateEventMutation.isPending ? (
+                  {cancelEventMutation.isPending ? (
                     <CircularProgress size={24} />
                   ) : (
-                    'Update'
+                    'Cancel Event'
                   )}
                 </Button>
               </DialogActions>
@@ -758,7 +698,7 @@ const EventManage = () => {
 
                         <DateTimePicker
                           label="Start Time"
-                          value={formData.startTime}
+                          value={formData.startTime ? dayjs(formData.startTime) : null}
                           onChange={(newValue) => handleDateChange('startTime', newValue)}
                           slotProps={{
                             textField: {
@@ -770,7 +710,7 @@ const EventManage = () => {
 
                         <DateTimePicker
                           label="End Time"
-                          value={formData.endTime}
+                          value={formData.endTime ? dayjs(formData.endTime) : null}
                           onChange={(newValue) => handleDateChange('endTime', newValue)}
                           slotProps={{
                             textField: {
@@ -802,7 +742,7 @@ const EventManage = () => {
 
                         <DateTimePicker
                           label="Registration Deadline"
-                          value={formData.registrationDeadline}
+                          value={formData.registrationDeadline ? dayjs(formData.registrationDeadline) : null}
                           onChange={(newValue) => handleDateChange('registrationDeadline', newValue)}
                           slotProps={{
                             textField: {
@@ -934,7 +874,7 @@ const EventManage = () => {
                                         if (e.target.checked) {
                                           setFormData(prev => ({
                                             ...prev,
-                                            emails: teacherEmails
+                                            emails: Array.from(new Set(teacherEmails))
                                           }));
                                         } else {
                                           setFormData(prev => ({
@@ -968,7 +908,7 @@ const EventManage = () => {
                                         ...prev,
                                         emails: isSelected
                                           ? prev.emails.filter(e => e !== teacher.email)
-                                          : [...prev.emails, teacher.email]
+                                          : Array.from(new Set([...prev.emails, teacher.email]))
                                       }));
                                     }}
                                   >
@@ -979,7 +919,7 @@ const EventManage = () => {
                                           if (e.target.checked) {
                                             setFormData(prev => ({
                                               ...prev,
-                                              emails: [...prev.emails, teacher.email]
+                                              emails: Array.from(new Set([...prev.emails, teacher.email]))
                                             }));
                                           } else {
                                             setFormData(prev => ({
@@ -1125,7 +1065,7 @@ const EventManage = () => {
                       >
                         Start Time
                       </TableCell>
-                      <TableCell>{dayjs(detailData.data.data.startTime).format('DD/MM/YYYY HH:mm')}</TableCell>
+                      <TableCell>{detailData.data.data.startTime}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell 
@@ -1137,7 +1077,7 @@ const EventManage = () => {
                       >
                         End Time
                       </TableCell>
-                      <TableCell>{dayjs(detailData.data.data.endTime).format('DD/MM/YYYY HH:mm')}</TableCell>
+                      <TableCell>{detailData.data.data.endTime}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell 
@@ -1176,7 +1116,7 @@ const EventManage = () => {
                         Registration Deadline
                       </TableCell>
                       <TableCell>
-                        {dayjs(detailData.data.data.registrationDeadline).format('DD/MM/YYYY HH:mm')}
+                        {detailData.data.data.registrationDeadline}
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -1190,6 +1130,18 @@ const EventManage = () => {
                         Host Name
                       </TableCell>
                       <TableCell>{detailData.data.data.hostName}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          bgcolor: '#f8f9fa',
+                          fontWeight: 600,
+                          color: '#1976d2'
+                        }}
+                      >
+                        Status
+                      </TableCell>
+                      <TableCell>{renderStatusBadge(detailData.data.data.status)}</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -1232,7 +1184,7 @@ const EventManage = () => {
                 </Box>
               )}
 
-              {detailData.data.data.emails && detailData.data.data.emails.length > 0 && (
+              {((Array.isArray(eventTeachers?.data) && eventTeachers.data.length > 0) || (Array.isArray(eventTeachers) && eventTeachers.length > 0)) && (
                 <Box sx={{ mt: 4 }}>
                   <Typography
                     variant="h6"
@@ -1244,42 +1196,41 @@ const EventManage = () => {
                       borderBottom: '2px solid #e3f2fd'
                     }}
                   >
-                    Participant Emails
+                    Assigned Teachers
                   </Typography>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      border: '1px solid #e0e0e0',
-                      borderRadius: 2
-                    }}
-                  >
-                    <Grid container spacing={1}>
-                      {detailData.data.data.emails.map((email, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                          <Paper
-                            elevation={0}
-                            sx={{
-                              p: 1.5,
-                              textAlign: 'center',
-                              bgcolor: '#f8f9fa',
-                              border: '1px solid #e0e0e0',
-                              borderRadius: 1
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: '0.9rem',
-                                color: '#2c3e50'
-                              }}
-                            >
-                              {email}
-                            </Typography>
-                          </Paper>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Paper>
+                  {isLoadingEventTeachers ? (
+                    <CircularProgress />
+                  ) : (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: 2,
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <TableContainer>
+                        <Table>
+                          <TableHead>
+                            <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                              <TableCell>Name</TableCell>
+                              <TableCell>Email</TableCell>
+                              <TableCell>Department</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {(Array.isArray(eventTeachers?.data) ? eventTeachers.data : Array.isArray(eventTeachers) ? eventTeachers : []).map((teacher) => (
+                              <TableRow key={teacher.id}>
+                                <TableCell>{teacher.name}</TableCell>
+                                <TableCell>{teacher.email}</TableCell>
+                                <TableCell>{teacher.department || 'N/A'}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Paper>
+                  )}
                 </Box>
               )}
             </Box>
