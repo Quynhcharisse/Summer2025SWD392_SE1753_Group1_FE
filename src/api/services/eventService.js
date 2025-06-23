@@ -30,20 +30,22 @@ export const createEvent = async (data) => {
     }
 };
 
-export const updateEvent = async (id, data) => {
+export const cancelEvent = async (id) => {
     try {
-        // Log the update operation
-        console.log(`Editing event ${id} with data:`, data);
-        
-        // Use query parameter for id in update endpoint
-        const response = await apiClient.put(`/education/event?id=${id}`, data);
-        
-        // Log the response
-        console.log(`Edit response for event ${id}:`, response);
-        
+        const response = await apiClient.put(`/education/event/cancel?id=${id}`);
         return response;
     } catch (error) {
-        console.error(`Edit event error for ID ${id}:`, error);
+        console.error(`Cancel event error for ID ${id}:`, error);
+        throw error;
+    }
+};
+
+export const getEventTeachers = async (eventId) => {
+    try {
+        const response = await apiClient.get(`/education/event/assign/teachers?id=${eventId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Get event teachers error:', error);
         throw error;
     }
 };

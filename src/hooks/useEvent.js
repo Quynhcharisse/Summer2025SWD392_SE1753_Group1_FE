@@ -54,23 +54,20 @@ export const useCreateEvent = () => {
   });
 };
 
-export const useUpdateEvent = () => {
+export const useCancelEvent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: eventKeys.update(),
-    mutationFn: async ({ id, data }) => {
-      const response = await eventService.updateEvent(id, data);
+    mutationKey: ['cancelEvent'],
+    mutationFn: async (id) => {
+      const response = await eventService.cancelEvent(id);
       return response.data;
     },
     onSuccess: (data, { id }) => {
-      // Invalidate and refetch affected queries
       queryClient.invalidateQueries({ queryKey: eventKeys.lists() });
       queryClient.invalidateQueries({ 
         queryKey: eventKeys.detail(id)
       });
-
-      // Optionally update the cache directly
       queryClient.setQueryData(eventKeys.lists(), (old) => {
         if (!old?.data?.data) return old;
         const updatedData = old.data.data.map((event) => 
@@ -85,5 +82,13 @@ export const useUpdateEvent = () => {
         };
       });
     },
+  });
+};
+
+export const useEventTeachers = (eventId) => {
+  return useQuery({
+    queryKey: [...eventKeys.detail(eventId), 'teachers'],
+    queryFn: () => eventService.getEventTeachers(eventId),
+    enabled: !!eventId,
   });
 };

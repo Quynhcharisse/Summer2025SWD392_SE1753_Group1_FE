@@ -328,91 +328,13 @@ const LessonManage = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Topic
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Description
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Objective
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Required Tools
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 0.5,
-                  }}
-                  onClick={handleSortClick}
-                >
-                  Duration per week (Hours)
-                  <Box
-                    component="span"
-                    sx={{ display: "inline-flex", alignItems: "center" }}
-                  >
-                    {sortOrder === "asc" ? "↑" : "↓"}
-                  </Box>
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Actions
-                </TableCell>
+              <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Topic</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Description</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Objective</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Required Tools</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Duration per week (Hours)</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -421,36 +343,37 @@ const LessonManage = () => {
                 return (
                   <TableRow key={row.id}>
                     <TableCell align="center">{row.topic ?? "-"}</TableCell>
-                    <TableCell align="center">
-                      {row.description ?? "-"}
-                    </TableCell>
+                    <TableCell align="center">{row.description ?? "-"}</TableCell>
                     <TableCell align="center">{row.objective ?? "-"}</TableCell>
+                    <TableCell align="center">{row.toolsRequired ?? "-"}</TableCell>
+                    <TableCell align="center">{typeof row.duration === "number" ? row.duration : "-"}</TableCell>
                     <TableCell align="center">
-                      {row.toolsRequired ?? "-"}
-                    </TableCell>
-                    <TableCell align="center">
-                      {typeof row.duration === "number" ? row.duration : "-"}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box
-                        sx={{
-                          display: "flex",
-                          gap: 1,
-                          justifyContent: "center",
-                        }}
-                      >
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                         <Button
-                          variant="outlined"
-                          color="info"
+                          variant="contained"
+                          sx={{
+                            backgroundColor: '#42a5f5',
+                            color: '#fff',
+                            minWidth: 80,
+                            '&:hover': { backgroundColor: '#1976d2' },
+                            fontWeight: 600
+                          }}
                           onClick={() => handleViewDetail(row.id)}
                           size="small"
                         >
                           View
                         </Button>
                         <Button
-                          variant="outlined"
-                          size="small"
+                          variant="contained"
+                          sx={{
+                            backgroundColor: '#1976d2',
+                            color: '#fff',
+                            minWidth: 80,
+                            '&:hover': { backgroundColor: '#1565c0' },
+                            fontWeight: 600
+                          }}
                           onClick={() => showModal(row)}
+                          size="small"
                         >
                           Edit
                         </Button>

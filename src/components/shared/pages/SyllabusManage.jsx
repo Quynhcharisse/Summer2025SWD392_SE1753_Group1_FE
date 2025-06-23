@@ -469,79 +469,13 @@ const SyllabusManage = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Subject
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Description
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Number of Week
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Hours of Syllabuses
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Grade
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    borderBottom: "2px solid #e3f2fd",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Actions
-                </TableCell>
+              <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Subject</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Description</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Number of Week</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Hours of Syllabuses</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Grade</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -549,28 +483,34 @@ const SyllabusManage = () => {
                 <TableRow key={row.id}>
                   <TableCell align="center">{row.subject || "-"}</TableCell>
                   <TableCell align="center">{row.description || "-"}</TableCell>
-                  <TableCell align="center">
-                    {row.numberOfWeek || "-"}
-                  </TableCell>
-                  <TableCell align="center">
-                    {row.maxHoursOfSyllabus || "-"}
-                  </TableCell>
+                  <TableCell align="center">{row.numberOfWeek || "-"}</TableCell>
+                  <TableCell align="center">{row.maxHoursOfSyllabus || "-"}</TableCell>
                   <TableCell align="center">{row.grade || "-"}</TableCell>
                   <TableCell align="center">
-                    <Box
-                      sx={{ display: "flex", gap: 1, justifyContent: "center" }}
-                    >
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                       <Button
-                        variant="outlined"
-                        color="info"
+                        variant="contained"
+                        sx={{
+                          backgroundColor: '#42a5f5',
+                          color: '#fff',
+                          minWidth: 80,
+                          '&:hover': { backgroundColor: '#1976d2' },
+                          fontWeight: 600
+                        }}
                         onClick={() => handleViewDetail(row.id)}
                         size="small"
                       >
                         View
                       </Button>
                       <Button
-                        variant="outlined"
-                        color="primary"
+                        variant="contained"
+                        sx={{
+                          backgroundColor: '#1976d2',
+                          color: '#fff',
+                          minWidth: 80,
+                          '&:hover': { backgroundColor: '#1565c0' },
+                          fontWeight: 600
+                        }}
                         onClick={() => showModal(row)}
                         size="small"
                         disabled={row.isAssigned}
@@ -578,8 +518,14 @@ const SyllabusManage = () => {
                         Edit
                       </Button>
                       <Button
-                        variant="outlined"
-                        color="secondary"
+                        variant="contained"
+                        sx={{
+                          backgroundColor: '#8e24aa',
+                          color: '#fff',
+                          minWidth: 120,
+                          '&:hover': { backgroundColor: '#6a1b9a' },
+                          fontWeight: 600
+                        }}
                         onClick={() =>
                           navigate(
                             `/user/education/syllabus/assignlesson/${row.id}`,
