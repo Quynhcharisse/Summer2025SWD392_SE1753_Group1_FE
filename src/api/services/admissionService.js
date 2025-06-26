@@ -29,43 +29,41 @@ export const createTerm = async (
     grade,
     startDate,
     endDate,
-    maxNumberRegistration,
+    expectedClasses,
     reservationFee,
     serviceFee,
     uniformFee,
     learningMaterialFee,
     facilityFee
 ) => {
-
     try {
-        const response = await
-            apiClient.post("/admission/term", {
-                grade: grade,
-                startDate: startDate,
-                endDate: endDate,
-                maxNumberRegistration: maxNumberRegistration,
-                reservationFee: reservationFee,
-                serviceFee: serviceFee,
-                uniformFee: uniformFee,
-                learningMaterialFee: learningMaterialFee,
-                facilityFee: facilityFee
-            }
-        );
-        return response.data;
-    } catch (error) {
-        console.error("Create term error:", error);
-        throw error;
-    }
-}
-
-export const getDefaultGrade = async (grade) => {
-    try {
-        const response = await apiClient.get(`/admission/default/fee`, {
-            params: { grade } //Gửi grade vào query
+        const response = await apiClient.post('/admission/term/create', {
+            grade,
+            startDate,
+            endDate,
+            expectedClasses,
+            reservationFee,
+            serviceFee,
+            uniformFee,
+            learningMaterialFee,
+            facilityFee
         });
         return response.data;
     } catch (error) {
-        console.error("Error fetching default fee for grade:", grade, error);
+        console.error('Error creating term:', error);
+        throw error;
+    }
+};
+
+export const getDefaultGrade = async (grade) => {
+    try {
+        const response = await apiClient.get('/admission/default/fee', {
+            params: { grade }
+        });
+        console.log("API Response for default fee:", response);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching default grade:", error);
         throw error;
     }
 };
@@ -96,6 +94,19 @@ export const createExtraTerm = async (data) => {
             status: error.response?.status,
             headers: error.response?.headers
         });
+        throw error;
+    }
+};
+
+export const getTermYears = async () => {
+    try {
+        const response = await apiClient.get('/admission/years');
+        if (!response.data.success) {
+            throw new Error(response.data.message || 'Failed to fetch years');
+        }
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching term years:', error);
         throw error;
     }
 };

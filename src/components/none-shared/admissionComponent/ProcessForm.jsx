@@ -56,14 +56,17 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
     return (
         <Paper sx={{
             width: '100%',
-            height: 500,
+            minHeight: 400,
+            maxHeight: 'calc(100vh - 200px)',
             borderRadius: 3,
-            overflow: 'hidden',
+            overflow: 'visible',
             backgroundColor: '#fff',
             boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
-            border: '2px solid rgb(254, 254, 253)'
+            border: '2px solid rgb(254, 254, 253)',
+            display: 'flex',
+            flexDirection: 'column'
         }}>
-            <TableContainer sx={{height: 500}}>
+            <TableContainer sx={{ flex: 1, maxHeight: 'calc(100vh - 300px)', overflow: 'auto' }}>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
@@ -124,6 +127,18 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                sx={{
+                    borderTop: '1px solid #e0e0e0',
+                    '.MuiTablePagination-select': {
+                        borderRadius: '8px',
+                        padding: '4px 8px',
+                        marginRight: '8px'
+                    },
+                    backgroundColor: '#fff',
+                    position: 'sticky',
+                    bottom: 0,
+                    zIndex: 2
+                }}
             />
         </Paper>
     )
