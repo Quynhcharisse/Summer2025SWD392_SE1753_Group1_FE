@@ -31,6 +31,8 @@ import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {getFormTracking, processAdmissionForm} from "@/api/services/admissionService.js";
 import { parseISO } from "date-fns";
 import {enqueueSnackbar} from "notistack";
+import {CircularProgress} from "@mui/material";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 
 function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
@@ -56,60 +58,132 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
     return (
         <Paper sx={{
             width: '100%',
-            height: 500,
+            minHeight: 400,
+            maxHeight: 'calc(100vh - 200px)',
             borderRadius: 3,
-            overflow: 'hidden',
+            overflow: 'visible',
             backgroundColor: '#fff',
             boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
-            border: '2px solid rgb(254, 254, 253)'
+            border: '2px solid rgb(254, 254, 253)',
+            display: 'flex',
+            flexDirection: 'column'
         }}>
-            <TableContainer sx={{height: 500}}>
+            <TableContainer sx={{ flex: 1, maxHeight: 'calc(100vh - 300px)', overflow: 'auto' }}>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell align="center" sx={{ fontWeight: 'bold', minWidth: 80 }}>No</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 'bold', minWidth: 160 }}>Child Name</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 'bold', minWidth: 140 }}>Submit Date</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 'bold', minWidth: 160 }}>Cancel Reason</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 'bold', minWidth: 120 }}>Status</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 'bold', minWidth: 120 }}>Note</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 'bold', minWidth: 80 }}>Action</TableCell>
+                            <TableCell align="center" sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 80,
+                                backgroundColor: '#f8faf8',
+                                color: '#07663a',
+                                fontSize: '0.95rem',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>No</TableCell>
+                            <TableCell align="center" sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 160,
+                                backgroundColor: '#f8faf8',
+                                color: '#07663a',
+                                fontSize: '0.95rem',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>Child Name</TableCell>
+                            <TableCell align="center" sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 140,
+                                backgroundColor: '#f8faf8',
+                                color: '#07663a',
+                                fontSize: '0.95rem',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>Submit Date</TableCell>
+                            <TableCell align="center" sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 160,
+                                backgroundColor: '#f8faf8',
+                                color: '#07663a',
+                                fontSize: '0.95rem',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>Cancel Reason</TableCell>
+                            <TableCell align="center" sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 120,
+                                backgroundColor: '#f8faf8',
+                                color: '#07663a',
+                                fontSize: '0.95rem',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>Status</TableCell>
+                            <TableCell align="center" sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 120,
+                                backgroundColor: '#f8faf8',
+                                color: '#07663a',
+                                fontSize: '0.95rem',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>Note</TableCell>
+                            <TableCell align="center" sx={{ 
+                                fontWeight: 'bold', 
+                                minWidth: 120,
+                                backgroundColor: '#f8faf8',
+                                color: '#07663a',
+                                fontSize: '0.95rem',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>Action</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {filteredForms
                             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((form, index) => (
-                                <TableRow key={index}>
-                                    <TableCell align="center" sx={{minWidth: 80}}>{index + 1}</TableCell>
-                                    <TableCell align="center" sx={{minWidth: 160}}>{form.studentName}</TableCell>
-                                    <TableCell align="center" sx={{minWidth: 140}}>{form.submittedDate}</TableCell>
-                                    <TableCell align="center" sx={{minWidth: 160}}>{form.cancelReason || "N/A"}</TableCell>
-                                    <TableCell align="center" sx={{
-                                        color:
-                                            form.status === "approved" || form.status === "pending approval" || form.status === "pending"
-                                                ? "#07663a"
-                                                : form.status === "rejected" || form.status === "cancelled"
-                                                    ? "#dc3545"
-                                                    : form.status === "pending approval" || form.status === "pending"
-                                                        ? "#0d6efd"
-                                                        : "black",
-                                        fontWeight: "600",
-                                        padding: '6px 12px',
-                                        width: 'fit-content',
-                                        margin: '0 auto'
-                                    }}>{form.status}</TableCell>
-                                    <TableCell align="center" sx={{minWidth: 120}}>{form.note}</TableCell>
-                                    <TableCell align="center" sx={{minWidth: 80}}>
-                                        <Tooltip title="View Detail">
-                                            <IconButton
-                                                color="success"
-                                                onClick={() => handleDetailClick(form)}
-                                                sx={{mr: 1}}
-                                            >
-                                                <Info/>
-                                            </IconButton>
-                                        </Tooltip>
+                                <TableRow 
+                                    key={index}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: '#f8faf8',
+                                        },
+                                        transition: 'background-color 0.2s'
+                                    }}
+                                >
+                                    <TableCell align="center">{index + 1}</TableCell>
+                                    <TableCell align="center">{form.studentName}</TableCell>
+                                    <TableCell align="center">{form.submittedDate}</TableCell>
+                                    <TableCell align="center">{form.cancelReason || "N/A"}</TableCell>
+                                    <TableCell align="center">
+                                        <Chip
+                                            label={form.status}
+                                            sx={{
+                                                backgroundColor: 
+                                                    form.status === "approved" ? "rgba(7, 102, 58, 0.1)" :
+                                                    form.status === "rejected" || form.status === "cancelled" ? "rgba(220, 53, 69, 0.1)" :
+                                                    form.status === "pending approval" || form.status === "pending" ? "rgba(13, 110, 253, 0.1)" :
+                                                    "transparent",
+                                                color:
+                                                    form.status === "approved" ? "#07663a" :
+                                                    form.status === "rejected" || form.status === "cancelled" ? "#dc3545" :
+                                                    form.status === "pending approval" || form.status === "pending" ? "#0d6efd" :
+                                                    "black",
+                                                fontWeight: "600",
+                                                borderRadius: '20px'
+                                            }}
+                                        />
+                                    </TableCell>
+                                    <TableCell align="center">{form.note || "N/A"}</TableCell>
+                                    <TableCell align="center">
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<Info />}
+                                            onClick={() => handleDetailClick(form)}
+                                            sx={{
+                                                backgroundColor: '#07663a',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(7, 102, 58, 0.85)'
+                                                },
+                                                textTransform: 'none',
+                                                borderRadius: '8px',
+                                                boxShadow: 'none'
+                                            }}
+                                        >
+                                            Info
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -124,40 +198,59 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                sx={{
+                    borderTop: '1px solid #e0e0e0',
+                    '.MuiTablePagination-select': {
+                        borderRadius: '8px',
+                        padding: '4px 8px',
+                        marginRight: '8px'
+                    },
+                    backgroundColor: '#fff',
+                    position: 'sticky',
+                    bottom: 0,
+                    zIndex: 2
+                }}
             />
         </Paper>
     )
 }
 
 function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
-
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
         type: '',
         reason: ''
     });
-
-    //tạo state để hiển thị ảnh
+    const [isProcessing, setIsProcessing] = useState(false);
     const [openImage, setOpenImage] = useState(false);
     const [selectedImage, setSelectedImage] = useState('');
 
     async function HandleProcessForm(isApproved, reason) {
-        const response = await processAdmissionForm(selectedForm.id, isApproved, reason)
+        setIsProcessing(true);
+        try {
+            const response = await processAdmissionForm(selectedForm.id, isApproved, reason);
 
-        console.log("API Response: ", response.success);
-
-        if (response && response.success) {
+            if (response && response.success) {
+                enqueueSnackbar(
+                    isApproved ? "Approved successfully" : "Rejected successfully",
+                    {variant: "success"}
+                );
+                handleClosePopUp();
+            } else {
+                enqueueSnackbar(
+                    isApproved ? "Approval failed" : "Rejection failed",
+                    {variant: "error"}
+                );
+            }
+        } catch (error) {
             enqueueSnackbar(
-                isApproved ? "Approved successfully" : "Rejected successfully",
-                {variant: "success"})
-        } else {
-            console.error("Process failed:", response?.message || "No response");
-            enqueueSnackbar(
-                isApproved ? "Approval failed" : "Rejection failed",
+                "An error occurred while processing the form",
                 {variant: "error"}
-            )
+            );
+        } finally {
+            setIsProcessing(false);
+            setConfirmDialog({open: false, type: '', reason: ''});
         }
-        handleClosePopUp()
     }
 
     return (
@@ -166,6 +259,8 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
+            <LoadingOverlay open={isProcessing} message={confirmDialog.type === 'approve' ? 'Approving form...' : 'Rejecting form...'} />
+            
             <AppBar sx={{position: 'relative', bgcolor: '#07663a'}}>
                 <Toolbar>
                     <IconButton edge="start"
@@ -301,7 +396,7 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                             onClose={() => setConfirmDialog({open: false, type: '', reason: ''})}>
                         <Box p={3} width={500}>
                             <Stack spacing={3}>
-                                <Typography variant="h6" fontWeight="bold">
+                                <Typography variant="h6" fontWeight="bold" color={confirmDialog.type === 'approve' ? '#07663a' : '#dc3545'}>
                                     {confirmDialog.type === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
                                 </Typography>
 
@@ -326,7 +421,10 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                                 )}
 
                                 <Stack direction="row" spacing={2} justifyContent="flex-end">
-                                    <Button onClick={() => setConfirmDialog({open: false, type: '', reason: ''})}>
+                                    <Button 
+                                        onClick={() => setConfirmDialog({open: false, type: '', reason: ''})}
+                                        disabled={isProcessing}
+                                    >
                                         Cancel
                                     </Button>
                                     <Button
@@ -336,23 +434,16 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                                             const isApproved = confirmDialog.type === 'approve';
                                             const reason = isApproved ? '' : confirmDialog.reason.trim();
 
-                                            // Log phân biệt rõ hành động
-                                            if (isApproved) {
-                                                console.log("🟢 APPROVE form:", selectedForm.id);
-                                            } else {
-                                                console.log("🔴 REJECT form:", selectedForm.id, "| Reason:", reason);
-                                            }
-
-                                            //Nếu là reject mà ko có lys do chỉ cảnh báo
                                             if (!isApproved && reason === '') {
                                                 enqueueSnackbar("Please enter a reason for rejection.", {variant: "warning"});
                                                 return;
                                             }
-                                            //ktr lỗi
                                             HandleProcessForm(isApproved, reason);
                                         }}
+                                        disabled={isProcessing}
+                                        startIcon={isProcessing ? <CircularProgress size={20} /> : null}
                                     >
-                                        Confirm
+                                        {isProcessing ? (confirmDialog.type === 'approve' ? 'Approving...' : 'Rejecting...') : 'Confirm'}
                                     </Button>
                                 </Stack>
                             </Stack>
