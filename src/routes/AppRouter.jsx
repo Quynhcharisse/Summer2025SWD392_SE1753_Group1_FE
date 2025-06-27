@@ -36,6 +36,7 @@ const HRDashboard = lazy(() => import("@pages/HRDashboard"));
 const EducationDashboard = lazy(() => import("@pages/EducationDashboard"));
 const UserProfile = lazy(() => import("@pages/UserProfile"));
 const ComingSoon = lazy(() => import("@pages/ComingSoon"));
+const EventDetail = lazy(() => import("@pages/EventDetail"));
 
 
 
@@ -144,6 +145,14 @@ const router = createBrowserRouter([
     element: (
       <PublicPageWrapper>
         <Events />
+      </PublicPageWrapper>
+    ),
+  },
+  {
+    path: "/homepage/events/:id",
+    element: (
+      <PublicPageWrapper>
+        <EventDetail />
       </PublicPageWrapper>
     ),
   },

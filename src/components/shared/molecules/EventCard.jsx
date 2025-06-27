@@ -31,7 +31,8 @@ const EventCard = ({
     location,
     category,
     color = 'blue',
-    featured = false
+    featured = false,
+    attachmentImg
   } = event;
 
   const getColorClasses = (color) => {
@@ -73,6 +74,13 @@ const EventCard = ({
 
   return (
     <div className={`${baseClasses} ${variantClasses[variant]} ${className}`}>
+      {/* Event image */}
+      {attachmentImg && (
+        <div className="mb-3 rounded overflow-hidden">
+          <img src={attachmentImg} alt={title} className="w-full h-56 object-cover" />
+        </div>
+      )}
+
       {/* Header with badges */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex gap-2">
@@ -188,7 +196,8 @@ EventCard.propTypes = {
     location: PropTypes.string,
     category: PropTypes.string,
     color: PropTypes.oneOf(['blue', 'green', 'purple', 'orange', 'pink', 'yellow']),
-    featured: PropTypes.bool
+    featured: PropTypes.bool,
+    attachmentImg: PropTypes.string
   }).isRequired,
   /** Visual variant of the card */
   variant: PropTypes.oneOf(['default', 'featured', 'compact']),

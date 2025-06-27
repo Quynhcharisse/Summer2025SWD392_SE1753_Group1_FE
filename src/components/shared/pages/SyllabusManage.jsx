@@ -43,6 +43,9 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAssignedLessons } from "@hooks/useSyllabusLesson";
 import { useLessonList } from "@hooks/useLesson";
+import LayersIcon from '@mui/icons-material/Layers';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import InfoIcon from '@mui/icons-material/Info';
 
 const HOURS_PER_WEEK = 30;
 
@@ -1132,181 +1135,127 @@ const SyllabusManage = () => {
             </Box>
           ) : detailData?.data?.data ? (
             <Box sx={{ p: 3 }}>
-              <TableContainer
-                component={Paper}
+              {/* Block 1: Syllabus Information */}
+              <Paper
                 elevation={0}
                 sx={{
-                  borderRadius: 2,
-                  overflow: "hidden",
+                  p: 3,
                   mb: 3,
-                  border: "1px solid #e0e0e0",
-                  "& .MuiTableCell-root": {
-                    borderColor: "#e0e0e0",
-                    py: 2.5,
-                    px: 3,
-                  },
-                  "& .MuiTableRow-root": {
-                    "&:last-child td, &:last-child th": {
-                      borderBottom: 0,
-                    },
-                  },
+                  borderRadius: 3,
+                  borderLeft: '6px solid #38bdf8',
+                  background: 'linear-gradient(90deg, #e0f2fe 60%, #fff 100%)',
+                  boxShadow: '0 2px 8px rgba(56,189,248,0.08)',
                 }}
               >
-                <Table>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell
-                        sx={{
-                          width: "20%",
-                          bgcolor: "#f8f9fa",
-                          fontWeight: 600,
-                          color: "#1976d2",
-                        }}
-                      >
-                        Grade
-                      </TableCell>
-                      <TableCell>{detailData.data.data.grade}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell
-                        sx={{
-                          bgcolor: "#f8f9fa",
-                          fontWeight: 600,
-                          color: "#1976d2",
-                        }}
-                      >
-                        Duration
-                      </TableCell>
-                      <TableCell>
-                        {detailData.data.data.numberOfWeek} weeks
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell
-                        sx={{
-                          bgcolor: "#f8f9fa",
-                          fontWeight: 600,
-                          color: "#1976d2",
-                        }}
-                      >
-                        Description
-                      </TableCell>
-                      <TableCell sx={{ whiteSpace: "pre-wrap" }}>
-                        {detailData.data.data.description}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                <Typography variant="h5" sx={{ fontWeight: 800, color: '#0ea5e9', mb: 2, letterSpacing: 0.5 }}>
+                  Syllabus Information
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Paper sx={{ display: 'flex', alignItems: 'center', p: 2, borderRadius: 2, bgcolor: '#fff', boxShadow: 'none', minHeight: 56 }}>
+                      <LayersIcon sx={{ color: '#38bdf8', mr: 1, fontSize: 20 }} />
+                      <Box>
+                        <Typography fontSize="0.97rem" color="#888" fontWeight={500} sx={{ mb: 0.2 }}>Grade :</Typography>
+                        <Typography fontWeight={700} color="#222" fontSize="1.08rem">{detailData.data.data.grade}</Typography>
+                      </Box>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Paper sx={{ display: 'flex', alignItems: 'center', p: 2, borderRadius: 2, bgcolor: '#fff', boxShadow: 'none', minHeight: 56 }}>
+                      <AccessTimeIcon sx={{ color: '#1976d2', mr: 1, fontSize: 20 }} />
+                      <Box>
+                        <Typography fontSize="0.97rem" color="#888" fontWeight={500} sx={{ mb: 0.2 }}>Duration :</Typography>
+                        <Typography fontWeight={700} color="#222" fontSize="1.08rem">{detailData.data.data.numberOfWeek} weeks</Typography>
+                      </Box>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={12} sm={12}>
+                    <Paper sx={{ display: 'flex', alignItems: 'center', p: 2, borderRadius: 2, bgcolor: '#fff', boxShadow: 'none', minHeight: 56 }}>
+                      <InfoIcon sx={{ color: '#0ea5e9', mr: 1, fontSize: 20 }} />
+                      <Box>
+                        <Typography fontSize="0.97rem" color="#888" fontWeight={500} sx={{ mb: 0.2 }}>Description :</Typography>
+                        <Typography fontWeight={700} color="#222" fontSize="1.08rem" sx={{ whiteSpace: 'pre-wrap' }}>{detailData.data.data.description}</Typography>
+                      </Box>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </Paper>
 
-              {/* Lessons Section */}
-              <Box sx={{ mt: 4 }}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 3,
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: "#1976d2",
-                      fontWeight: 600,
-                      mb: 3,
-                      pb: 2,
-                      borderBottom: "2px solid #e3f2fd",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    <Box
-                      component="span"
-                      sx={{
-                        width: 6,
-                        height: 24,
-                        bgcolor: "#1976d2",
-                        display: "inline-block",
-                        borderRadius: 1,
-                        mr: 1,
-                      }}
-                    />
-                    Lessons
-                  </Typography>
-
-                  {isLoadingAssignedLessons ? (
-                    <Box
-                      sx={{ display: "flex", justifyContent: "center", p: 3 }}
-                    >
-                      <CircularProgress size={24} />
-                    </Box>
-                  ) : assignedLessonsData?.data?.data?.length > 0 ? (
-                    <Grid
-                      container
-                      spacing={2.5}
-                      sx={{
-                        px: { xs: 0, sm: 2 },
-                        mx: { xs: -1, sm: -2 },
-                      }}
-                    >
-                      {assignedLessonsData.data.data.map((lesson) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={lesson.id}>
-                          <Paper
-                            elevation={0}
+              {/* Block 2: Lessons */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  borderRadius: 3,
+                  borderLeft: '6px solid #22c55e',
+                  background: 'linear-gradient(90deg, #dcfce7 60%, #fff 100%)',
+                  boxShadow: '0 2px 8px rgba(34,197,94,0.08)',
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#16a34a', mb: 2 }}>
+                  Lessons
+                </Typography>
+                {isLoadingAssignedLessons ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : assignedLessonsData?.data?.data?.length > 0 ? (
+                  <Grid container spacing={2.5}>
+                    {assignedLessonsData.data.data.map((lesson) => (
+                      <Grid item xs={12} sm={6} md={4} lg={3} key={lesson.id}>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2.5,
+                            height: "100%",
+                            bgcolor: "#fff",
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                            transition: "all 0.2s ease",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            '&:hover': {
+                              bgcolor: '#f0fdfa',
+                              borderColor: '#22c55e',
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 4px 8px rgba(34,197,94,0.08)',
+                            },
+                          }}
+                        >
+                          <Typography
                             sx={{
-                              p: 2.5,
-                              height: "100%",
-                              bgcolor: "#fff",
-                              border: "1px solid #e0e0e0",
-                              borderRadius: 2,
-                              transition: "all 0.2s ease",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: "pointer",
-                              "&:hover": {
-                                bgcolor: "#f5f5f5",
-                                borderColor: "#1976d2",
-                                transform: "translateY(-2px)",
-                                boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-                              },
+                              fontWeight: 500,
+                              color: "#2c3e50",
+                              textAlign: "center",
+                              lineHeight: 1.3,
+                              fontSize: "0.95rem",
                             }}
                           >
-                            <Typography
-                              sx={{
-                                fontWeight: 500,
-                                color: "#2c3e50",
-                                textAlign: "center",
-                                lineHeight: 1.3,
-                                fontSize: "0.95rem",
-                              }}
-                            >
-                              {lesson.topic}
-                            </Typography>
-                          </Paper>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  ) : (
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 3,
-                        textAlign: "center",
-                        bgcolor: "#f8f9fa",
-                        border: "1px solid #e0e0e0",
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Typography color="text.secondary">
-                        No lessons assigned.
-                      </Typography>
-                    </Paper>
-                  )}
-                </Paper>
-              </Box>
+                            {lesson.topic}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+                ) : (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      textAlign: "center",
+                      bgcolor: "#f8f9fa",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography color="text.secondary">
+                      No lessons assigned.
+                    </Typography>
+                  </Paper>
+                )}
+              </Paper>
             </Box>
           ) : (
             <Box sx={{ p: 4, textAlign: "center" }}>

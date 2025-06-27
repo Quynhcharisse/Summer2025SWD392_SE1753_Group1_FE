@@ -240,11 +240,11 @@ const EventManage = () => {
     try {
       const processedData = {
         name: formData.name.trim(),
-        startTime: formData.startTime.toISOString(),
-        endTime: formData.endTime.toISOString(),
+        startTime: formData.startTime ? formData.startTime.format('YYYY-MM-DDTHH:mm:ss') : '',
+        endTime: formData.endTime ? formData.endTime.format('YYYY-MM-DDTHH:mm:ss') : '',
         location: formData.location.trim(),
         description: formData.description.trim(),
-        registrationDeadline: formData.registrationDeadline.toISOString(),
+        registrationDeadline: formData.registrationDeadline ? formData.registrationDeadline.format('YYYY-MM-DDTHH:mm:ss') : '',
         attachmentImg: formData.attachmentImg.trim(),
         hostName: formData.hostName.trim(),
         emails: Array.from(new Set(formData.emails)),
@@ -261,7 +261,7 @@ const EventManage = () => {
         await createEventMutation.mutateAsync(processedData);
         setSnackbar({
           open: true,
-          message: 'Event created successfully',
+          message: 'Event created successfully!',
           severity: 'success'
         });
       }
@@ -270,7 +270,7 @@ const EventManage = () => {
       console.error('Operation error:', error);
       setSnackbar({
         open: true,
-        message: error.message || 'An error occurred',
+        message: error?.response?.data?.message || error.message || 'An error occurred',
         severity: 'error'
       });
     }
@@ -285,8 +285,9 @@ const EventManage = () => {
     setPage(0);
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setSnackbar({ ...snackbar, open: false });
   };
 
   const handleViewDetail = (id) => {

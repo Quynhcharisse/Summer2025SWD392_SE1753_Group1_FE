@@ -1,80 +1,75 @@
 import React, { useEffect } from "react";
+import dayjs from "dayjs";
 import { PageTemplate } from "@templates";
 import { Button } from "@atoms";
 import { NewsletterSignup, EventCard } from "@molecules";
+import { useEventActive, useEventDetail, useEventTeachers } from "@hooks/useEvent";
+import { Alert, CircularProgress, Snackbar } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+
+// Helper to format date/time using dayjs 24h
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const d = dayjs(dateStr);
+  return d.isValid() ? d.format('DD/MM/YYYY') : '';
+};
+
+const formatTimeRange = (start, end) => {
+  const s = start ? dayjs(start) : null;
+  const e = end ? dayjs(end) : null;
+  if (!s || !s.isValid()) return '';
+  if (!e || !e.isValid()) return s.format('HH:mm');
+  return `${s.format('HH:mm')} - ${e.format('HH:mm')}`;
+};
 
 const Events = () => {
   useEffect(() => {
     document.title = "Events - Sunshine Preschool";
   }, []);
-  const events = [
-    {
-      id: 1,
-      date: "June 15, 2025",
-      time: "10:00 AM - 2:00 PM",
-      title: "Summer Festival",
-      description: "Join us for a fun-filled summer festival with games, music, and activities for the whole family.",
-      location: "School Playground",
-      category: "Festival",
-      color: "blue",
-      featured: true
-    },
-    {
-      id: 2,
-      date: "June 22, 2025",
-      time: "2:00 PM - 4:00 PM",
-      title: "Parent-Teacher Conference",
-      description: "Meet with your child's teacher to discuss progress and development.",
-      location: "Classrooms",
-      category: "Academic",
-      color: "green"
-    },
-    {
-      id: 3,
-      date: "July 4, 2025",
-      time: "9:00 AM - 11:00 AM",
-      title: "Art Exhibition",
-      description: "Showcase of our students' creative artwork and crafts projects.",
-      location: "Art Room",
-      category: "Arts",
-      color: "purple"
-    },
-    {
-      id: 4,
-      date: "July 12, 2025",
-      time: "3:00 PM - 5:00 PM",
-      title: "Sports Day",
-      description: "Athletic competitions and team sports for all age groups.",
-      location: "Sports Field",
-      category: "Sports",
-      color: "orange"
-    },
-    {
-      id: 5,
-      date: "July 20, 2025",
-      time: "10:00 AM - 12:00 PM",
-      title: "Reading Week",
-      description: "Special reading activities and storytelling sessions.",
-      location: "Library",
-      category: "Academic",
-      color: "pink"
-    },
-    {
-      id: 6,
-      date: "August 5, 2025",
-      time: "6:00 PM - 8:00 PM",
-      title: "Graduation Ceremony",
-      description: "Celebrating our graduating students moving to primary school.",
-      location: "Main Hall",
-      category: "Ceremony",
-      color: "yellow",
-      featured: true
-    }  ];
+
+  const { data: eventActiveResponse, isLoading, isError, error } = useEventActive();
+  const events = eventActiveResponse?.data?.data || [];
+
+  const navigate = useNavigate();
+  const handleOpenDetail = (id) => {
+    navigate(`/homepage/events/${id}`);
+  };
+
+  const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' });
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  if (isLoading) {
+    return (
+      <PageTemplate>
+        <div className="flex justify-center items-center h-64">
+          <CircularProgress />
+        </div>
+      </PageTemplate>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageTemplate>
+        <Alert severity="error">
+          {error?.response?.status === 403 
+            ? 'You do not have permission to access this resource. Please log in with appropriate permissions.'
+            : `Error loading events: ${error?.message || 'Please try again later.'}`
+          }
+        </Alert>
+      </PageTemplate>
+    );
+  }
 
   return (
     <PageTemplate
       title="Upcoming Events"
-      subtitle="Join us for exciting activities and important school events throughout the year"      breadcrumbs={[
+      subtitle="Join us for exciting activities and important school events throughout the year"
+      breadcrumbs={[
         { label: "Home", href: "/homepage" },
         { label: "Events", href: "/homepage/events" }
       ]}
@@ -88,7 +83,8 @@ const Events = () => {
           </Button>
         </div>
       }
-    >      <div className="space-y-6 sm:space-y-8">
+    >
+      <div className="space-y-6 sm:space-y-8">
         {/* Featured Events */}
         <section>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Featured Events</h2>
@@ -98,17 +94,19 @@ const Events = () => {
                 key={event.id}
                 event={{
                   id: event.id,
-                  title: event.title,
+                  title: event.name,
                   description: event.description,
-                  date: event.date,
-                  time: event.time,
+                  date: formatDate(event.startTime),
+                  time: formatTimeRange(event.startTime, event.endTime),
                   location: event.location,
-                  category: event.category,
-                  color: event.color
+                  category: event.category || "Event",
+                  color: event.color || "blue",
+                  attachmentImg: event.attachmentImg,
+                  featured: event.featured
                 }}
                 variant="featured"
-                onAction={() => console.log('Learn more about event:', event.id)}
-                actionText="Learn More"
+                onAction={() => handleOpenDetail(event.id)}
+                actionLabel="Learn More"
               />
             ))}
           </div>
@@ -123,18 +121,19 @@ const Events = () => {
                 key={event.id}
                 event={{
                   id: event.id,
-                  title: event.title,
+                  title: event.name,
                   description: event.description,
-                  date: event.date,
-                  time: event.time,
+                  date: formatDate(event.startTime),
+                  time: formatTimeRange(event.startTime, event.endTime),
                   location: event.location,
-                  category: event.category,
-                  color: event.color,
+                  category: event.category || "Event",
+                  color: event.color || "blue",
+                  attachmentImg: event.attachmentImg,
                   featured: event.featured
                 }}
                 variant="compact"
-                onAction={() => console.log('RSVP for event:', event.id)}
-                actionText="RSVP"
+                onAction={() => handleOpenDetail(event.id)}
+                actionLabel="Learn More"
               />
             ))}
           </div>
@@ -159,6 +158,23 @@ const Events = () => {
             Download Calendar
           </Button>
         </div>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: '100%', whiteSpace: 'pre-line' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </div>
     </PageTemplate>
   );

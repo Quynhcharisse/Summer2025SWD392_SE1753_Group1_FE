@@ -50,4 +50,50 @@ export const getEventTeachers = async (eventId) => {
     }
 };
 
+export const getEventActive = async () => {
+    try {
+        const response = await apiClient.get("/auth/event/active");
+        return response;
+    } catch (error) {
+        console.error("Get event list error:", error);
+        throw error;
+    }
+};
+
+export const getEventActiveDetail = async (id) => {
+    try {
+        const response = await apiClient.get(`/auth/event/detail?id=${id}`);
+        return response;
+    } catch (error) {
+        console.error("Get event active detail error:", error);
+        throw error;
+    }
+};
+
+export const registerEvent = async ({ eventId, studentIds }) => {
+    try {
+        const response = await apiClient.post(`/parent/event/register`, {
+            eventId,
+            studentIds,
+        });
+        return response;
+    } catch (error) {
+        console.error("Register event error:", error);
+        throw error;
+    }
+};
+
+export const getChildren = async () => {
+    try {
+        const response = await apiClient.get("/parent/child");
+        if (!response?.data) {
+            throw new Error("Failed to fetch children");
+        }
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching children:", error);
+        throw error;
+    }
+};
+
 

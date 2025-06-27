@@ -92,3 +92,31 @@ export const useEventTeachers = (eventId) => {
     enabled: !!eventId,
   });
 };
+
+export const useEventActive = () => {
+  return useQuery({
+    queryKey: [...eventKeys.all, 'getEventActive'],
+    queryFn: eventService.getEventActive,
+  });
+};
+
+export const useEventActiveDetail = (id) => {
+  return useQuery({
+    queryKey: [...eventKeys.all, 'getEventActiveDetail', id],
+    queryFn: () => eventService.getEventActiveDetail(id),
+    enabled: !!id,
+  });
+};
+
+export const useRegisterEvent = () => {
+  return useMutation({
+    mutationFn: ({ eventId, studentIds }) => eventService.registerEvent({ eventId, studentIds }),
+  });
+};
+
+export const useChildren = () => {
+  return useQuery({
+    queryKey: ['children'],
+    queryFn: eventService.getChildren,
+  });
+};
