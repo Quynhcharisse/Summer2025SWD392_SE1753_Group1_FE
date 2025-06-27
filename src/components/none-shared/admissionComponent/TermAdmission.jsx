@@ -26,10 +26,9 @@ import {
 } from "@mui/material";
 import {Add, Close, FilterList, Visibility} from '@mui/icons-material';
 import {useEffect, useState} from "react";
-import {createTerm, getDefaultGrade, getTermList, getTermYears} from "@services/admissionService.js";
+import {createTerm, getDefaultGrade, getTermList, getTermYears, updateTermStatus} from "@services/admissionService.js";
 import {useSnackbar} from "notistack";
 import {format} from 'date-fns';
-import {ValidateTermFormData} from "../validation/ValidateTermFormData.jsx";
 import ExtraTermForm from "./ExtraTermForm.jsx";
 
 function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
@@ -51,6 +50,18 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
         openDetailPopUpFunc(type);
     }
 
+    const getExtraTermStatus = (extraTerms) => {
+        if (!extraTerms || extraTerms.length === 0) return null;
+
+        // Tìm extra term đang active hoặc inactive
+        const activeExtraTerm = extraTerms.find(term =>
+            term.status.toLowerCase() === 'active' ||
+            term.status.toLowerCase() === 'inactive'
+        );
+
+        return activeExtraTerm ? activeExtraTerm.status : 'All Locked';
+    };
+
     const columns = [
         {label: 'No', minWidth: 80, align: 'center', key: 'no'},
         {label: 'Grade', minWidth: 100, align: 'center', key: 'grade'},
@@ -58,6 +69,8 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
         {label: 'Classes', minWidth: 100, align: 'center', key: 'classes'},
         {label: 'Registration', minWidth: 160, align: 'center', key: 'registration'},
         {label: 'Status', minWidth: 120, align: 'center', key: 'status'},
+        {label: 'Extra Terms', minWidth: 100, align: 'center', key: 'extraTermCount'},
+        {label: 'Extra Term Status', minWidth: 140, align: 'center', key: 'extraTermStatus'},
         {label: 'Action', minWidth: 80, align: 'center', key: 'action'},
     ];
 
@@ -74,9 +87,9 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
             display: 'flex',
             flexDirection: 'column'
         }}>
-            <TableContainer sx={{ 
-                flex: 1, 
-                maxHeight: 'calc(100vh - 300px)', 
+            <TableContainer sx={{
+                flex: 1,
+                maxHeight: 'calc(100vh - 300px)',
                 overflow: 'auto',
                 '&::-webkit-scrollbar': {
                     width: '8px',
@@ -121,7 +134,7 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                     <TableBody>
                         {terms.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((term, idx) => (
-                                <TableRow 
+                                <TableRow
                                     key={term.id}
                                     sx={{
                                         '&:nth-of-type(odd)': {
@@ -163,7 +176,8 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                     <TableCell align="center" sx={{minWidth: 100}}>
                                         <Typography>
                                             {term.expectedClasses} classes
-                                            <Typography component="span" sx={{color: 'text.secondary', fontSize: '0.875rem'}}>
+                                            <Typography component="span"
+                                                        sx={{color: 'text.secondary', fontSize: '0.875rem'}}>
                                                 {` (${term.studentsPerClass} students/class)`}
                                             </Typography>
                                         </Typography>
@@ -203,6 +217,46 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                         textTransform: 'uppercase'
                                     }}>
                                         {term.status}
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Box sx={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            borderRadius: '16px',
+                                            padding: '4px 12px',
+                                            minWidth: '40px'
+                                        }}>
+                                            <Typography sx={{
+                                                fontWeight: 600,
+                                                color: term.extraTerms?.length > 0 ? '#1976d2' : '#757575'
+                                            }}>
+                                                {term.extraTerms?.length || 0}
+                                            </Typography>
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        {getExtraTermStatus(term.extraTerms) && (
+                                            <Box sx={{
+                                                display: 'inline-block',
+                                                backgroundColor:
+                                                    getExtraTermStatus(term.extraTerms).toLowerCase() === 'active'
+                                                        ? '#4caf50'
+                                                        : getExtraTermStatus(term.extraTerms).toLowerCase() === 'inactive'
+                                                            ? '#ff9800'
+                                                            : '#9e9e9e',
+                                                padding: '4px 12px',
+                                                borderRadius: '12px',
+                                            }}>
+                                                <Typography sx={{
+                                                    color: '#ffffff',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.875rem'
+                                                }}>
+                                                    {getExtraTermStatus(term.extraTerms)}
+                                                </Typography>
+                                            </Box>
+                                        )}
                                     </TableCell>
                                     <TableCell align="center" sx={{minWidth: 80}}>
                                         <Tooltip title="View">
@@ -245,8 +299,10 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
     )
 }
 
-function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
+function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm}) {
+    const {enqueueSnackbar} = useSnackbar();
     const [formData, setFormData] = useState({
+        id: null,
         grade: null,
         startDate: null,
         endDate: null,
@@ -290,7 +346,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
     }, [selectedTerm]);
 
     const getStatusColor = (status) => {
-        switch(status?.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'active':
                 return '#219653';
             case 'inactive':
@@ -299,6 +355,32 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
                 return '#d32f2f';
             default:
                 return '#2c3e50';
+        }
+    };
+
+    const handleLockTerm = async () => {
+        console.log("ID: ", formData.id)
+        try {
+            if (!formData.id) {
+                enqueueSnackbar("Invalid term data", {variant: "error"});
+                return;
+            }
+
+            const response = await updateTermStatus(formData.id);
+            if (response.success) {
+                enqueueSnackbar("Term locked successfully!", {variant: "success"});
+                handleClosePopUp();
+                GetTerm(); // Refresh the data
+            } else {
+                enqueueSnackbar(response.message || "Failed to lock term", {variant: "error"});
+            }
+        } catch (error) {
+            console.error("Error locking term:", error);
+            const errorMessage = error.response?.data?.message || "Error locking term";
+            enqueueSnackbar(errorMessage, {
+                variant: "error",
+                autoHideDuration: 5000
+            });
         }
     };
 
@@ -345,6 +427,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
                 </Typography>
 
                 <Stack spacing={3}>
+
                     {/* Grade Display */}
                     <Box sx={{
                         display: 'flex',
@@ -519,7 +602,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
                     </Stack>
 
                     {formData.status === 'locked' && (
-                        <ExtraTermForm 
+                        <ExtraTermForm
                             formData={formData}
                             onClose={handleClosePopUp}
                             getStatusColor={getStatusColor}
@@ -529,6 +612,24 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
             </Box>
 
             <DialogActions sx={{justifyContent: 'flex-end', px: 4, py: 3}}>
+                {/* Lock Button - Only show if term is not already locked */}
+                {formData.status?.toLowerCase() !== 'locked' && (
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={handleLockTerm}
+                        sx={{
+                            minWidth: 120,
+                            height: '44px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            fontSize: '1rem'
+                        }}
+                    >
+                        Lock Term
+                    </Button>
+                )}
+
                 <Button
                     sx={{minWidth: 120, height: '44px'}}
                     variant="contained"
@@ -572,18 +673,13 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
     }, [formData.expectedClasses, formData.grade]);
 
     const handleCreate = async (formData) => {
-        const errorMsg = ValidateTermFormData(formData, terms);
-        if (errorMsg) {
-            enqueueSnackbar(errorMsg, {variant: "warning"});
-            return;
-        }
-
         try {
             const response = await createTerm(
                 formData.grade,
                 formData.startDate,
                 formData.endDate,
                 formData.expectedClasses,
+                formData.studentsPerClass,
                 formData.reservationFee,
                 formData.serviceFee,
                 formData.uniformFee,
@@ -599,7 +695,8 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
                 enqueueSnackbar(response.message || "Failed to create term", {variant: "error"});
             }
         } catch (error) {
-            enqueueSnackbar(error.message || "An error occurred while creating term", {variant: "error"});
+            console.error("Error in handleCreate:", error);
+            enqueueSnackbar(error.response?.data?.message || "Error creating term", {variant: "error"});
         }
     };
 
@@ -678,8 +775,8 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
                 }
             }}
         >
-            <AppBar 
-                position="relative" 
+            <AppBar
+                position="relative"
                 sx={{
                     bgcolor: '#07663a',
                     boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
@@ -698,11 +795,11 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
                             }
                         }}
                     >
-                        <Close />
+                        <Close/>
                     </IconButton>
-                    <Typography 
-                        variant="h6" 
-                        component="div" 
+                    <Typography
+                        variant="h6"
+                        component="div"
                         sx={{
                             flex: 1,
                             fontSize: '1.25rem',
@@ -815,7 +912,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
                     </Box>
 
                     {/* Grade Selection */}
-                    <FormControl 
+                    <FormControl
                         fullWidth
                         sx={{
                             '& .MuiOutlinedInput-root': {
@@ -860,9 +957,9 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
                             onChange={handleChange}
                             placeholder="Enter number of classes"
                             InputProps={{
-                                inputProps: { 
+                                inputProps: {
                                     min: 0,
-                                    style: { textAlign: 'left' }
+                                    style: {textAlign: 'left'}
                                 }
                             }}
                             sx={{
@@ -914,8 +1011,8 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
                     </Box>
 
                     {/* Fee Information */}
-                    <Paper 
-                        elevation={0} 
+                    <Paper
+                        elevation={0}
                         sx={{
                             p: 3,
                             borderRadius: '16px',
@@ -923,8 +1020,8 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
                             backgroundColor: '#fff'
                         }}
                     >
-                        <Typography 
-                            variant="h6" 
+                        <Typography
+                            variant="h6"
                             sx={{
                                 mb: 3,
                                 color: '#07663a',
@@ -1010,7 +1107,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
                 </Box>
             </DialogContent>
 
-            <Toolbar sx={{ justifyContent: 'flex-end' }}>
+            <Toolbar sx={{justifyContent: 'flex-end'}}>
                 <Button
                     onClick={handleClosePopUp}
                     variant="outlined"
@@ -1057,6 +1154,7 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
             try {
                 const response = await getTermYears();
                 if (response.success) {
+                    // Sort years in descending order
                     const sortedYears = [...response.data].sort((a, b) => b - a);
                     setYears(['all', ...sortedYears]);
                 } else {
@@ -1069,18 +1167,18 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
         fetchYears();
     }, []);
 
-    const filteredTerms = selectedYear === 'all' 
-        ? terms
-        : terms.filter(term => term.year === selectedYear);
+    const formatYear = (year) => {
+        if (year === 'all') return 'All Years';
+        return `${year}-${parseInt(year) + 1}`;
+    };
 
-    // const totalMaxRegistrations = terms.reduce((sum, term) => sum + term.maxNumberRegistration, 0);
-    // const totalRegistered = terms.reduce((sum, term) => sum + (term.approvedForm || 0), 0);
-    //
-    // const budMaxRegistrations = filteredTerms.filter(term => term.grade === 'BUD').reduce((sum, term) => sum + term.maxNumberRegistration, 0);
-    // const budRegistered = filteredTerms.filter(term => term.grade === 'BUD').reduce((sum, term) => sum + (term.approvedForm || 0), 0);
-    //
-    // const seedMaxRegistrations = filteredTerms.filter(term => term.grade === 'SEED').reduce((sum, term) => sum + term.maxNumberRegistration, 0);
-    // const seedRegistered = filteredTerms.filter(term => term.grade === 'SEED').reduce((sum, term) => sum + (term.approvedForm || 0), 0);
+    const filteredTerms = selectedYear === 'all'
+        ? terms.filter(term => !term.isExtraTerm)
+        : terms.filter(term => {
+            // Format the term year to match the filter format
+            const termYear = term.year.split('-')[0];
+            return termYear === selectedYear.toString() && !term.isExtraTerm;
+        });
 
     return (
         <div className="container">
@@ -1118,7 +1216,7 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
                 mb: 3,
                 mx: {xs: 0, md: 2}
             }}>
-                <FormControl sx={{ minWidth: 200 }}>
+                <FormControl sx={{minWidth: 200}}>
                     <Select
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(e.target.value)}
@@ -1144,17 +1242,17 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
                             }
                         }}
                         renderValue={(selected) => (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <FilterList sx={{ color: '#07663a', fontSize: 20 }} />
-                                <Typography sx={{ color: '#07663a', fontWeight: 500 }}>
-                                    {selected === 'all' ? 'Filter by Year' : `Year: ${selected}`}
+                            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                                <FilterList sx={{color: '#07663a', fontSize: 20}}/>
+                                <Typography sx={{color: '#07663a', fontWeight: 500}}>
+                                    {selected === 'all' ? 'Filter by Year' : `Year: ${formatYear(selected)}`}
                                 </Typography>
                             </Box>
                         )}
                     >
                         {years.map((year) => (
                             <MenuItem key={year} value={year}>
-                                {year === 'all' ? 'All Years' : year}
+                                {formatYear(year)}
                             </MenuItem>
                         ))}
                     </Select>
@@ -1181,11 +1279,11 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
                 </Button>
             </Box>
 
-                <RenderTable
-                    terms={filteredTerms}
-                    openDetailPopUpFunc={openDetailPopUpFunc}
-                    HandleSelectedTerm={HandleSelectedTerm}
-                />
+            <RenderTable
+                terms={filteredTerms}
+                openDetailPopUpFunc={openDetailPopUpFunc}
+                HandleSelectedTerm={HandleSelectedTerm}
+            />
         </div>
     )
 }
@@ -1257,6 +1355,7 @@ export default function TermAdmission() {
                     isPopUpOpen={popUp.isOpen}
                     handleClosePopUp={handleClosePopUp}
                     selectedTerm={selectedTerm}
+                    GetTerm={GetTerm}
                 />
             )}
         </>

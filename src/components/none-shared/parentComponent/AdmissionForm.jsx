@@ -1,6 +1,7 @@
 import {
     Alert,
     AppBar,
+    Backdrop,
     Box,
     Button,
     CircularProgress,
@@ -44,6 +45,23 @@ import {enqueueSnackbar} from "notistack";
 import axios from "axios";
 import {cancelAdmission, getFormInformation, refillForm, submittedForm} from "@api/services/parentService.js";
 
+// Loading Overlay Component
+function LoadingOverlay({ open, message }) {
+    return (
+        <Backdrop
+            sx={{
+                color: '#fff',
+                zIndex: (theme) => theme.zIndex.drawer + 1,
+                flexDirection: 'column',
+                gap: 2
+            }}
+            open={open}
+        >
+            <CircularProgress color="inherit" size={60} />
+            <Typography variant="h6">{message}</Typography>
+        </Backdrop>
+    );
+}
 
 async function uploadToCloudinary(file, onProgress, signal) {
     try {
@@ -287,6 +305,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
 function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}) {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [isRefillOpen, setIsRefillOpen] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
 
     const handleCloseConfirm = () => setIsConfirmOpen(false);
     const handleOpenConfirm = () => setIsConfirmOpen(true);
@@ -323,12 +342,13 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
 
     async function HandleCancel() {
         try {
+            setIsCancelling(true);
             const response = await cancelAdmission(selectedForm.id);
             if (response && response.success) {
                 enqueueSnackbar(response.message || "Form cancelled successfully", {variant: "success"});
                 handleClosePopUp();
-                handleCloseConfirm(); // Close confirm dialog
-                // await GetForm(); // Refresh the form list
+                handleCloseConfirm();
+                await GetForm();
             } else {
                 enqueueSnackbar(response?.message || "Failed to cancel admission form", {variant: "error"});
             }
@@ -347,6 +367,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
             } else {
                 enqueueSnackbar(error.response?.data?.message || "Failed to cancel admission form", {variant: "error"});
             }
+        } finally {
+            setIsCancelling(false);
         }
     }
 
@@ -356,6 +378,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
+            <LoadingOverlay open={isCancelling} message="Cancelling admission form..." />
+
             <AppBar sx={{
                 position: 'relative',
                 backgroundColor: '#07663a'
@@ -554,6 +578,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                             <DialogActions>
                                 <Button
                                     onClick={handleCloseConfirm}
+                                    disabled={isCancelling}
                                     sx={{
                                         color: 'red',
                                     }}
@@ -562,12 +587,14 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                                 </Button>
                                 <Button
                                     onClick={HandleCancel}
+                                    disabled={isCancelling}
                                     sx={{
                                         color: 'red',
                                     }}
+                                    startIcon={isCancelling ? <CircularProgress size={20} color="error"/> : null}
                                     autoFocus
                                 >
-                                    Agree
+                                    {isCancelling ? 'Cancelling...' : 'Agree'}
                                 </Button>
                             </DialogActions>
                         </Dialog>
@@ -611,6 +638,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
 
     //Hiển thị trạng thái đang xử lý (true khi submit, upload...)
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
 
     //Lưu trữ lỗi khi validate (ví dụ thiếu địa chỉ, file...)
     const [errors, setErrors] = useState({});
@@ -800,11 +828,13 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             }
 
             setIsLoading(true);
+            setLoadingMessage('Uploading files...');
             const uploadResult = await handleUploadImage();
             if (!uploadResult) {
                 return;
             }
 
+            setLoadingMessage('Submitting form...');
             const formData = {
                 studentId: selectedStudentId,
                 householdRegistrationAddress: input.address,
@@ -838,6 +868,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             }
         } finally {
             setIsLoading(false);
+            setLoadingMessage('');
             setUploadProgress({});
         }
     }
@@ -882,6 +913,8 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
+            <LoadingOverlay open={isLoading} message={loadingMessage} />
+            
             <AppBar sx={{
                 position: 'relative',
                 backgroundColor: '#07663a'
@@ -1318,6 +1351,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
 
 function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}) {
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
     const [errors, setErrors] = useState({});
     const [input, setInput] = useState({
         address: selectedForm?.householdRegistrationAddress || '',
@@ -1499,11 +1533,13 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
             }
 
             setIsLoading(true);
+            setLoadingMessage('Uploading files...');
             const uploadResult = await handleUploadImage();
             if (!uploadResult) {
                 return;
             }
 
+            setLoadingMessage('Resubmitting form...');
             const formData = {
                 studentId: selectedForm.studentId,
                 householdRegistrationAddress: input.address.trim(),
@@ -1538,11 +1574,14 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
             }
         } finally {
             setIsLoading(false);
+            setLoadingMessage('');
         }
     }
 
     return (
         <Dialog fullScreen open={isPopUpOpen} onClose={handleClosePopUp}>
+            <LoadingOverlay open={isLoading} message={loadingMessage} />
+            
             <AppBar sx={{position: 'relative', backgroundColor: '#07663a'}}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={handleClosePopUp}>

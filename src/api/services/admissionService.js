@@ -16,8 +16,7 @@ export const processAdmissionForm = async (id, isApproved, reason) => {
 
 export const getTermList = async () => {
     try {
-        const response = await
-           apiClient.get("/admission/term")
+        const response = await apiClient.get("/admission/term")
         return response.data
     } catch (error) {
         console.error("Get term list error:", error);
@@ -30,6 +29,7 @@ export const createTerm = async (
     startDate,
     endDate,
     expectedClasses,
+    studentsPerClass,
     reservationFee,
     serviceFee,
     uniformFee,
@@ -37,11 +37,12 @@ export const createTerm = async (
     facilityFee
 ) => {
     try {
-        const response = await apiClient.post('/admission/term/create', {
+        const response = await apiClient.post('/admission/term', {
             grade,
             startDate,
             endDate,
             expectedClasses,
+            studentsPerClass,
             reservationFee,
             serviceFee,
             uniformFee,
@@ -110,4 +111,17 @@ export const getTermYears = async () => {
         throw error;
     }
 };
+
+export const updateTermStatus = async (termId) => {
+    try {
+        console.log('Updating term status with:', termId);
+        const response = await apiClient.put('/admission/term', {
+            termId: termId,
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 

@@ -15,11 +15,12 @@ import {
     FormControl,
     FormLabel,
     Tooltip,
-    IconButton
+    IconButton,
+    Alert
 } from "@mui/material";
-import {Add, Info} from "@mui/icons-material";
+import {Add, Info, Close} from "@mui/icons-material";
 import {format} from "date-fns";
-import {useState} from "react";
+import {useState, useMemo} from "react";
 import {createExtraTerm} from "@api/services/admissionService.js";
 import {enqueueSnackbar} from "notistack";
 import {
@@ -28,7 +29,6 @@ import {
     DialogContent,
     DialogActions
 } from "@mui/material";
-import {Close} from "@mui/icons-material";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
@@ -44,6 +44,15 @@ export default function ExtraTermForm({formData, onClose, getStatusColor}) {
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [open, setOpen] = useState(false);
+
+    // Kiểm tra xem có extra term đang active/inactive không
+    const hasActiveExtraTerm = useMemo(() => {
+        if (!formData.extraTerms || formData.extraTerms.length === 0) return false;
+        return formData.extraTerms.some(term => 
+            term.status.toLowerCase() === 'active' || 
+            term.status.toLowerCase() === 'inactive'
+        );
+    }, [formData.extraTerms]);
 
     const handleExtraTermSubmit = async () => {
         try {
@@ -194,7 +203,11 @@ export default function ExtraTermForm({formData, onClose, getStatusColor}) {
                 </Typography>
             )}
 
-            {!extraTermForm.displayForm ? (
+            {/* Chỉ hiển thị nút "ADD EXTRA TERM" khi:
+                1. Không có extra term nào, hoặc
+                2. Tất cả extra term hiện có đều đã locked
+            */}
+            {!hasActiveExtraTerm && !extraTermForm.displayForm && (
                 <Button
                     fullWidth
                     variant="contained"
@@ -207,9 +220,21 @@ export default function ExtraTermForm({formData, onClose, getStatusColor}) {
                 >
                     + ADD EXTRA TERM
                 </Button>
-            ) : (
+            )}
+
+            {/* Form tạo extra term */}
+            {!hasActiveExtraTerm && extraTermForm.displayForm && (
                 <Box sx={{ mt: 2, p: 3, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-                    <Typography variant="h6" sx={{ mb: 3 }}>New Extra Term</Typography>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Typography variant="h6">New Extra Term</Typography>
+                        {/* Thêm nút đóng form */}
+                        <IconButton 
+                            onClick={() => setExtraTermForm(prev => ({ ...prev, displayForm: false }))}
+                            size="small"
+                        >
+                            <Close />
+                        </IconButton>
+                    </Stack>
                     
                     <Stack spacing={3}>
                         <FormControl>
@@ -264,93 +289,12 @@ export default function ExtraTermForm({formData, onClose, getStatusColor}) {
                 </Box>
             )}
 
-            <Dialog 
-                open={open} 
-                onClose={() => setOpen(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle sx={{ 
-                    backgroundColor: '#07663a',
-                    color: 'white',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                }}>
-                    Create Extra Term
-                    <IconButton
-                        onClick={() => setOpen(false)}
-                        sx={{ color: 'white' }}
-                    >
-                        <Close />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent sx={{ mt: 2 }}>
-                    <Box>
-                        <Typography variant="subtitle1" sx={{ mb: 2, color: '#07663a', fontWeight: 600 }}>
-                            Creating: {generateExtraTermName(formData)}
-                        </Typography>
-                        <Stack spacing={3}>
-                            <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                <DateTimePicker
-                                    label="Start Date"
-                                    value={startDate}
-                                    onChange={handleStartDateChange}
-                                    renderInput={(params) => (
-                                        <TextField 
-                                            {...params} 
-                                            fullWidth
-                                            required
-                                            error={!startDate}
-                                        />
-                                    )}
-                                />
-                                <DateTimePicker
-                                    label="End Date"
-                                    value={endDate}
-                                    onChange={handleEndDateChange}
-                                    renderInput={(params) => (
-                                        <TextField 
-                                            {...params} 
-                                            fullWidth
-                                            required
-                                            error={!endDate}
-                                        />
-                                    )}
-                                />
-                            </LocalizationProvider>
-                        </Stack>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{ p: 2, gap: 1 }}>
-                    <Button 
-                        onClick={() => setOpen(false)}
-                        variant="outlined"
-                        sx={{ 
-                            color: '#07663a',
-                            borderColor: '#07663a',
-                            '&:hover': {
-                                borderColor: '#07663a',
-                                backgroundColor: 'rgba(7, 102, 58, 0.1)'
-                            }
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button 
-                        onClick={handleExtraTermSubmit}
-                        variant="contained"
-                        sx={{ 
-                            backgroundColor: '#07663a',
-                            '&:hover': {
-                                backgroundColor: 'rgba(7, 102, 58, 0.85)'
-                            }
-                        }}
-                    >
-                        Create
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            {/* Hiển thị thông báo khi đã có extra term active/inactive */}
+            {hasActiveExtraTerm && (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                    An active or upcoming extra term already exists. You can create a new extra term once the current one is locked.
+                </Alert>
+            )}
         </>
     );
 } 
