@@ -1,6 +1,7 @@
 import {
     Alert,
     AppBar,
+    Backdrop,
     Box,
     Button,
     CircularProgress,
@@ -16,6 +17,7 @@ import {
     Grid,
     IconButton,
     InputLabel,
+    LinearProgress,
     MenuItem,
     Paper,
     Radio,
@@ -34,7 +36,7 @@ import {
     Typography
 } from "@mui/material";
 import {Add, Close, CloudUpload} from '@mui/icons-material';
-import {useEffect, useState} from "react";
+import {useEffect, useState, useRef} from "react";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
@@ -43,8 +45,25 @@ import {enqueueSnackbar} from "notistack";
 import axios from "axios";
 import {cancelAdmission, getFormInformation, refillForm, submittedForm} from "@api/services/parentService.js";
 
+// Loading Overlay Component
+function LoadingOverlay({ open, message }) {
+    return (
+        <Backdrop
+            sx={{
+                color: '#fff',
+                zIndex: (theme) => theme.zIndex.drawer + 1,
+                flexDirection: 'column',
+                gap: 2
+            }}
+            open={open}
+        >
+            <CircularProgress color="inherit" size={60} />
+            <Typography variant="h6">{message}</Typography>
+        </Backdrop>
+    );
+}
 
-async function uploadToCloudinary(file) {
+async function uploadToCloudinary(file, onProgress, signal) {
     try {
         const formData = new FormData();
         formData.append("file", file);
@@ -53,11 +72,22 @@ async function uploadToCloudinary(file) {
 
         const response = await axios.post(
             "https://api.cloudinary.com/v1_1/dfx4miova/image/upload",
-            formData
+            formData,
+            {
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    onProgress(percentCompleted);
+                },
+                signal: signal
+            }
         );
 
         return response.data.secure_url;
     } catch (error) {
+        if (axios.isCancel(error)) {
+            enqueueSnackbar("Upload cancelled", {variant: "info"});
+            return null;
+        }
         enqueueSnackbar("Failed to upload file", {variant: "error"});
         return null;
     }
@@ -107,6 +137,16 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                 borderBottom: '2px solid #e0e0e0'
                             }}>
                                 No
+                            </TableCell>
+                            <TableCell align="center" sx={{
+                                fontWeight: '600',
+                                color: '#07663a',
+                                backgroundColor: '#f8faf8',
+                                fontSize: '0.95rem',
+                                padding: '16px 8px',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>
+                                Name
                             </TableCell>
                             <TableCell align="center" sx={{
                                 fontWeight: '600',
@@ -175,6 +215,9 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                 >
                                     <TableCell align="center" sx={{padding: '12px 8px'}}>
                                         {page * rowsPerPage + index + 1}
+                                    </TableCell>
+                                    <TableCell align="center" sx={{padding: '12px 8px'}}>
+                                        {form.studentName}
                                     </TableCell>
                                     <TableCell align="center" sx={{padding: '12px 8px'}}>
                                         {form.submittedDate}
@@ -262,14 +305,10 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                 sx={{
                     borderTop: '1px solid #e0e0e0',
                     '.MuiTablePagination-select': {
-                        backgroundColor: 'rgba(7, 102, 58, 0.1)',
                         borderRadius: '8px',
                         padding: '4px 8px',
                         marginRight: '8px'
                     },
-                    '.MuiTablePagination-selectIcon': {
-                        color: '#07663a'
-                    }
                 }}
             />
         </Paper>
@@ -279,6 +318,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
 function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}) {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [isRefillOpen, setIsRefillOpen] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
 
     const handleCloseConfirm = () => setIsConfirmOpen(false);
     const handleOpenConfirm = () => setIsConfirmOpen(true);
@@ -315,12 +355,13 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
 
     async function HandleCancel() {
         try {
+            setIsCancelling(true);
             const response = await cancelAdmission(selectedForm.id);
             if (response && response.success) {
                 enqueueSnackbar(response.message || "Form cancelled successfully", {variant: "success"});
                 handleClosePopUp();
-                handleCloseConfirm(); // Close confirm dialog
-                // await GetForm(); // Refresh the form list
+                handleCloseConfirm();
+                await GetForm();
             } else {
                 enqueueSnackbar(response?.message || "Failed to cancel admission form", {variant: "error"});
             }
@@ -339,6 +380,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
             } else {
                 enqueueSnackbar(error.response?.data?.message || "Failed to cancel admission form", {variant: "error"});
             }
+        } finally {
+            setIsCancelling(false);
         }
     }
 
@@ -348,6 +391,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
+            <LoadingOverlay open={isCancelling} message="Cancelling admission form..." />
+
             <AppBar sx={{
                 position: 'relative',
                 backgroundColor: '#07663a'
@@ -516,7 +561,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
 
                         {/*button cancel*/}
                         {/*xét điều kiện, nếu cancel rồi thì ẩn nút cancel đó, ko cho hiện lại */}
-                        {selectedForm.status !== 'cancelled' && (
+                        {selectedForm.status === 'pending approval' &&  (
                             <Button
                                 sx={{
                                     width: '10%',
@@ -546,6 +591,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                             <DialogActions>
                                 <Button
                                     onClick={handleCloseConfirm}
+                                    disabled={isCancelling}
                                     sx={{
                                         color: 'red',
                                     }}
@@ -554,12 +600,14 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                                 </Button>
                                 <Button
                                     onClick={HandleCancel}
+                                    disabled={isCancelling}
                                     sx={{
                                         color: 'red',
                                     }}
+                                    startIcon={isCancelling ? <CircularProgress size={20} color="error"/> : null}
                                     autoFocus
                                 >
-                                    Agree
+                                    {isCancelling ? 'Cancelling...' : 'Agree'}
                                 </Button>
                             </DialogActions>
                         </Dialog>
@@ -603,6 +651,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
 
     //Hiển thị trạng thái đang xử lý (true khi submit, upload...)
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
 
     //Lưu trữ lỗi khi validate (ví dụ thiếu địa chỉ, file...)
     const [errors, setErrors] = useState({});
@@ -618,6 +667,10 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         childCharacteristicsForm: '',
         commit: ''
     });
+
+    const [uploadProgress, setUploadProgress] = useState({});
+    const [isCancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const abortControllerRef = useRef(null);
 
     const student = studentList.find(s => s.id === selectedStudentId) || null;
 
@@ -688,6 +741,99 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         return true;
     };
 
+    const handleCancelUpload = () => {
+        setCancelDialogOpen(true);
+    };
+
+    const confirmCancel = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        setCancelDialogOpen(false);
+        setIsLoading(false);
+        setUploadProgress({});
+    };
+
+    const handleUploadImage = async () => {
+        if (!validateFileUploads()) {
+            return null;
+        }
+
+        try {
+            abortControllerRef.current = new AbortController();
+            const signal = abortControllerRef.current.signal;
+
+            const uploadPromises = [];
+            const uploadResults = {};
+
+            if (uploadedFile.childCharacteristicsForm) {
+                uploadPromises.push(
+                    uploadToCloudinary(
+                        uploadedFile.childCharacteristicsForm,
+                        (progress) => setUploadProgress(prev => ({...prev, childCharacteristicsForm: progress})),
+                        signal
+                    ).then(url => {
+                        uploadResults.childCharacteristicsFormLink = url;
+                    })
+                );
+            }
+
+            if (uploadedFile.commit) {
+                uploadPromises.push(
+                    uploadToCloudinary(
+                        uploadedFile.commit,
+                        (progress) => setUploadProgress(prev => ({...prev, commit: progress})),
+                        signal
+                    ).then(url => {
+                        uploadResults.commitLink = url;
+                    })
+                );
+            }
+
+            await Promise.all(uploadPromises);
+
+            if (signal.aborted) {
+                return null;
+            }
+
+            return uploadResults;
+        } catch (error) {
+            console.error('Error uploading images:', error);
+            return null;
+        }
+    };
+
+    const validateFileUploads = () => {
+        const requiredFiles = {
+            childCharacteristicsForm: 'Child characteristics form',
+            commit: 'Commitment form'
+        };
+
+        for (const [key, label] of Object.entries(requiredFiles)) {
+            const file = uploadedFile[key];
+
+            if (!file) {
+                enqueueSnackbar(`${label} is required`, {variant: "error"});
+                return false;
+            }
+
+            // Revalidate files before upload
+            if (!validateFileType(file)) {
+                enqueueSnackbar(`Invalid ${label.toLowerCase()}`, {variant: "error"});
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    function CheckAge(dateOfBirth) {
+        const birthYear = new Date(dateOfBirth).getFullYear()
+        const currentYear = new Date().getFullYear()
+        const age = currentYear - birthYear
+        return age >= 3 && age <= 5
+    }
+
     async function HandleSubmit() {
         try {
             if (!validateForm()) {
@@ -695,11 +841,13 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             }
 
             setIsLoading(true);
+            setLoadingMessage('Uploading files...');
             const uploadResult = await handleUploadImage();
             if (!uploadResult) {
                 return;
             }
 
+            setLoadingMessage('Submitting form...');
             const formData = {
                 studentId: selectedStudentId,
                 householdRegistrationAddress: input.address,
@@ -733,6 +881,8 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             }
         } finally {
             setIsLoading(false);
+            setLoadingMessage('');
+            setUploadProgress({});
         }
     }
 
@@ -770,88 +920,14 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         }
     }
 
-    const handleUploadImage = async () => {
-        try {
-            if (!validateFileUploads()) {
-                return null;
-            }
-
-            // Upload each file to Cloudinary
-            const uploadFile = async (file) => {
-                const formData = new FormData();
-                formData.append("file", file);
-                formData.append("upload_preset", "pes_swd");
-                formData.append("cloud_name", "dfx4miova");
-
-                const response = await axios.post(
-                    "https://api.cloudinary.com/v1_1/dfx4miova/image/upload",
-                    formData
-                );
-
-                if (response.status === 200) {
-                    return response.data.secure_url;
-                }
-                throw new Error('Upload failed');
-            };
-
-            // Upload both files
-            const [childCharacteristicsFormUrl, commitUrl] = await Promise.all([
-                uploadFile(uploadedFile.childCharacteristicsForm),
-                uploadFile(uploadedFile.commit)
-            ]);
-
-            if (!childCharacteristicsFormUrl || !commitUrl) {
-                enqueueSnackbar("Failed to upload one or more images", {variant: "error"});
-                return null;
-            }
-
-            return {
-                childCharacteristicsFormLink: childCharacteristicsFormUrl,
-                commitLink: commitUrl
-            };
-        } catch (error) {
-            enqueueSnackbar("Failed to process images", {variant: "error"});
-            return null;
-        }
-    };
-
-    const validateFileUploads = () => {
-        const requiredFiles = {
-            childCharacteristicsForm: 'Child characteristics form',
-            commit: 'Commitment form'
-        };
-
-        for (const [key, label] of Object.entries(requiredFiles)) {
-            const file = uploadedFile[key];
-
-            if (!file) {
-                enqueueSnackbar(`${label} is required`, {variant: "error"});
-                return false;
-            }
-
-            // Revalidate files before upload
-            if (!validateFileType(file)) {
-                enqueueSnackbar(`Invalid ${label.toLowerCase()}`, {variant: "error"});
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-    function CheckAge(dateOfBirth) {
-        const birthYear = new Date(dateOfBirth).getFullYear()
-        const currentYear = new Date().getFullYear()
-        const age = currentYear - birthYear
-        return age >= 3 && age <= 5
-    }
-
     return (
         <Dialog
             fullScreen
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
+            <LoadingOverlay open={isLoading} message={loadingMessage} />
+            
             <AppBar sx={{
                 position: 'relative',
                 backgroundColor: '#07663a'
@@ -1120,6 +1196,58 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         }}
                     />
 
+                    {/* Upload Progress */}
+                    {isLoading && Object.keys(uploadProgress).length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Upload Progress
+                            </Typography>
+                            {Object.entries(uploadProgress).map(([key, progress]) => (
+                                <Box key={key} sx={{ mb: 2 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {key === 'childCharacteristicsForm' ? 'Child Characteristics Form' : 'Commitment Form'}: {progress}%
+                                    </Typography>
+                                    <LinearProgress 
+                                        variant="determinate" 
+                                        value={progress} 
+                                        sx={{ 
+                                            mt: 1,
+                                            height: 8,
+                                            borderRadius: 5
+                                        }}
+                                    />
+                                </Box>
+                            ))}
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                onClick={handleCancelUpload}
+                                sx={{ mt: 1 }}
+                            >
+                                Cancel Upload
+                            </Button>
+                        </Box>
+                    )}
+
+                    {/* Cancel Confirmation Dialog */}
+                    <Dialog
+                        open={isCancelDialogOpen}
+                        onClose={() => setCancelDialogOpen(false)}
+                    >
+                        <DialogTitle>Cancel Upload?</DialogTitle>
+                        <DialogContent>
+                            <DialogContentText>
+                                Are you sure you want to cancel the upload? This action cannot be undone.
+                            </DialogContentText>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setCancelDialogOpen(false)}>No</Button>
+                            <Button onClick={confirmCancel} color="error" autoFocus>
+                                Yes, Cancel Upload
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
                     {/* Document Upload Section */}
                     <Typography variant="h6" sx={{
                         mt: 4,
@@ -1168,7 +1296,12 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                             <input
                                                 type="file"
                                                 hidden
-                                                onChange={(e) => HandleUploadFile(e.target.files[0], item.fileId)}
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        setUploadedFile(prev => ({...prev, [item.key]: file}));
+                                                    }
+                                                }}
                                                 accept="image/*"
                                             />
                                         </Button>
@@ -1231,6 +1364,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
 
 function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}) {
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
     const [errors, setErrors] = useState({});
     const [input, setInput] = useState({
         address: selectedForm?.householdRegistrationAddress || '',
@@ -1412,11 +1546,13 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
             }
 
             setIsLoading(true);
+            setLoadingMessage('Uploading files...');
             const uploadResult = await handleUploadImage();
             if (!uploadResult) {
                 return;
             }
 
+            setLoadingMessage('Resubmitting form...');
             const formData = {
                 studentId: selectedForm.studentId,
                 householdRegistrationAddress: input.address.trim(),
@@ -1451,11 +1587,14 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
             }
         } finally {
             setIsLoading(false);
+            setLoadingMessage('');
         }
     }
 
     return (
         <Dialog fullScreen open={isPopUpOpen} onClose={handleClosePopUp}>
+            <LoadingOverlay open={isLoading} message={loadingMessage} />
+            
             <AppBar sx={{position: 'relative', backgroundColor: '#07663a'}}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={handleClosePopUp}>

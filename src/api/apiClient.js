@@ -3,7 +3,6 @@ import Cookies from "js-cookie";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8080/api/v1",
-  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 10000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -20,6 +19,7 @@ const getToken = () => {
     token = localStorage.getItem('accessToken');
   }
   
+  console.log('Current token:', token ? 'Present' : 'Not found');
   return token;
 };
 
@@ -44,8 +44,16 @@ apiClient.interceptors.request.use(
     const token = getToken();
     if (validateToken(token)) {
       config.headers.Authorization = `Bearer ${token}`;
-      // Log request headers for debugging
-      console.log('Request headers:', config.headers);
+      console.log('Request config:', {
+        url: config.url,
+        method: config.method,
+        headers: {
+          Authorization: config.headers.Authorization ? 'Bearer [HIDDEN]' : 'None',
+          'Content-Type': config.headers['Content-Type']
+        }
+      });
+    } else {
+      console.warn('No valid token found for request');
     }
     return config;
   },

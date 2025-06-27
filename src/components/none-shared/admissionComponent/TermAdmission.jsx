@@ -5,13 +5,12 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
     FormControl,
-    FormControlLabel,
-    FormLabel,
     IconButton,
+    InputLabel,
+    MenuItem,
     Paper,
-    RadioGroup,
+    Select,
     Stack,
     Table,
     TableBody,
@@ -25,27 +24,16 @@ import {
     Tooltip,
     Typography
 } from "@mui/material";
-import {Add, Close, Visibility} from '@mui/icons-material';
+import {Add, Close, FilterList, Visibility} from '@mui/icons-material';
 import {useEffect, useState} from "react";
-import Radio from '@mui/material/Radio';
-import {createTerm, getDefaultGrade, getTermList} from "@services/admissionService.js";
+import {createTerm, getDefaultGrade, getTermList, getTermYears, updateTermStatus} from "@services/admissionService.js";
 import {useSnackbar} from "notistack";
 import {format} from 'date-fns';
-import {ValidateTermFormData} from "../validation/ValidateTermFormData.jsx";
 import ExtraTermForm from "./ExtraTermForm.jsx";
 
 function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
-
-    const columns = [
-        {label: 'No', minWidth: 80, align: 'center', key: 'no'},
-        {label: 'Grade', minWidth: 100, align: 'center', key: 'grade'},
-        {label: 'Max Number Registration', minWidth: 160, align: 'center', key: 'maxNumberRegistration'},
-        {label: 'Year', minWidth: 100, align: 'center', key: 'year'},
-        {label: 'Status', minWidth: 120, align: 'center', key: 'status'},
-        {label: 'Action', minWidth: 80, align: 'center', key: 'action'},
-    ];
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -56,24 +44,69 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
         setPage(0)
     }
 
+
     const handleDetailClick = (term, type) => {
         HandleSelectedTerm(term)
         openDetailPopUpFunc(type);
     }
 
-    console.log(terms)
+    const getExtraTermStatus = (extraTerms) => {
+        if (!extraTerms || extraTerms.length === 0) return null;
+
+        // Tìm extra term đang active hoặc inactive
+        const activeExtraTerm = extraTerms.find(term =>
+            term.status.toLowerCase() === 'active' ||
+            term.status.toLowerCase() === 'inactive'
+        );
+
+        return activeExtraTerm ? activeExtraTerm.status : 'All Locked';
+    };
+
+    const columns = [
+        {label: 'No', minWidth: 80, align: 'center', key: 'no'},
+        {label: 'Grade', minWidth: 100, align: 'center', key: 'grade'},
+        {label: 'Academic Year', minWidth: 120, align: 'center', key: 'year'},
+        {label: 'Classes', minWidth: 100, align: 'center', key: 'classes'},
+        {label: 'Registration', minWidth: 160, align: 'center', key: 'registration'},
+        {label: 'Status', minWidth: 120, align: 'center', key: 'status'},
+        {label: 'Extra Terms', minWidth: 100, align: 'center', key: 'extraTermCount'},
+        {label: 'Extra Term Status', minWidth: 140, align: 'center', key: 'extraTermStatus'},
+        {label: 'Action', minWidth: 80, align: 'center', key: 'action'},
+    ];
 
     return (
         <Paper sx={{
             width: '100%',
-            height: 500,
+            minHeight: 400,
+            maxHeight: 'calc(100vh - 200px)',
             borderRadius: 3,
-            overflow: 'hidden',
+            overflow: 'visible',
             backgroundColor: '#fff',
             boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
-            border: '2px solid rgb(254, 254, 253)'
+            border: '2px solid rgb(254, 254, 253)',
+            display: 'flex',
+            flexDirection: 'column'
         }}>
-            <TableContainer sx={{height: 500}}>
+            <TableContainer sx={{
+                flex: 1,
+                maxHeight: 'calc(100vh - 300px)',
+                overflow: 'auto',
+                '&::-webkit-scrollbar': {
+                    width: '8px',
+                    height: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                    background: '#f1f1f1',
+                    borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    background: '#888',
+                    borderRadius: '4px',
+                    '&:hover': {
+                        background: '#555',
+                    },
+                },
+            }}>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
@@ -81,7 +114,17 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                 <TableCell
                                     key={col.key}
                                     align={col.align}
-                                    sx={{minWidth: col.minWidth, fontWeight: 'bold'}}
+                                    sx={{
+                                        minWidth: col.minWidth,
+                                        fontWeight: 'bold',
+                                        backgroundColor: '#f8faf8',
+                                        color: '#07663a',
+                                        borderBottom: '2px solid #e0e0e0',
+                                        fontSize: '0.95rem',
+                                        padding: '16px',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px'
+                                    }}
                                 >
                                     {col.label}
                                 </TableCell>
@@ -91,7 +134,19 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                     <TableBody>
                         {terms.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((term, idx) => (
-                                <TableRow key={term.id}>
+                                <TableRow
+                                    key={term.id}
+                                    sx={{
+                                        '&:nth-of-type(odd)': {
+                                            backgroundColor: '#fafafa',
+                                        },
+                                        '&:hover': {
+                                            backgroundColor: '#f5f5f5',
+                                            transition: 'background-color 0.2s ease',
+                                        },
+                                        cursor: 'pointer'
+                                    }}
+                                >
                                     <TableCell align="center" sx={{minWidth: 80}}>{idx + 1}</TableCell>
                                     <TableCell align="center" sx={{minWidth: 100}}>
                                         <Box sx={{
@@ -117,6 +172,16 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                             </Typography>
                                         </Box>
                                     </TableCell>
+                                    <TableCell align="center" sx={{minWidth: 120}}>{term.year}</TableCell>
+                                    <TableCell align="center" sx={{minWidth: 100}}>
+                                        <Typography>
+                                            {term.expectedClasses} classes
+                                            <Typography component="span"
+                                                        sx={{color: 'text.secondary', fontSize: '0.875rem'}}>
+                                                {` (${term.studentsPerClass} students/class)`}
+                                            </Typography>
+                                        </Typography>
+                                    </TableCell>
                                     <TableCell align="center" sx={{minWidth: 160}}>
                                         <Box sx={{
                                             display: 'flex',
@@ -136,7 +201,6 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                             </Typography>
                                         </Box>
                                     </TableCell>
-                                    <TableCell align="center" sx={{minWidth: 100}}>{term.year}</TableCell>
                                     <TableCell align="center" sx={{
                                         minWidth: 120,
                                         fontWeight: 700,
@@ -153,6 +217,46 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                         textTransform: 'uppercase'
                                     }}>
                                         {term.status}
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Box sx={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            borderRadius: '16px',
+                                            padding: '4px 12px',
+                                            minWidth: '40px'
+                                        }}>
+                                            <Typography sx={{
+                                                fontWeight: 600,
+                                                color: term.extraTerms?.length > 0 ? '#1976d2' : '#757575'
+                                            }}>
+                                                {term.extraTerms?.length || 0}
+                                            </Typography>
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        {getExtraTermStatus(term.extraTerms) && (
+                                            <Box sx={{
+                                                display: 'inline-block',
+                                                backgroundColor:
+                                                    getExtraTermStatus(term.extraTerms).toLowerCase() === 'active'
+                                                        ? '#4caf50'
+                                                        : getExtraTermStatus(term.extraTerms).toLowerCase() === 'inactive'
+                                                            ? '#ff9800'
+                                                            : '#9e9e9e',
+                                                padding: '4px 12px',
+                                                borderRadius: '12px',
+                                            }}>
+                                                <Typography sx={{
+                                                    color: '#ffffff',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.875rem'
+                                                }}>
+                                                    {getExtraTermStatus(term.extraTerms)}
+                                                </Typography>
+                                            </Box>
+                                        )}
                                     </TableCell>
                                     <TableCell align="center" sx={{minWidth: 80}}>
                                         <Tooltip title="View">
@@ -178,13 +282,27 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                sx={{
+                    borderTop: '1px solid #e0e0e0',
+                    '.MuiTablePagination-select': {
+                        borderRadius: '8px',
+                        padding: '4px 8px',
+                        marginRight: '8px'
+                    },
+                    backgroundColor: '#fff',
+                    position: 'sticky',
+                    bottom: 0,
+                    zIndex: 2
+                }}
             />
         </Paper>
     )
 }
 
-function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
+function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm}) {
+    const {enqueueSnackbar} = useSnackbar();
     const [formData, setFormData] = useState({
+        id: null,
         grade: null,
         startDate: null,
         endDate: null,
@@ -196,10 +314,11 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
         facilityFee: 0,
         approvedForm: 0,
         status: '',
-        extraTerms: []
+        extraTerms: [],
+        studentsPerClass: 20,
+        expectedClasses: 0
     });
 
-    //Đồng bộ formData từ selectedTerm
     useEffect(() => {
         if (selectedTerm) {
             setFormData({
@@ -219,13 +338,15 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
                 facilityFee: selectedTerm.facilityFee ?? 0,
                 approvedForm: selectedTerm.approvedForm ?? 0,
                 status: selectedTerm.status ?? '',
-                extraTerms: selectedTerm.extraTerms ?? []
+                extraTerms: selectedTerm.extraTerms ?? [],
+                studentsPerClass: selectedTerm.studentsPerClass ?? 20,
+                expectedClasses: selectedTerm.expectedClasses ?? 0
             });
         }
     }, [selectedTerm]);
 
     const getStatusColor = (status) => {
-        switch(status?.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'active':
                 return '#219653';
             case 'inactive':
@@ -234,6 +355,32 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
                 return '#d32f2f';
             default:
                 return '#2c3e50';
+        }
+    };
+
+    const handleLockTerm = async () => {
+        console.log("ID: ", formData.id)
+        try {
+            if (!formData.id) {
+                enqueueSnackbar("Invalid term data", {variant: "error"});
+                return;
+            }
+
+            const response = await updateTermStatus(formData.id);
+            if (response.success) {
+                enqueueSnackbar("Term locked successfully!", {variant: "success"});
+                handleClosePopUp();
+                GetTerm(); // Refresh the data
+            } else {
+                enqueueSnackbar(response.message || "Failed to lock term", {variant: "error"});
+            }
+        } catch (error) {
+            console.error("Error locking term:", error);
+            const errorMessage = error.response?.data?.message || "Error locking term";
+            enqueueSnackbar(errorMessage, {
+                variant: "error",
+                autoHideDuration: 5000
+            });
         }
     };
 
@@ -280,6 +427,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
                 </Typography>
 
                 <Stack spacing={3}>
+
                     {/* Grade Display */}
                     <Box sx={{
                         display: 'flex',
@@ -333,6 +481,44 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
                             InputProps={{readOnly: true}}
                         />
                     </Stack>
+
+                    <Box sx={{display: 'flex', gap: 2}}>
+                        <TextField
+                            label="Expected Classes"
+                            type="number"
+                            value={formData.expectedClasses}
+                            InputProps={{readOnly: true}}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Students Per Class"
+                            type="number"
+                            value={formData.studentsPerClass}
+                            InputProps={{
+                                readOnly: true
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '12px',
+                                    backgroundColor: '#f5f5f5'
+                                }
+                            }}
+                        />
+                        <TextField
+                            label="Max Registration"
+                            type="number"
+                            value={formData.maxNumberRegistration}
+                            InputProps={{
+                                readOnly: true
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '12px',
+                                    backgroundColor: '#f5f5f5'
+                                }
+                            }}
+                        />
+                    </Box>
 
                     <Stack>
                         <TextField
@@ -416,7 +602,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
                     </Stack>
 
                     {formData.status === 'locked' && (
-                        <ExtraTermForm 
+                        <ExtraTermForm
                             formData={formData}
                             onClose={handleClosePopUp}
                             getStatusColor={getStatusColor}
@@ -426,6 +612,24 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
             </Box>
 
             <DialogActions sx={{justifyContent: 'flex-end', px: 4, py: 3}}>
+                {/* Lock Button - Only show if term is not already locked */}
+                {formData.status?.toLowerCase() !== 'locked' && (
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={handleLockTerm}
+                        sx={{
+                            minWidth: 120,
+                            height: '44px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            fontSize: '1rem'
+                        }}
+                    >
+                        Lock Term
+                    </Button>
+                )}
+
                 <Button
                     sx={{minWidth: 120, height: '44px'}}
                     variant="contained"
@@ -440,35 +644,42 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm}) {
 }
 
 function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
-
     const {enqueueSnackbar} = useSnackbar();
 
     const [formData, setFormData] = useState({
-        grade: null,
-        startDate: '',  // Initialize as empty string
-        endDate: '',    // Initialize as empty string
+        name: '',
+        year: new Date().getFullYear(),
+        startDate: '',
+        endDate: '',
+        grade: '',
+        expectedClasses: '',
+        studentsPerClass: 20,
         maxNumberRegistration: 0,
         reservationFee: 0,
         serviceFee: 0,
         uniformFee: 0,
         learningMaterialFee: 0,
-        facilityFee: 0
+        facilityFee: 0,
+        status: 'ACTIVE'
     });
 
+    useEffect(() => {
+        const numExpectedClasses = parseInt(formData.expectedClasses) || 0;
+        setFormData(prev => ({
+            ...prev,
+            maxNumberRegistration: numExpectedClasses * prev.studentsPerClass,
+            name: `${prev.grade || ''} Term ${prev.year}-${prev.year + 1}`
+        }));
+    }, [formData.expectedClasses, formData.grade]);
 
     const handleCreate = async (formData) => {
-        const errorMsg = ValidateTermFormData(formData, terms);
-        if (errorMsg) {
-            enqueueSnackbar(errorMsg, {variant: "warning"});
-            return;
-        }
-
         try {
             const response = await createTerm(
                 formData.grade,
                 formData.startDate,
                 formData.endDate,
-                formData.maxNumberRegistration,
+                formData.expectedClasses,
+                formData.studentsPerClass,
                 formData.reservationFee,
                 formData.serviceFee,
                 formData.uniformFee,
@@ -484,460 +695,493 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
                 enqueueSnackbar(response.message || "Failed to create term", {variant: "error"});
             }
         } catch (error) {
-            enqueueSnackbar(error.message || "An error occurred while creating term", {variant: "error"});
+            console.error("Error in handleCreate:", error);
+            enqueueSnackbar(error.response?.data?.message || "Error creating term", {variant: "error"});
         }
     };
 
-    console.log("Form data: ", formData)
-
-    // hàm cập nhật liên tục, onChange sẽ đc gọi, môix khi có thông tin thay đổi
-    async function HandleOnChange(e) {
+    const handleChange = async (e) => {
         const {name, value} = e.target;
 
-        if (name === "grade") {
-            try {
-                console.log("Calling getDefaultGrade with value:", value);
-                const response = await getDefaultGrade(value); // Gọi API theo grade
-                console.log("getDefaultGrade response:", response);
-
-                if (response && response.success && response.data) {
-                    console.log("Updating form data with fees:", response.data);
-                    setFormData(prev => ({
-                        ...prev,
-                        grade: value,
-                        ...response.data // Cập nhật phí theo grade
-                    }));
-                    return;
-                } else {
-                    console.warn("Invalid response format from getDefaultGrade:", response);
-                    enqueueSnackbar("Failed to load default fees. Please check the values manually.", {variant: "warning"});
-                }
-            } catch (err) {
-                console.error("Error loading default fees:", err);
-                enqueueSnackbar("Error loading default fees. Please check the values manually.", {variant: "error"});
-            }
-        }
-
-        // For datetime fields, ensure the value is in correct format
-        if (name === "startDate" || name === "endDate") {
-            const date = new Date(value);
-            if (!isNaN(date.getTime())) { // Check if valid date
+        if (name === "expectedClasses") {
+            // Allow empty string or positive numbers
+            if (value === '' || (parseInt(value) >= 0)) {
                 setFormData(prev => ({
                     ...prev,
-                    [name]: value // Keep the ISO string format
+                    [name]: value,
+                    maxNumberRegistration: value ? parseInt(value) * prev.studentsPerClass : 0
                 }));
             }
             return;
         }
-        // For other fields
+
+        if (name === "grade") {
+            try {
+                // First update the grade and name immediately
+                setFormData(prev => ({
+                    ...prev,
+                    grade: value,
+                    name: `${value} Term ${prev.year}-${prev.year + 1}`
+                }));
+
+                const response = await getDefaultGrade(value);
+                console.log("Default fee response:", response);
+
+                if (response?.success && response?.data) {
+                    const fees = response.data;
+                    // Update fees matching the backend enum order
+                    setFormData(prev => ({
+                        ...prev,
+                        learningMaterialFee: fees.learningMaterialFee || 0,
+                        reservationFee: fees.reservationFee || 0,
+                        serviceFee: fees.serviceFee || 0,
+                        uniformFee: fees.uniformFee || 0,
+                        facilityFee: fees.facilityFee || 0
+                    }));
+                } else {
+                    enqueueSnackbar("Failed to load fees for the selected grade. Please try again.", {variant: "error"});
+                }
+            } catch (err) {
+                console.error("Error loading default fees:", err);
+                enqueueSnackbar("Error loading fees. Please try again or contact support.", {variant: "error"});
+            }
+            return;
+        }
+
+        if (name === "startDate" || name === "endDate") {
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: value
+                }));
+            }
+            return;
+        }
+
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
-    }
+    };
 
     return (
-        <Dialog open={isPopUpOpen}
-                onClose={handleClosePopUp}
-                fullScreen
+        <Dialog
+            open={isPopUpOpen}
+            fullScreen
+            PaperProps={{
+                sx: {
+                    bgcolor: '#f8f9fa'
+                }
+            }}
         >
-            <AppBar sx={{
-                position: 'relative',
-                backgroundColor: '#07663a'
-            }}>
+            <AppBar
+                position="relative"
+                sx={{
+                    bgcolor: '#07663a',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}
+            >
                 <Toolbar>
-                    <IconButton edge="start"
-                                color="inherit"
-                                onClick={handleClosePopUp}
-                                aria-label="close">
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        onClick={handleClosePopUp}
+                        aria-label="close"
+                        sx={{
+                            mr: 2,
+                            '&:hover': {
+                                backgroundColor: 'rgba(255,255,255,0.1)'
+                            }
+                        }}
+                    >
                         <Close/>
                     </IconButton>
-                    <Typography sx={{ml: 2, flex: 1}} variant="h6" component="div">
-                        Admission Form Detail
+                    <Typography
+                        variant="h6"
+                        component="div"
+                        sx={{
+                            flex: 1,
+                            fontSize: '1.25rem',
+                            fontWeight: 600,
+                            letterSpacing: '0.5px'
+                        }}
+                    >
+                        Create New Term
                     </Typography>
                 </Toolbar>
             </AppBar>
-            <DialogTitle sx={{fontWeight: 'bold', fontSize: 26, color: '#2c684f'}}>
-                Create New Term
-            </DialogTitle>
-            <DialogContent>
-                <Box sx={{mt: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                    <FormControl sx={{pl: 1}}>
-                        <FormLabel sx={{
-                            color: '#2c684f !important',
-                            '&.Mui-focused': {
-                                color: '#2c684f !important'
-                            },
-                            marginBottom: '8px',
-                            fontSize: '1rem',
-                            fontWeight: 500
-                        }}>Grade</FormLabel>
-                        <RadioGroup
-                            row
-                            name="grade"
-                            value={formData.grade}
-                            onChange={(e) => HandleOnChange(e)}
-                            sx={{gap: 2}}
-                        >
-                            <FormControlLabel
-                                value="seed"
-                                control={
-                                    <Radio sx={{
-                                        color: '#2e7d32',
-                                        '&.Mui-checked': {
-                                            color: '#2e7d32',
-                                        },
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(46, 125, 50, 0.04)',
-                                        },
-                                    }}/>
-                                }
-                                label={
-                                    <Box sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        padding: '6px 16px',
-                                        borderRadius: '16px',
-                                        backgroundColor: formData.grade === 'seed' ? '#2e7d32' : 'transparent',
-                                        transition: 'all 0.2s',
-                                        '&:hover': {
-                                            backgroundColor: formData.grade === 'seed' ? '#2e7d32' : 'rgba(46, 125, 50, 0.08)',
-                                        },
-                                    }}>
-                                        <Typography sx={{
-                                            color: formData.grade === 'seed' ? '#ffffff' : '#2e7d32',
-                                            fontWeight: 600,
-                                            fontSize: '0.875rem'
-                                        }}>
-                                            Seed
-                                        </Typography>
-                                    </Box>
-                                }
-                            />
-                            <FormControlLabel
-                                value="bud"
-                                control={
-                                    <Radio sx={{
-                                        color: '#ed6c02',
-                                        '&.Mui-checked': {
-                                            color: '#ed6c02',
-                                        },
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(237, 108, 2, 0.04)',
-                                        },
-                                    }}/>
-                                }
-                                label={
-                                    <Box sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        padding: '6px 16px',
-                                        borderRadius: '16px',
-                                        backgroundColor: formData.grade === 'bud' ? '#ed6c02' : 'transparent',
-                                        transition: 'all 0.2s',
-                                        '&:hover': {
-                                            backgroundColor: formData.grade === 'bud' ? '#ed6c02' : 'rgba(237, 108, 2, 0.08)',
-                                        },
-                                    }}>
-                                        <Typography sx={{
-                                            color: formData.grade === 'bud' ? '#ffffff' : '#ed6c02',
-                                            fontWeight: 600,
-                                            fontSize: '0.875rem'
-                                        }}>
-                                            Bud
-                                        </Typography>
-                                    </Box>
-                                }
-                            />
-                            <FormControlLabel
-                                value="leaf"
-                                control={
-                                    <Radio sx={{
-                                        color: '#0288d1',
-                                        '&.Mui-checked': {
-                                            color: '#0288d1',
-                                        },
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(2, 136, 209, 0.04)',
-                                        },
-                                    }}/>
-                                }
-                                label={
-                                    <Box sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        padding: '6px 16px',
-                                        borderRadius: '16px',
-                                        backgroundColor: formData.grade === 'leaf' ? '#0288d1' : 'transparent',
-                                        transition: 'all 0.2s',
-                                        '&:hover': {
-                                            backgroundColor: formData.grade === 'leaf' ? '#0288d1' : 'rgba(2, 136, 209, 0.08)',
-                                        },
-                                    }}>
-                                        <Typography sx={{
-                                            color: formData.grade === 'leaf' ? '#ffffff' : '#0288d1',
-                                            fontWeight: 600,
-                                            fontSize: '0.875rem'
-                                        }}>
-                                            Leaf
-                                        </Typography>
-                                    </Box>
-                                }
-                            />
-                        </RadioGroup>
-                    </FormControl>
 
-                    <Box sx={{display: 'flex', gap: 2, width: '30%'}}>
+            <DialogContent>
+                <Box sx={{
+                    mt: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                    maxWidth: '1000px',
+                    mx: 'auto',
+                    px: 2
+                }}>
+                    {/* Term Name */}
+                    <TextField
+                        label="Term Name"
+                        name="name"
+                        value={formData.name}
+                        fullWidth
+                        required
+                        InputProps={{
+                            readOnly: true,
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: '12px',
+                                backgroundColor: '#f5f5f5'
+                            }
+                        }}
+                    />
+
+                    {/* Academic Year */}
+                    <TextField
+                        label="Academic Year"
+                        value={`${formData.year}-${formData.year + 1}`}
+                        fullWidth
+                        InputProps={{
+                            readOnly: true,
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: '12px',
+                                backgroundColor: '#f5f5f5'
+                            }
+                        }}
+                    />
+
+                    {/* Start Date and End Date */}
+                    <Box sx={{display: 'flex', gap: 2}}>
                         <TextField
-                            label="Start Date"
+                            label="Start Date *"
                             type="datetime-local"
                             name="startDate"
                             value={formData.startDate}
-                            onChange={(e) => HandleOnChange(e)}
+                            onChange={handleChange}
                             required
                             fullWidth
                             InputLabelProps={{shrink: true}}
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '12px',
-                                    '& fieldset': {
-                                        borderColor: '#2c684f',
-                                        borderWidth: 2,
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#07663a',
                                     },
-                                    '&:hover fieldset': {
-                                        borderColor: '#2c684f',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: '#2c684f',
-                                        boxShadow: '0 0 0 2px #eaf3ed'
-                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#07663a',
+                                        borderWidth: 2
+                                    }
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: '#07663a'
                                 }
                             }}
                         />
+
                         <TextField
-                            label="End Date"
+                            label="End Date *"
                             type="datetime-local"
-                            required
-                            fullWidth
                             name="endDate"
                             value={formData.endDate}
-                            onChange={(e) => HandleOnChange(e)}
+                            onChange={handleChange}
+                            required
+                            fullWidth
                             InputLabelProps={{shrink: true}}
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '12px',
-                                    '& fieldset': {
-                                        borderColor: '#2c684f',
-                                        borderWidth: 2,
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#07663a',
                                     },
-                                    '&:hover fieldset': {
-                                        borderColor: '#2c684f',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: '#2c684f',
-                                        boxShadow: '0 0 0 2px #eaf3ed'
-                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#07663a',
+                                        borderWidth: 2
+                                    }
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: '#07663a'
                                 }
                             }}
                         />
                     </Box>
 
-                    <TextField
-                        label="Max Registrations"
-                        type="number"
-                        required
+                    {/* Grade Selection */}
+                    <FormControl
                         fullWidth
-                        name="maxNumberRegistration"
-                        value={formData.maxNumberRegistration}
-                        onChange={(e) => HandleOnChange(e)}
                         sx={{
                             '& .MuiOutlinedInput-root': {
                                 borderRadius: '12px',
-                                '& fieldset': {
-                                    borderColor: '#2c684f',
-                                    borderWidth: 2,
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#07663a',
                                 },
-                                '&:hover fieldset': {
-                                    borderColor: '#2c684f',
-                                },
-                                '&.Mui-focused fieldset': {
-                                    borderColor: '#2c684f',
-                                    boxShadow: '0 0 0 2px #eaf3ed'
-                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#07663a',
+                                    borderWidth: 2
+                                }
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                                color: '#07663a'
                             }
                         }}
-                    />
-                    <Typography fontWeight="bold" sx={{mt: 1, mb: 0}}>Fees</Typography>
-                    <TextField label="Reservation Fee"
-                               type="number"
-                               required
-                               fullWidth
-                               name="reservationFee"
-                               value={formData.reservationFee}
-                               onChange={(e) => HandleOnChange(e)}
-                               sx={{
-                                   '& .MuiOutlinedInput-root': {
-                                       borderRadius: '12px',
-                                       '& fieldset': {
-                                           borderColor: '#2c684f',
-                                           borderWidth: 2,
-                                       },
-                                       '&:hover fieldset': {
-                                           borderColor: '#2c684f',
-                                       },
-                                       '&.Mui-focused fieldset': {
-                                           borderColor: '#2c684f',
-                                           boxShadow: '0 0 0 2px #eaf3ed'
-                                       },
-                                   }
-                               }}
-                    />
-                    <TextField label="Service Fee"
-                               type="number"
-                               required
-                               fullWidth
-                               name="serviceFee"
-                               value={formData.serviceFee}
-                               onChange={(e) => HandleOnChange(e)}
-                               sx={{
-                                   '& .MuiOutlinedInput-root': {
-                                       borderRadius: '12px',
-                                       '& fieldset': {
-                                           borderColor: '#2c684f',
-                                           borderWidth: 2,
-                                       },
-                                       '&:hover fieldset': {
-                                           borderColor: '#2c684f',
-                                       },
-                                       '&.Mui-focused fieldset': {
-                                           borderColor: '#2c684f',
-                                           boxShadow: '0 0 0 2px #eaf3ed'
-                                       },
-                                   }
-                               }}
-                    />
-                    <TextField label="Uniform Fee"
-                               type="number"
-                               required
-                               fullWidth
-                               name="uniformFee"
-                               value={formData.uniformFee}
-                               onChange={(e) => HandleOnChange(e)}
-                               sx={{
-                                   '& .MuiOutlinedInput-root': {
-                                       borderRadius: '12px',
-                                       '& fieldset': {
-                                           borderColor: '#2c684f',
-                                           borderWidth: 2,
-                                       },
-                                       '&:hover fieldset': {
-                                           borderColor: '#2c684f',
-                                       },
-                                       '&.Mui-focused fieldset': {
-                                           borderColor: '#2c684f',
-                                           boxShadow: '0 0 0 2px #eaf3ed'
-                                       },
-                                   }
-                               }}
-                    />
-                    <TextField label="Learning Material Fee"
-                               type="number"
-                               required
-                               fullWidth
-                               name="learningMaterialFee"
-                               value={formData.learningMaterialFee}
-                               onChange={(e) => HandleOnChange(e)}
-                               sx={{
-                                   '& .MuiOutlinedInput-root': {
-                                       borderRadius: '12px',
-                                       '& fieldset': {
-                                           borderColor: '#2c684f',
-                                           borderWidth: 2,
-                                       },
-                                       '&:hover fieldset': {
-                                           borderColor: '#2c684f',
-                                       },
-                                       '&.Mui-focused fieldset': {
-                                           borderColor: '#2c684f',
-                                           boxShadow: '0 0 0 2px #eaf3ed'
-                                       },
-                                   }
-                               }}
-                    />
-                    <TextField label="Facility Fee"
-                               type="number"
-                               required
-                               fullWidth
-                               name="facilityFee"
-                               value={formData.facilityFee}
-                               onChange={(e) => HandleOnChange(e)}
-                               sx={{
-                                   '& .MuiOutlinedInput-root': {
-                                       borderRadius: '12px',
-                                       '& fieldset': {
-                                           borderColor: '#2c684f',
-                                           borderWidth: 2,
-                                       },
-                                       '&:hover fieldset': {
-                                           borderColor: '#2c684f',
-                                       },
-                                       '&.Mui-focused fieldset': {
-                                           borderColor: '#2c684f',
-                                           boxShadow: '0 0 0 2px #eaf3ed'
-                                       },
-                                   }
-                               }}
-                    />
+                    >
+                        <InputLabel id="grade-label">Grade *</InputLabel>
+                        <Select
+                            labelId="grade-label"
+                            name="grade"
+                            value={formData.grade}
+                            onChange={handleChange}
+                            label="Grade *"
+                            required
+                        >
+                            <MenuItem value="SEED">SEED</MenuItem>
+                            <MenuItem value="BUD">BUD</MenuItem>
+                            <MenuItem value="LEAF">LEAF</MenuItem>
+                        </Select>
+                    </FormControl>
+
+                    {/* Class Information */}
+                    <Box sx={{display: 'flex', gap: 2}}>
+                        <TextField
+                            label="Expected Classes *"
+                            type="number"
+                            required
+                            fullWidth
+                            name="expectedClasses"
+                            value={formData.expectedClasses}
+                            onChange={handleChange}
+                            placeholder="Enter number of classes"
+                            InputProps={{
+                                inputProps: {
+                                    min: 0,
+                                    style: {textAlign: 'left'}
+                                }
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '12px',
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#07663a',
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#07663a',
+                                        borderWidth: 2
+                                    }
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: '#07663a'
+                                }
+                            }}
+                        />
+
+                        <TextField
+                            label="Students Per Class"
+                            type="number"
+                            value={formData.studentsPerClass}
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '12px',
+                                    backgroundColor: '#f5f5f5'
+                                }
+                            }}
+                        />
+
+                        <TextField
+                            label="Max Registration"
+                            type="number"
+                            value={formData.maxNumberRegistration}
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '12px',
+                                    backgroundColor: '#f5f5f5'
+                                }
+                            }}
+                        />
+                    </Box>
+
+                    {/* Fee Information */}
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 3,
+                            borderRadius: '16px',
+                            border: '1px solid #e0e0e0',
+                            backgroundColor: '#fff'
+                        }}
+                    >
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                mb: 3,
+                                color: '#07663a',
+                                fontWeight: 600,
+                                fontSize: '1.1rem'
+                            }}
+                        >
+                            Fee Information
+                        </Typography>
+
+                        <Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
+                            <TextField
+                                label="Reservation Fee"
+                                type="number"
+                                value={formData.reservationFee}
+                                InputProps={{readOnly: true}}
+                                fullWidth
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: '12px',
+                                        backgroundColor: '#f5f5f5'
+                                    }
+                                }}
+                            />
+
+                            <TextField
+                                label="Service Fee"
+                                type="number"
+                                value={formData.serviceFee}
+                                InputProps={{readOnly: true}}
+                                fullWidth
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: '12px',
+                                        backgroundColor: '#f5f5f5'
+                                    }
+                                }}
+                            />
+
+                            <TextField
+                                label="Uniform Fee"
+                                type="number"
+                                value={formData.uniformFee}
+                                InputProps={{readOnly: true}}
+                                fullWidth
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: '12px',
+                                        backgroundColor: '#f5f5f5'
+                                    }
+                                }}
+                            />
+
+                            <TextField
+                                label="Learning Material Fee"
+                                type="number"
+                                value={formData.learningMaterialFee}
+                                InputProps={{readOnly: true}}
+                                fullWidth
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: '12px',
+                                        backgroundColor: '#f5f5f5'
+                                    }
+                                }}
+                            />
+
+                            <TextField
+                                label="Facility Fee"
+                                type="number"
+                                value={formData.facilityFee}
+                                InputProps={{readOnly: true}}
+                                fullWidth
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: '12px',
+                                        backgroundColor: '#f5f5f5'
+                                    }
+                                }}
+                            />
+                        </Box>
+                    </Paper>
                 </Box>
             </DialogContent>
-            <DialogActions sx={{pb: 3, pr: 3, gap: '5px'}}>
+
+            <Toolbar sx={{justifyContent: 'flex-end'}}>
                 <Button
                     onClick={handleClosePopUp}
-                    variant="contained"
-                    color='warning'
+                    variant="outlined"
+                    color="error"
                     sx={{
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                        fontSize: 18,
-                        px: 4
+                        mr: 2,
+                        borderRadius: '10px',
+                        px: 3,
+                        py: 1,
+                        textTransform: 'none',
+                        fontWeight: 600
                     }}
                 >
                     Cancel
                 </Button>
                 <Button
+                    onClick={() => handleCreate(formData)}
                     variant="contained"
                     sx={{
-                        borderRadius: '12px',
+                        backgroundColor: '#07663a',
+                        borderRadius: '10px',
+                        px: 3,
+                        py: 1,
+                        textTransform: 'none',
                         fontWeight: 600,
-                        fontSize: 18,
-                        px: 4,
-                        backgroundColor: '#2c684f',
-                        '&:hover': {backgroundColor: '#22513c'}
+                        '&:hover': {
+                            backgroundColor: '#05512e'
+                        }
                     }}
-                    onClick={() => handleCreate(formData)}
                 >
-                    Save Change
+                    Create Term
                 </Button>
-            </DialogActions>
+            </Toolbar>
         </Dialog>
-    )
+    );
 }
 
 function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelectedTerm}) {
-    // Calculate total registrations
-    const totalMaxRegistrations = terms.reduce((sum, term) => sum + term.maxNumberRegistration, 0);
-    const totalRegistered = terms.reduce((sum, term) => sum + (term.approvedForm || 0), 0);
+    const [years, setYears] = useState(['all']);
+    const [selectedYear, setSelectedYear] = useState('all');
 
-    // Calculate BUD and SEED registrations
-    const budMaxRegistrations = terms.filter(term => term.grade === 'BUD').reduce((sum, term) => sum + term.maxNumberRegistration, 0);
-    const budRegistered = terms.filter(term => term.grade === 'BUD').reduce((sum, term) => sum + (term.approvedForm || 0), 0);
+    useEffect(() => {
+        const fetchYears = async () => {
+            try {
+                const response = await getTermYears();
+                if (response.success) {
+                    // Sort years in descending order
+                    const sortedYears = [...response.data].sort((a, b) => b - a);
+                    setYears(['all', ...sortedYears]);
+                } else {
+                    console.error('Failed to fetch years:', response.message);
+                }
+            } catch (error) {
+                console.error('Error fetching years:', error);
+            }
+        };
+        fetchYears();
+    }, []);
 
-    const seedMaxRegistrations = terms.filter(term => term.grade === 'SEED').reduce((sum, term) => sum + term.maxNumberRegistration, 0);
-    const seedRegistered = terms.filter(term => term.grade === 'SEED').reduce((sum, term) => sum + (term.approvedForm || 0), 0);
+    const formatYear = (year) => {
+        if (year === 'all') return 'All Years';
+        return `${year}-${parseInt(year) + 1}`;
+    };
+
+    const filteredTerms = selectedYear === 'all'
+        ? terms.filter(term => !term.isExtraTerm)
+        : terms.filter(term => {
+            // Format the term year to match the filter format
+            const termYear = term.year.split('-')[0];
+            return termYear === selectedYear.toString() && !term.isExtraTerm;
+        });
 
     return (
         <div className="container">
-            {/*1.tiêu đề */}
             <Box sx={{mt: 2, mb: 2}}>
                 <Typography
                     variant="h4"
@@ -965,116 +1209,55 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
                 </Typography>
             </Box>
 
-            {/* Registration Statistics */}
             <Box sx={{
                 display: 'flex',
-                justifyContent: 'center',
-                gap: 4,
-                mb: 3
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 3,
+                mx: {xs: 0, md: 2}
             }}>
-                {/* BUD Grade Stats */}
-                <Paper sx={{
-                    p: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    backgroundColor: '#f8faf8',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '12px'
-                }}>
-                    <Box sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2
-                    }}>
-                        <Box sx={{
-                            backgroundColor: '#ed6c02',
-                            color: 'white',
-                            px: 2,
-                            py: 0.5,
-                            borderRadius: '16px',
-                            fontWeight: 600
-                        }}>
-                            BUD
-                        </Box>
-                        <Typography variant="h6" sx={{color: '#07663a', fontWeight: 600}}>
-                            Registration:
-                        </Typography>
-                        <Box sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1
-                        }}>
-                            <Typography 
-                                variant="h5" 
-                                sx={{
-                                    color: budRegistered >= budMaxRegistrations ? '#d32f2f' : '#07663a',
-                                    fontWeight: 700
-                                }}
-                            >
-                                {budRegistered}
-                            </Typography>
-                            <Typography variant="h5" sx={{color: '#666'}}>/</Typography>
-                            <Typography variant="h5" sx={{color: '#2c3e50', fontWeight: 700}}>
-                                {budMaxRegistrations}
-                            </Typography>
-                        </Box>
-                    </Box>
-                </Paper>
+                <FormControl sx={{minWidth: 200}}>
+                    <Select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        displayEmpty
+                        sx={{
+                            height: '44px',
+                            backgroundColor: '#fff',
+                            borderRadius: '10px',
+                            '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#07663a',
+                                borderWidth: '2px'
+                            },
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#07663a',
+                            },
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#07663a',
+                            },
+                            '& .MuiSelect-select': {
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                            }
+                        }}
+                        renderValue={(selected) => (
+                            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                                <FilterList sx={{color: '#07663a', fontSize: 20}}/>
+                                <Typography sx={{color: '#07663a', fontWeight: 500}}>
+                                    {selected === 'all' ? 'Filter by Year' : `Year: ${formatYear(selected)}`}
+                                </Typography>
+                            </Box>
+                        )}
+                    >
+                        {years.map((year) => (
+                            <MenuItem key={year} value={year}>
+                                {formatYear(year)}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
-                {/* SEED Grade Stats */}
-                <Paper sx={{
-                    p: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    backgroundColor: '#f8faf8',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '12px'
-                }}>
-                    <Box sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2
-                    }}>
-                        <Box sx={{
-                            backgroundColor: '#2e7d32',
-                            color: 'white',
-                            px: 2,
-                            py: 0.5,
-                            borderRadius: '16px',
-                            fontWeight: 600
-                        }}>
-                            SEED
-                        </Box>
-                        <Typography variant="h6" sx={{color: '#07663a', fontWeight: 600}}>
-                            Registration:
-                        </Typography>
-                        <Box sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1
-                        }}>
-                            <Typography 
-                                variant="h5" 
-                                sx={{
-                                    color: seedRegistered >= seedMaxRegistrations ? '#d32f2f' : '#07663a',
-                                    fontWeight: 700
-                                }}
-                            >
-                                {seedRegistered}
-                            </Typography>
-                            <Typography variant="h5" sx={{color: '#666'}}>/</Typography>
-                            <Typography variant="h5" sx={{color: '#2c3e50', fontWeight: 700}}>
-                                {seedMaxRegistrations}
-                            </Typography>
-                        </Box>
-                    </Box>
-                </Paper>
-            </Box>
-
-            {/*2. button create new term */}
-            <Box sx={{display: 'flex', justifyContent: 'flex-end', mb: 2}}>
                 <Button
                     variant="contained"
                     endIcon={<Add/>}
@@ -1087,16 +1270,17 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
                         fontSize: 14,
                         backgroundColor: '#07663a',
                         boxShadow: 2,
-                        mr: {xs: 0, md: 2}
+                        '&:hover': {
+                            backgroundColor: '#05512e'
+                        }
                     }}
                 >
                     Create new term
                 </Button>
             </Box>
 
-            {/*3. cần 1 bảng để hiện list */}
             <RenderTable
-                terms={terms}
+                terms={filteredTerms}
                 openDetailPopUpFunc={openDetailPopUpFunc}
                 HandleSelectedTerm={HandleSelectedTerm}
             />
@@ -1171,6 +1355,7 @@ export default function TermAdmission() {
                     isPopUpOpen={popUp.isOpen}
                     handleClosePopUp={handleClosePopUp}
                     selectedTerm={selectedTerm}
+                    GetTerm={GetTerm}
                 />
             )}
         </>
