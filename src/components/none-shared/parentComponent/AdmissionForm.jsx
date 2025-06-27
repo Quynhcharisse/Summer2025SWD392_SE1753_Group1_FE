@@ -146,6 +146,16 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                 padding: '16px 8px',
                                 borderBottom: '2px solid #e0e0e0'
                             }}>
+                                Name
+                            </TableCell>
+                            <TableCell align="center" sx={{
+                                fontWeight: '600',
+                                color: '#07663a',
+                                backgroundColor: '#f8faf8',
+                                fontSize: '0.95rem',
+                                padding: '16px 8px',
+                                borderBottom: '2px solid #e0e0e0'
+                            }}>
                                 Submit Date
                             </TableCell>
                             <TableCell align="center" sx={{
@@ -205,6 +215,9 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                 >
                                     <TableCell align="center" sx={{padding: '12px 8px'}}>
                                         {page * rowsPerPage + index + 1}
+                                    </TableCell>
+                                    <TableCell align="center" sx={{padding: '12px 8px'}}>
+                                        {form.studentName}
                                     </TableCell>
                                     <TableCell align="center" sx={{padding: '12px 8px'}}>
                                         {form.submittedDate}
@@ -548,7 +561,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
 
                         {/*button cancel*/}
                         {/*xét điều kiện, nếu cancel rồi thì ẩn nút cancel đó, ko cho hiện lại */}
-                        {selectedForm.status !== 'cancelled' && (
+                        {selectedForm.status === 'pending approval' &&  (
                             <Button
                                 sx={{
                                     width: '10%',
