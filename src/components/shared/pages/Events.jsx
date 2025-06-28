@@ -3,9 +3,10 @@ import dayjs from "dayjs";
 import { PageTemplate } from "@templates";
 import { Button } from "@atoms";
 import { NewsletterSignup, EventCard } from "@molecules";
-import { useEventActive, useEventDetail, useEventTeachers } from "@hooks/useEvent";
-import { Alert, CircularProgress, Snackbar } from "@mui/material";
+import { useEventActive, useEventDetail, useEventTeachers, useRegisteredEvents } from "@hooks/useEvent";
+import { Alert, CircularProgress, Snackbar, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import CalendarIcon from "@icons/CalendarIcon";
 
 // Helper to format date/time using dayjs 24h
 const formatDate = (dateStr) => {
@@ -42,6 +43,21 @@ const Events = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const [openRegisteredDialog, setOpenRegisteredDialog] = React.useState(false);
+  const { data: registeredEventsData, isLoading: isLoadingRegistered, refetch: refetchRegisteredEvents } = useRegisteredEvents();
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isLoggedIn = !!user;
+
+  const handleOpenRegisteredDialog = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+    refetchRegisteredEvents();
+    setOpenRegisteredDialog(true);
+  };
+
   if (isLoading) {
     return (
       <PageTemplate>
@@ -75,11 +91,8 @@ const Events = () => {
       ]}
       actions={
         <div className="flex gap-4">
-          <Button variant="outline" size="md">
-            View Calendar
-          </Button>
-          <Button variant="primary" size="md">
-            Subscribe to Updates
+          <Button variant="outline" size="md" startIcon={<CalendarIcon />} onClick={handleOpenRegisteredDialog}>
+            View Registered Events
           </Button>
         </div>
       }
@@ -123,13 +136,13 @@ const Events = () => {
                   id: event.id,
                   title: event.name,
                   description: event.description,
-                  date: formatDate(event.startTime),
-                  time: formatTimeRange(event.startTime, event.endTime),
+                  time: event.endTime ? `${event.startTime} - ${event.endTime}` : undefined,
                   location: event.location,
                   category: event.category || "Event",
                   color: event.color || "blue",
                   attachmentImg: event.attachmentImg,
-                  featured: event.featured
+                  featured: event.featured,
+                  deadline: event.registrationDeadline,
                 }}
                 variant="compact"
                 onAction={() => handleOpenDetail(event.id)}
@@ -139,25 +152,48 @@ const Events = () => {
           </div>
         </section>
 
-        {/* Newsletter Signup */}
-        <NewsletterSignup
-          title="Never Miss an Event!"
-          description="Subscribe to our newsletter to receive updates about upcoming events, important announcements, and school activities."
-          variant="primary"
-          layout="horizontal"
-          onSubmit={async (email) => {
-            console.log('Newsletter subscription:', email);
-            // Here you would normally call your newsletter API
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-          }}
-          className="max-w-xl sm:max-w-2xl mx-auto"
-        />
-        
-        <div className="text-center mt-3 sm:mt-4">
-          <Button variant="outline" size="md" className="text-sm sm:text-base">
-            Download Calendar
-          </Button>
-        </div>
+        {/* Dialog hiển thị các sự kiện đã đăng ký */}
+        <Dialog open={openRegisteredDialog} onClose={() => setOpenRegisteredDialog(false)} maxWidth="md" fullWidth>
+          <DialogTitle>Events Registered for Your Children</DialogTitle>
+          <DialogContent dividers>
+            {isLoadingRegistered ? (
+              <div className="py-6 text-center"><CircularProgress /></div>
+            ) : registeredEventsData?.data?.data?.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {registeredEventsData.data.data.map((event, idx) => (
+                  <EventCard
+                    key={idx}
+                    event={{
+                      title: event.eventName || event.name,
+                      description: event.description,
+                      date: `Registered At: ${dayjs(event.registeredAt).format('DD/MM/YYYY HH:mm')}`,
+                      time: event.endTime ? `${event.startTime} - ${event.endTime}` : undefined,
+                      location: event.location,
+                      category: 'Event',
+                      attachmentImg: event.attachmentImg,
+                      deadline: event.registrationDeadline
+                    }}
+                    variant="compact"
+                    actionLabel="View"
+                    onAction={() => {
+                      setOpenRegisteredDialog(false);
+                      if (event.eventId || event.id) {
+                        handleOpenDetail(event.eventId || event.id);
+                      }
+                    }}
+                    disabled={!(event.eventId || event.id)}
+                    childrenNames={`Children Name: ${event.childName}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="py-6 text-center text-gray-500">No registered events found.</div>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenRegisteredDialog(false)} variant="outline">Close</Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Snackbar for notifications */}
         <Snackbar

@@ -25,8 +25,17 @@ import {
   TextField,
   Typography,
   Grid,
+  Card,
+  Divider,
+  Stack,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
+import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import InfoIcon from '@mui/icons-material/Info';
 
 const LessonManage = () => {
   // State quản lý modal, paging, search, sort, snackbar
@@ -245,41 +254,53 @@ const LessonManage = () => {
           pb: 2,
         }}
       >
-        <Box>
-          <Typography
-            variant="h4"
-            component="h1"
-            sx={{
-              color: "#1976d2",
-              fontWeight: "bold",
-              mb: 1,
-            }}
-          >
-            Lesson Management
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              color: "#666",
-              fontWeight: "medium",
-            }}
-          >
-            Total Lessons: {totalItems}
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <LibraryBooksIcon sx={{ color: '#1976d2', fontSize: 38 }} />
+          <Box>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                color: "#1976d2",
+                fontWeight: "bold",
+                mb: 1,
+              }}
+            >
+              Lesson Management
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                color: "#666",
+                fontWeight: "medium",
+              }}
+            >
+              Total Lessons: {totalItems}
+            </Typography>
+          </Box>
         </Box>
         <Button
           variant="contained"
           sx={{
-            backgroundColor: "#1976d2",
-            "&:hover": {
-              backgroundColor: "#1565c0",
-            },
+            background: "linear-gradient(90deg, #1976d2 60%, #42a5f5 100%)",
+            color: '#fff',
+            fontWeight: 700,
+            borderRadius: 2,
+            boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
             px: 3,
+            py: 1.2,
+            fontSize: '1.08rem',
+            '&:hover': {
+              background: "linear-gradient(90deg, #1565c0 60%, #42a5f5 100%)",
+              boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+            },
+            gap: 1.2
           }}
           color="primary"
           onClick={() => showModal(null)}
+          startIcon={<AddCircleOutlineIcon />}
         >
-          Create New Lesson
+          CREATE NEW LESSON
         </Button>
       </Box>
 
@@ -325,41 +346,57 @@ const LessonManage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{
+          borderRadius: 3,
+          boxShadow: '0 4px 24px rgba(25,118,210,0.08)',
+          overflow: 'hidden',
+          border: '1.5px solid #e3f2fd',
+        }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Topic</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Description</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Objective</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Required Tools</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Duration per week (Hours)</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Actions</TableCell>
+              <TableRow sx={{ background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)' }}>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Topic</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Description</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Objective</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Required Tools</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Duration per week (Hours)</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {displayedData.map((row) => {
                 if (!row) return null;
                 return (
-                  <TableRow key={row.id}>
-                    <TableCell align="center">{row.topic ?? "-"}</TableCell>
+                  <TableRow
+                    key={row.id}
+                    sx={{
+                      transition: 'background 0.2s',
+                      '&:hover': { backgroundColor: '#f1f8fd' },
+                      '&:last-child td, &:last-child th': { borderBottom: 0 }
+                    }}
+                  >
+                    <TableCell align="center" sx={{ fontWeight: 600 }}>{row.topic ?? "-"}</TableCell>
                     <TableCell align="center">{row.description ?? "-"}</TableCell>
                     <TableCell align="center">{row.objective ?? "-"}</TableCell>
                     <TableCell align="center">{row.toolsRequired ?? "-"}</TableCell>
                     <TableCell align="center">{typeof row.duration === "number" ? row.duration : "-"}</TableCell>
                     <TableCell align="center">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                      <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
                         <Button
                           variant="contained"
                           sx={{
                             backgroundColor: '#42a5f5',
                             color: '#fff',
-                            minWidth: 80,
+                            minWidth: 44,
+                            borderRadius: 2,
+                            boxShadow: '0 2px 8px rgba(66,165,245,0.10)',
                             '&:hover': { backgroundColor: '#1976d2' },
-                            fontWeight: 600
+                            fontWeight: 600,
+                            p: 1.2
                           }}
                           onClick={() => handleViewDetail(row.id)}
                           size="small"
+                          startIcon={<VisibilityIcon />}
                         >
                           View
                         </Button>
@@ -368,12 +405,16 @@ const LessonManage = () => {
                           sx={{
                             backgroundColor: '#1976d2',
                             color: '#fff',
-                            minWidth: 80,
+                            minWidth: 44,
+                            borderRadius: 2,
+                            boxShadow: '0 2px 8px rgba(25,118,210,0.10)',
                             '&:hover': { backgroundColor: '#1565c0' },
-                            fontWeight: 600
+                            fontWeight: 600,
+                            p: 1.2
                           }}
                           onClick={() => showModal(row)}
                           size="small"
+                          startIcon={<EditIcon />}
                         >
                           Edit
                         </Button>
@@ -394,64 +435,81 @@ const LessonManage = () => {
             labelDisplayedRows={({ from, to, count }) =>
               `${from}-${to} of ${count}`
             }
+            sx={{
+              borderTop: '1.5px solid #e3f2fd',
+              background: '#f8fafc',
+              '.MuiTablePagination-toolbar': { fontWeight: 600 },
+              '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { color: '#1976d2' }
+            }}
           />
         </TableContainer>
       )}
 
       {/* Create/Edit Modal */}
-      <Dialog open={isModalOpen} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog open={isModalOpen} onClose={handleClose} maxWidth="sm" fullWidth
+        PaperProps={{
+          sx: {
+            minHeight: '60vh',
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: 4,
+            boxShadow: '0 8px 32px rgba(25,118,210,0.18)',
+            border: '2px solid #e3f2fd',
+            background: 'linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)',
+          },
+        }}
+      >
+        <DialogTitle sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          fontWeight: 800,
+          color: '#1976d2',
+          fontSize: '1.5rem',
+          background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)',
+          borderBottom: '2px solid #e3f2fd',
+          py: 2.5,
+          px: 3
+        }}>
+          {editingId ? <EditIcon sx={{ color: '#1976d2', fontSize: 28 }} /> : <AddCircleOutlineIcon sx={{ color: '#1976d2', fontSize: 28 }} />}
           {editingId ? "Edit Lesson" : "Create New Lesson"}
         </DialogTitle>
         <form onSubmit={handleSubmit}>
-          <DialogContent>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}
-            >
+          <DialogContent sx={{ px: 4, py: 3 }}>
+            <Stack spacing={3} sx={{ pt: 2 }}>
               <TextField label="Topic" inputRef={topicRef} fullWidth required />
-              <TextField
-                label="Description"
-                inputRef={descriptionRef}
-                fullWidth
-                multiline
-                rows={2}
-                required
-              />
-              <TextField
-                label="Objective"
-                inputRef={objectiveRef}
-                fullWidth
-                multiline
-                rows={2}
-                required
-              />
-              <TextField
-                label="Required Tools"
-                inputRef={toolsRequiredRef}
-                fullWidth
-              />
-              <TextField
-                label="Duration per week (Hours)"
-                inputRef={durationRef}
-                type="number"
-                fullWidth
-                required
-                inputProps={{ min: 1, max: 1000 }}
-              />
-            </Box>
+              <TextField label="Description" inputRef={descriptionRef} fullWidth multiline rows={2} required />
+              <TextField label="Objective" inputRef={objectiveRef} fullWidth multiline rows={2} required />
+              <TextField label="Required Tools" inputRef={toolsRequiredRef} fullWidth />
+              <TextField label="Duration per week (Hours)" inputRef={durationRef} type="number" fullWidth required inputProps={{ min: 1, max: 1000 }} />
+            </Stack>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{
+            borderTop: '2px solid #e3f2fd',
+            backgroundColor: '#f8f9fa',
+            p: 2,
+            justifyContent: 'center'
+          }}>
             <Button onClick={handleClose}>Cancel</Button>
             <Button
               type="submit"
               variant="contained"
-              color="primary"
-              disabled={
-                createLessonMutation.isPending || updateLessonMutation.isPending
-              }
+              sx={{
+                minWidth: 120,
+                backgroundColor: '#1976d2',
+                color: '#fff',
+                fontWeight: 700,
+                borderRadius: 2,
+                boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+                fontSize: '1.08rem',
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                  boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+                },
+              }}
+              disabled={createLessonMutation.isPending || updateLessonMutation.isPending}
             >
-              {createLessonMutation.isPending ||
-              updateLessonMutation.isPending ? (
+              {createLessonMutation.isPending || updateLessonMutation.isPending ? (
                 <CircularProgress size={24} />
               ) : editingId ? (
                 "Update"
@@ -471,8 +529,11 @@ const LessonManage = () => {
         fullWidth
         sx={{
           "& .MuiDialog-paper": {
-            borderRadius: 2,
-            background: "linear-gradient(to bottom, #ffffff, #f8f9fa)",
+            borderRadius: 4,
+            background: "linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)",
+            boxShadow: '0 8px 32px rgba(25,118,210,0.18)',
+            p: 0,
+            fontFamily: 'Inter, Roboto, Arial, sans-serif',
           },
         }}
       >
@@ -480,15 +541,18 @@ const LessonManage = () => {
           sx={{
             textAlign: "center",
             borderBottom: "2px solid #e3f2fd",
-            backgroundColor: "#bbdefb",
+            background: "linear-gradient(90deg, #e3f2fd 60%, #fff 100%)",
             color: "#1976d2",
-            fontWeight: "bold",
-            py: 2,
+            fontWeight: 900,
+            fontSize: '2rem',
+            py: 3,
+            letterSpacing: 1,
+            fontFamily: 'Inter, Roboto, Arial, sans-serif',
           }}
         >
           Lesson Details
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 0 }}>
           {isLoadingSyllabuses ? (
             <Box
               sx={{
@@ -501,226 +565,195 @@ const LessonManage = () => {
               <CircularProgress size={40} />
             </Box>
           ) : (
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: { xs: 2, sm: 4 }, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
               {/* Lesson Info */}
-              <TableContainer
-                component={Paper}
-                elevation={0}
-                sx={{
-                  borderRadius: 2,
-                  overflow: "hidden",
-                  mb: 3,
-                  border: "1px solid #e0e0e0",
-                  "& .MuiTableCell-root": {
-                    borderColor: "#e0e0e0",
-                    py: 2.5,
-                    px: 3,
-                  },
-                  "& .MuiTableRow-root": {
-                    "&:last-child td, &:last-child th": {
-                      borderBottom: 0,
-                    },
-                  },
-                }}
-              >
-                <Table>
-                  <TableBody>
-                    {lessonDetail ? (
-                      <>
-                        <TableRow>
-                          <TableCell
-                            sx={{
-                              width: "20%",
-                              bgcolor: "#f8f9fa",
-                              fontWeight: 600,
-                              color: "#1976d2",
-                            }}
-                          >
-                            Topic
-                          </TableCell>
-                          <TableCell sx={{ whiteSpace: "pre-wrap" }}>
-                            {lessonDetail.topic ?? "-"}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell
-                            sx={{
-                              bgcolor: "#f8f9fa",
-                              fontWeight: 600,
-                              color: "#1976d2",
-                            }}
-                          >
-                            Description
-                          </TableCell>
-                          <TableCell sx={{ whiteSpace: "pre-wrap" }}>
-                            {lessonDetail.description ?? "-"}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell
-                            sx={{
-                              bgcolor: "#f8f9fa",
-                              fontWeight: 600,
-                              color: "#1976d2",
-                            }}
-                          >
-                            Objective
-                          </TableCell>
-                          <TableCell sx={{ whiteSpace: "pre-wrap" }}>
-                            {lessonDetail.objective ?? "-"}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell
-                            sx={{
-                              bgcolor: "#f8f9fa",
-                              fontWeight: 600,
-                              color: "#1976d2",
-                            }}
-                          >
-                            Required Tools
-                          </TableCell>
-                          <TableCell sx={{ whiteSpace: "pre-wrap" }}>
-                            {lessonDetail.toolsRequired ?? "-"}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell
-                            sx={{
-                              bgcolor: "#f8f9fa",
-                              fontWeight: 600,
-                              color: "#1976d2",
-                            }}
-                          >
-                            Duration
-                          </TableCell>
-                          <TableCell>
-                            {typeof lessonDetail.duration === "number"
-                              ? lessonDetail.duration
-                              : "-"}{" "}
-                            hours
-                          </TableCell>
-                        </TableRow>
-                      </>
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={2} align="center">
-                          Lesson not found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <Box sx={{
+                borderRadius: 4,
+                boxShadow: '0 4px 24px rgba(56,189,248,0.10)',
+                borderLeft: '6px solid #1976d2',
+                mb: 4,
+                background: 'linear-gradient(90deg, #e3f0fd 60%, #fff 100%)',
+                overflow: 'hidden',
+              }}>
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  px: 3,
+                  py: 2.5,
+                  background: 'linear-gradient(90deg, #e3f2fd 60%, #bbdefb 100%)',
+                  borderTopLeftRadius: 18,
+                  borderTopRightRadius: 18,
+                }}>
+                  <LibraryBooksIcon sx={{ color: '#1976d2', fontSize: 32 }} />
+                  <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#1976d2', fontFamily: 'inherit' }}>
+                    Lesson Information
+                  </Typography>
+                </Box>
+                {lessonDetail ? (
+                  <Box sx={{ p: 3, background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)', borderRadius: 4 }}>
+                    {/* Card lớn bọc toàn bộ lesson info */}
+                    <Card sx={{ p: { xs: 2, sm: 4 }, borderRadius: 4, boxShadow: '0 4px 24px rgba(56,189,248,0.10)', background: 'linear-gradient(90deg, #e3f0fd 60%, #fff 100%)', mb: 4 }}>
+                      {/* 2 card Topic & Duration căn giữa */}
+                      <Box sx={{ width: '100%', mb: 3 }}>
+                        <Grid container spacing={3} sx={{ width: '100%' }}>
+                          <Grid item xs={12} sm={6}>
+                            <Box
+                              sx={{
+                                bgcolor: '#e3f2fd',
+                                borderRadius: 3,
+                                p: 2.5,
+                                height: '100%',
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'flex-start',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <Typography sx={{ color: '#888', fontWeight: 600, fontSize: '1.08rem', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+                                Topic
+                              </Typography>
+                              <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '1.15rem', letterSpacing: 0.5, fontFamily: 'Inter, Roboto, Arial, sans-serif', whiteSpace: 'pre-line' }}>
+                                {lessonDetail.topic ?? '-'}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <Box
+                              sx={{
+                                bgcolor: '#e3f2fd',
+                                borderRadius: 3,
+                                p: 2.5,
+                                height: '100%',
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'flex-start',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <Typography sx={{ color: '#888', fontWeight: 600, fontSize: '1.08rem', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+                                Duration
+                              </Typography>
+                              <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '1.15rem', letterSpacing: 0.5, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+                                {typeof lessonDetail.duration === 'number' ? lessonDetail.duration : '-'} hours
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        </Grid>
+                      </Box>
+                      {/* 3 card data trải ngang, tách nhau bằng line ngang */}
+                      <Card sx={{ bgcolor: '#e3f2fd', borderRadius: 3, p: 2.5, mb: 0 }}>
+                        <Typography sx={{ color: '#888', fontWeight: 600, fontSize: '1.08rem', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+                          Required Tools
+                        </Typography>
+                        <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '1.15rem', fontFamily: 'Inter, Roboto, Arial, sans-serif', whiteSpace: 'pre-line' }}>
+                          {lessonDetail.toolsRequired ?? '-'}
+                        </Typography>
+                      </Card>
+                      <Divider sx={{ my: 2, background: '#bbdefb', height: 2, borderRadius: 1 }} />
+                      <Card sx={{ bgcolor: '#e3f2fd', borderRadius: 3, p: 2.5, mb: 0 }}>
+                        <Typography sx={{ color: '#888', fontWeight: 600, fontSize: '1.08rem', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+                          Objective
+                        </Typography>
+                        <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '1.15rem', fontFamily: 'Inter, Roboto, Arial, sans-serif', whiteSpace: 'pre-line' }}>
+                          {lessonDetail.objective ?? '-'}
+                        </Typography>
+                      </Card>
+                      <Divider sx={{ my: 2, background: '#bbdefb', height: 2, borderRadius: 1 }} />
+                      <Card sx={{ bgcolor: '#e3f2fd', borderRadius: 3, p: 2.5, mb: 0 }}>
+                        <Typography sx={{ color: '#888', fontWeight: 600, fontSize: '1.08rem', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+                          Description
+                        </Typography>
+                        <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '1.15rem', fontFamily: 'Inter, Roboto, Arial, sans-serif', whiteSpace: 'pre-line' }}>
+                          {lessonDetail.description ?? '-'}
+                        </Typography>
+                      </Card>
+                    </Card>
+                  </Box>
+                ) : (
+                  <Box sx={{ p: 4, textAlign: 'center' }}>
+                    <Typography color="error" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
+                      Lesson not found.
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
 
               {/* Syllabuses Section */}
-              <Box sx={{ mt: 4 }}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 3,
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: "#1976d2",
-                      fontWeight: 600,
-                      mb: 3,
-                      pb: 2,
-                      borderBottom: "2px solid #e3f2fd",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    <Box
-                      component="span"
-                      sx={{
-                        width: 6,
-                        height: 24,
-                        bgcolor: "#1976d2",
-                        display: "inline-block",
-                        borderRadius: 1,
-                        mr: 1,
-                      }}
-                    />
+              <Box sx={{
+                borderRadius: 4,
+                boxShadow: '0 4px 24px rgba(34,197,94,0.10)',
+                borderLeft: '6px solid #16a34a',
+                background: 'linear-gradient(90deg, #e8fbe9 60%, #fff 100%)',
+                overflow: 'hidden',
+              }}>
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  px: 3,
+                  py: 2.5,
+                  background: 'linear-gradient(90deg, #e8fbe9 60%, #bbf7d0 100%)',
+                  borderTopLeftRadius: 18,
+                  borderTopRightRadius: 18,
+                }}>
+                  <LibraryBooksIcon sx={{ color: '#16a34a', fontSize: 32 }} />
+                  <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#16a34a', fontFamily: 'inherit' }}>
                     Syllabuses Using This Lesson
                   </Typography>
-
+                </Box>
+                <Box sx={{ p: 3 }}>
                   {syllabusesData?.data?.data?.length > 0 ? (
-                    <Grid
-                      container
-                      spacing={2.5}
-                      sx={{
-                        px: { xs: 0, sm: 2 },
-                        mx: { xs: -1, sm: -2 },
-                      }}
-                    >
+                    <Grid container spacing={3}>
                       {syllabusesData.data.data.map((syllabus) => (
-                        <Grid
-                          item
-                          xs={12}
-                          sm={6}
-                          md={4}
-                          lg={3}
-                          key={syllabus.id}
-                        >
-                          <Paper
-                            elevation={0}
+                        <Grid item xs={12} sm={6} md={4} lg={3} key={syllabus.id}>
+                          <Box
                             sx={{
                               p: 2.5,
-                              height: "100%",
-                              bgcolor: "#fff",
-                              border: "1px solid #e0e0e0",
-                              borderRadius: 2,
-                              transition: "all 0.2s ease",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: "pointer",
-                              "&:hover": {
-                                bgcolor: "#f5f5f5",
-                                borderColor: "#1976d2",
-                                transform: "translateY(-2px)",
-                                boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+                              borderRadius: 3,
+                              bgcolor: '#fff',
+                              boxShadow: '0 2px 8px rgba(34,197,94,0.10)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              transition: 'all 0.2s',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: '#f0fdfa',
+                                boxShadow: '0 6px 16px rgba(34,197,94,0.18)',
+                                transform: 'translateY(-2px) scale(1.03)',
                               },
                             }}
                           >
-                            <Typography
-                              sx={{
-                                fontWeight: 500,
-                                color: "#2c3e50",
-                                textAlign: "center",
-                                lineHeight: 1.3,
-                                fontSize: "0.95rem",
-                              }}
-                            >
-                              {syllabus.subject}
-                            </Typography>
-                          </Paper>
+                            <LibraryBooksIcon sx={{ color: '#16a34a', fontSize: 28 }} />
+                            <Typography sx={{ fontWeight: 700, color: '#222', fontSize: '1.08rem', fontFamily: 'inherit' }}>{syllabus.subject}</Typography>
+                          </Box>
                         </Grid>
                       ))}
                     </Grid>
                   ) : (
-                    <Paper
-                      elevation={0}
+                    <Box
                       sx={{
-                        p: 3,
+                        p: 4,
                         textAlign: "center",
                         bgcolor: "#f8f9fa",
                         border: "1px solid #e0e0e0",
-                        borderRadius: 2,
+                        borderRadius: 3,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 2
                       }}
                     >
-                      <Typography color="text.secondary">
+                      <LibraryBooksIcon sx={{ color: '#bdbdbd', fontSize: 40, mb: 1 }} />
+                      <Typography color="text.secondary" fontWeight={600} fontSize="1.1rem">
                         This lesson is not used in any syllabus yet.
                       </Typography>
-                    </Paper>
+                    </Box>
                   )}
-                </Paper>
+                </Box>
               </Box>
             </Box>
           )}
@@ -742,6 +775,11 @@ const LessonManage = () => {
               "&:hover": {
                 backgroundColor: "#1565c0",
               },
+              fontWeight: 700,
+              borderRadius: 2,
+              fontSize: '1.08rem',
+              boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+              fontFamily: 'inherit',
             }}
           >
             Close

@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEventActiveDetail, useRegisterEvent, useChildren } from "@hooks/useEvent";
 import { CircularProgress, Alert, Box, Typography, Paper, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Card, CardContent, Button as MuiButton } from "@mui/material";
 import dayjs from "dayjs";
@@ -20,6 +20,9 @@ const EventDetail = () => {
   const [openRegisterDialog, setOpenRegisterDialog] = React.useState(false);
   const event = data?.data?.data;
   const [snackbar, setSnackbar] = React.useState({ open: false, message: '', severity: 'success' });
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isLoggedIn = !!user;
 
   const handleStudentCheckbox = (id) => {
     setSelectedStudentIds((prev) =>
@@ -49,6 +52,8 @@ const EventDetail = () => {
       {
         onSuccess: () => {
           setSnackbar({ open: true, message: 'Registration successful!', severity: 'success' });
+          setOpenRegisterDialog(false);
+          setSelectedStudentIds([]);
         },
         onError: (error) => {
           setSnackbar({
@@ -56,9 +61,19 @@ const EventDetail = () => {
             message: error?.response?.data?.message || 'Registration failed. Please try again.',
             severity: 'error',
           });
+          setOpenRegisterDialog(false);
+          setSelectedStudentIds([]);
         },
       }
     );
+  };
+
+  const handleRegisterClick = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+    handleOpenRegisterDialog();
   };
 
   // Breadcrumbs
@@ -110,8 +125,8 @@ const EventDetail = () => {
             <h1 className="text-3xl font-bold text-blue-700 mb-2">{event.name}</h1>
             {/* Event date/time under title */}
             <div className="flex flex-wrap gap-2 mb-2">
-              <Chip label={`Start: ${formatDateTime(event.startTime)}`} color="primary" size="small" />
-              <Chip label={`End: ${formatDateTime(event.endTime)}`} color="primary" size="small" />
+              <Chip label={`Start: ${event.startTime}`} color="primary" size="small" />
+              <Chip label={`End: ${event.endTime}`} color="primary" size="small" />
               <Chip label={`Location: ${event.location}`} color="secondary" size="small" />
               {event.category && <Chip label={event.category} color="info" size="small" />}
             </div>
@@ -123,9 +138,9 @@ const EventDetail = () => {
           <div className="flex-shrink-0">
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow transition-colors text-base disabled:opacity-60"
-              onClick={handleOpenRegisterDialog}
+              onClick={handleRegisterClick}
             >
-              Đăng ký sự kiện
+              Register Event
             </button>
             {/* Dialog chọn học sinh */}
             <Dialog
@@ -191,14 +206,7 @@ const EventDetail = () => {
                 ) : (
                   <div className="py-4 text-center text-gray-500">No children available for registration.</div>
                 )}
-                {registerEventMutation.isSuccess && (
-                  <div className="mt-4 text-green-600 font-medium text-sm text-center">Registration successful!</div>
-                )}
-                {registerEventMutation.isError && (
-                  <div className="mt-4 text-red-600 font-medium text-sm text-center">
-                    {registerEventMutation.error?.response?.data?.message || 'Registration failed. Please try again.'}
-                  </div>
-                )}
+                
               </DialogContent>
               <DialogActions>
                 <MuiButton onClick={handleCloseRegisterDialog} color="secondary">Close</MuiButton>

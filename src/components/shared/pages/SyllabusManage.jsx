@@ -38,6 +38,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Tooltip,
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -46,8 +47,133 @@ import { useLessonList } from "@hooks/useLesson";
 import LayersIcon from '@mui/icons-material/Layers';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import InfoIcon from '@mui/icons-material/Info';
+import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import StepConnector, { stepConnectorClasses } from '@mui/material/StepConnector';
+import { styled } from '@mui/material/styles';
 
 const HOURS_PER_WEEK = 30;
+
+// Custom Step Icon
+const CustomStepIconRoot = styled('div')(({ theme, ownerState }) => ({
+  backgroundColor: ownerState.active
+    ? '#1976d2'
+    : ownerState.completed
+    ? '#2e7d32'
+    : '#e3f2fd',
+  zIndex: 1,
+  color: '#fff',
+  width: 38,
+  height: 38,
+  display: 'flex',
+  borderRadius: '50%',
+  justifyContent: 'center',
+  alignItems: 'center',
+  fontWeight: 700,
+  fontSize: '1.25rem',
+  boxShadow: ownerState.active
+    ? '0 4px 16px rgba(25,118,210,0.18)'
+    : ownerState.completed
+    ? '0 4px 16px rgba(46,125,50,0.18)'
+    : '0 2px 8px rgba(25,118,210,0.08)',
+  border: ownerState.active
+    ? '2.5px solid #1976d2'
+    : ownerState.completed
+    ? '2.5px solid #2e7d32'
+    : '2.5px solid #e3f2fd',
+  transition: 'all 0.2s',
+}));
+
+function CustomStepIcon(props) {
+  const { active, completed, className, icon } = props;
+  return (
+    <CustomStepIconRoot ownerState={{ active, completed }} className={className}>
+      {icon}
+    </CustomStepIconRoot>
+  );
+}
+
+// Custom Connector
+const CustomConnector = styled(StepConnector)(({ theme }) => ({
+  [`&.${stepConnectorClasses.alternativeLabel}`]: {
+    top: '50%',
+    transform: 'translateY(-50%)',
+  },
+  [`& .${stepConnectorClasses.line}`]: {
+    borderColor: '#e3f2fd',
+    borderTopWidth: 4,
+    borderRadius: 2,
+    transition: 'border-color 0.2s',
+  },
+  [`&.${stepConnectorClasses.active} .${stepConnectorClasses.line}`]: {
+    borderColor: '#1976d2',
+  },
+  [`&.${stepConnectorClasses.completed} .${stepConnectorClasses.line}`]: {
+    borderColor: '#2e7d32',
+  },
+}));
+
+const ModernStepIconRoot = styled('div')(({ ownerState }) => ({
+  backgroundColor: ownerState.active
+    ? '#1976d2'
+    : ownerState.completed
+    ? '#009688'
+    : '#e3f2fd',
+  zIndex: 1,
+  color: ownerState.active || ownerState.completed ? '#fff' : '#90caf9',
+  width: 40,
+  height: 40,
+  display: 'flex',
+  borderRadius: '50%',
+  justifyContent: 'center',
+  alignItems: 'center',
+  fontWeight: 900,
+  fontSize: '1.25rem',
+  boxShadow: ownerState.active
+    ? '0 4px 16px rgba(25,118,210,0.18)'
+    : ownerState.completed
+    ? '0 4px 16px rgba(0,150,136,0.18)'
+    : '0 2px 8px rgba(158,158,158,0.08)',
+  border: ownerState.active
+    ? '2.5px solid #1976d2'
+    : ownerState.completed
+    ? '2.5px solid #009688'
+    : '2.5px solid #e3f2fd',
+  transition: 'all 0.2s',
+}));
+
+function ModernStepIcon(props) {
+  const { active, completed, className, icon } = props;
+  return (
+    <ModernStepIconRoot ownerState={{ active, completed }} className={className}>
+      {completed ? <span style={{ fontSize: 22, fontWeight: 900 }}>✓</span> : icon}
+    </ModernStepIconRoot>
+  );
+}
+
+const ModernConnector = styled(StepConnector)(({ theme }) => ({
+  [`&.${stepConnectorClasses.alternativeLabel}`]: {
+    top: '50%',
+    transform: 'translateY(-50%)',
+    left: 'calc(-50% + 20px)',
+    right: 'calc(50% + 20px)',
+    width: 'auto',
+  },
+  [`& .${stepConnectorClasses.line}`]: {
+    borderColor: '#e3f2fd',
+    borderTopWidth: 4,
+    borderRadius: 2,
+    transition: 'border-color 0.2s',
+  },
+  [`&.${stepConnectorClasses.active} .${stepConnectorClasses.line}`]: {
+    borderColor: '#1976d2',
+  },
+  [`&.${stepConnectorClasses.completed} .${stepConnectorClasses.line}`]: {
+    borderColor: '#009688',
+  },
+}));
 
 const SyllabusManage = () => {
   const [grade, setGrade] = useState("LEAF");
@@ -379,39 +505,51 @@ const SyllabusManage = () => {
           pb: 2,
         }}
       >
-        <Box>
-          <Typography
-            variant="h4"
-            component="h1"
-            sx={{
-              color: "#1976d2",
-              fontWeight: "bold",
-              mb: 1,
-            }}
-          >
-            Syllabus Management
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              color: "#666",
-              fontWeight: "medium",
-            }}
-          >
-            Total Lessons: {totalItems}
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <LibraryBooksIcon sx={{ color: '#1976d2', fontSize: 38 }} />
+          <Box>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                color: "#1976d2",
+                fontWeight: "bold",
+                mb: 1,
+              }}
+            >
+              Syllabus Management
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                color: "#666",
+                fontWeight: "medium",
+              }}
+            >
+              Total Lessons: {totalItems}
+            </Typography>
+          </Box>
         </Box>
         <Button
           variant="contained"
           sx={{
-            backgroundColor: "#1976d2",
-            "&:hover": {
-              backgroundColor: "#1565c0",
-            },
+            background: "linear-gradient(90deg, #1976d2 60%, #42a5f5 100%)",
+            color: '#fff',
+            fontWeight: 700,
+            borderRadius: 2,
+            boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
             px: 3,
+            py: 1.2,
+            fontSize: '1.08rem',
+            '&:hover': {
+              background: "linear-gradient(90deg, #1565c0 60%, #42a5f5 100%)",
+              boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+            },
+            gap: 1.2
           }}
           color="primary"
           onClick={() => showModal()}
+          startIcon={<AddCircleOutlineIcon />}
         >
           Create New Syllabus
         </Button>
@@ -469,76 +607,122 @@ const SyllabusManage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{
+          borderRadius: 3,
+          boxShadow: '0 4px 24px rgba(25,118,210,0.08)',
+          overflow: 'hidden',
+          border: '1.5px solid #e3f2fd',
+        }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Subject</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Description</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Number of Week</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Hours of Syllabuses</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Grade</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Actions</TableCell>
+              <TableRow sx={{ background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)' }}>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Subject</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Description</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Number of Week</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Hours of Syllabuses</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Grade</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {displayedData.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell align="center">{row.subject || "-"}</TableCell>
+                <TableRow
+                  key={row.id}
+                  sx={{
+                    transition: 'background 0.2s',
+                    '&:hover': { backgroundColor: '#f1f8fd' },
+                    '&:last-child td, &:last-child th': { borderBottom: 0 }
+                  }}
+                >
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>{row.subject || "-"}</TableCell>
                   <TableCell align="center">{row.description || "-"}</TableCell>
                   <TableCell align="center">{row.numberOfWeek || "-"}</TableCell>
                   <TableCell align="center">{row.maxHoursOfSyllabus || "-"}</TableCell>
-                  <TableCell align="center">{row.grade || "-"}</TableCell>
                   <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      <Button
-                        variant="contained"
-                        sx={{
-                          backgroundColor: '#42a5f5',
-                          color: '#fff',
-                          minWidth: 80,
-                          '&:hover': { backgroundColor: '#1976d2' },
-                          fontWeight: 600
-                        }}
-                        onClick={() => handleViewDetail(row.id)}
-                        size="small"
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="contained"
-                        sx={{
-                          backgroundColor: '#1976d2',
-                          color: '#fff',
-                          minWidth: 80,
-                          '&:hover': { backgroundColor: '#1565c0' },
-                          fontWeight: 600
-                        }}
-                        onClick={() => showModal(row)}
-                        size="small"
-                        disabled={row.isAssigned}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="contained"
-                        sx={{
-                          backgroundColor: '#8e24aa',
-                          color: '#fff',
-                          minWidth: 120,
-                          '&:hover': { backgroundColor: '#6a1b9a' },
-                          fontWeight: 600
-                        }}
-                        onClick={() =>
-                          navigate(
-                            `/user/education/syllabus/assignlesson/${row.id}`,
-                            { state: { syllabusData: row } }
-                          )
-                        }
-                        size="small"
-                      >
-                        Assign Lessons
-                      </Button>
+                    <Box sx={{
+                      display: 'inline-block',
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 2,
+                      border: '1.5px solid #1976d2',
+                      color: '#1976d2',
+                      fontWeight: 700,
+                      fontSize: '0.98rem',
+                      background: '#e3f2fd',
+                      minWidth: 70,
+                      textAlign: 'center',
+                    }}>{row.grade || "-"}</Box>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
+                      <Tooltip title="View Details">
+                        <Button
+                          variant="contained"
+                          sx={{
+                            backgroundColor: '#42a5f5',
+                            color: '#fff',
+                            minWidth: 44,
+                            borderRadius: 2,
+                            boxShadow: '0 2px 8px rgba(66,165,245,0.10)',
+                            '&:hover': { backgroundColor: '#1976d2' },
+                            fontWeight: 600,
+                            p: 1.2
+                          }}
+                          onClick={() => handleViewDetail(row.id)}
+                          size="small"
+                          startIcon={<VisibilityIcon />}
+                        >
+                          View
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title="Edit Syllabus">
+                        <span>
+                          <Button
+                            variant="contained"
+                            sx={{
+                              backgroundColor: '#1976d2',
+                              color: '#fff',
+                              minWidth: 44,
+                              borderRadius: 2,
+                              boxShadow: '0 2px 8px rgba(25,118,210,0.10)',
+                              '&:hover': { backgroundColor: '#1565c0' },
+                              fontWeight: 600,
+                              p: 1.2
+                            }}
+                            onClick={() => showModal(row)}
+                            size="small"
+                            startIcon={<EditIcon />}
+                            disabled={row.isAssigned}
+                          >
+                            Edit
+                          </Button>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title="Assign Lessons">
+                        <Button
+                          variant="contained"
+                          sx={{
+                            backgroundColor: '#8e24aa',
+                            color: '#fff',
+                            minWidth: 44,
+                            borderRadius: 2,
+                            boxShadow: '0 2px 8px rgba(142,36,170,0.10)',
+                            '&:hover': { backgroundColor: '#6a1b9a' },
+                            fontWeight: 600,
+                            p: 1.2
+                          }}
+                          onClick={() =>
+                            navigate(
+                              `/user/education/syllabus/assignlesson/${row.id}`,
+                              { state: { syllabusData: row } }
+                            )
+                          }
+                          size="small"
+                          startIcon={<LibraryBooksIcon />}
+                        >
+                          Assign
+                        </Button>
+                      </Tooltip>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -553,6 +737,12 @@ const SyllabusManage = () => {
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{
+              borderTop: '1.5px solid #e3f2fd',
+              background: '#f8fafc',
+              '.MuiTablePagination-toolbar': { fontWeight: 600 },
+              '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { color: '#1976d2' }
+            }}
           />
         </TableContainer>
       )}
@@ -560,21 +750,36 @@ const SyllabusManage = () => {
       <Dialog
         open={isModalOpen}
         onClose={handleClose}
-        maxWidth={editingId ? "sm" : "md"}
+        maxWidth={editingId ? "sm" : "sm"}
         fullWidth
         PaperProps={{
           sx: {
             minHeight: editingId ? "auto" : "70vh",
             display: "flex",
             flexDirection: "column",
+            borderRadius: 4,
+            boxShadow: '0 8px 32px rgba(25,118,210,0.18)',
+            border: '2px solid #e3f2fd',
+            background: 'linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)',
           },
         }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          fontWeight: 800,
+          color: '#1976d2',
+          fontSize: '1.5rem',
+          background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)',
+          borderBottom: '2px solid #e3f2fd',
+          py: 2.5,
+          px: 3
+        }}>
+          {editingId ? <EditIcon sx={{ color: '#1976d2', fontSize: 28 }} /> : <AddCircleOutlineIcon sx={{ color: '#1976d2', fontSize: 28 }} />}
           {editingId ? "Edit Syllabus" : "Create New Syllabus"}
         </DialogTitle>
-
-        <DialogContent>
+        <DialogContent sx={{ px: 4, py: 3 }}>
           {editingId ? (
             // Edit Form
             <form onSubmit={handleSubmit}>
@@ -739,7 +944,9 @@ const SyllabusManage = () => {
             <Box sx={{ width: "100%", mt: 2 }}>
               <Box
                 sx={{
-                  width: "70%",
+                  width: "60%",
+                  minWidth: 320,
+                  maxWidth: 500,
                   margin: "0 auto",
                   display: "flex",
                   justifyContent: "center",
@@ -747,53 +954,50 @@ const SyllabusManage = () => {
               >
                 <Stepper
                   activeStep={activeStep}
+                  orientation="horizontal"
                   sx={{
-                    width: "100%",
-                    "& .MuiStepLabel-root": {
-                      padding: "24px 12px",
+                    width: '100%',
+                    px: 2,
+                    mb: 2,
+                    gap: 4,
+                    justifyContent: 'center',
+                    '& .MuiStep-root': {
+                      flex: 1,
+                      maxWidth: 'none',
+                      minWidth: 180,
                     },
-                    "& .MuiStepIcon-root": {
-                      width: "35px",
-                      height: "35px",
-                      color: "#e3f2fd",
-                      "&.Mui-active": {
-                        color: "#1976d2",
+                    '& .MuiStepLabel-root': {
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      minWidth: 140,
+                      px: 1,
+                    },
+                    '& .MuiStepLabel-label': {
+                      fontSize: '1.08rem',
+                      fontWeight: 700,
+                      color: '#bdbdbd',
+                      textAlign: 'left',
+                      ml: 1,
+                      transition: 'color 0.2s',
+                      '&.Mui-active': {
+                        color: '#1976d2',
+                        fontWeight: 900,
                       },
-                      "&.Mui-completed": {
-                        color: "#2e7d32",
+                      '&.Mui-completed': {
+                        color: '#009688',
+                        fontWeight: 900,
                       },
                     },
-                    "& .MuiStepLabel-label": {
-                      fontSize: "1.1rem",
-                      fontWeight: 500,
-                      "&.Mui-active": {
-                        color: "#1976d2",
-                        fontWeight: 600,
-                      },
-                      "&.Mui-completed": {
-                        color: "#2e7d32",
-                        fontWeight: 600,
-                      },
-                    },
-                    "& .MuiStepConnector-line": {
-                      borderColor: "#e3f2fd",
-                      borderWidth: "3px",
-                    },
-                    "& .MuiStepConnector-root.Mui-active .MuiStepConnector-line":
-                      {
-                        borderColor: "#1976d2",
-                      },
-                    "& .MuiStepConnector-root.Mui-completed .MuiStepConnector-line":
-                      {
-                        borderColor: "#2e7d32",
-                      },
                   }}
+                  connector={<ModernConnector />}
+                  alternativeLabel
                 >
                   <Step>
-                    <StepLabel>Basic Information</StepLabel>
+                    <StepLabel StepIconComponent={ModernStepIcon}>Basic Information</StepLabel>
                   </Step>
                   <Step>
-                    <StepLabel>Select Lessons</StepLabel>
+                    <StepLabel StepIconComponent={ModernStepIcon}>Teacher Emails</StepLabel>
                   </Step>
                 </Stepper>
               </Box>
@@ -1055,11 +1259,71 @@ const SyllabusManage = () => {
 
         {/* Actions */}
         {!editingId && (
-          <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
-            {activeStep > 0 && <Button onClick={handleBack}>Back</Button>}
+          <DialogActions
+            sx={{
+              borderTop: '2px solid #e3f2fd',
+              backgroundColor: '#f8f9fa',
+              p: 2,
+              justifyContent: 'center',
+              gap: 2
+            }}
+          >
+            <Button
+              onClick={handleClose}
+              sx={{
+                minWidth: 120,
+                color: '#1976d2',
+                fontWeight: 700,
+                borderRadius: 2,
+                backgroundColor: 'transparent',
+                boxShadow: 'none',
+                fontSize: '1.08rem',
+                '&:hover': {
+                  backgroundColor: '#e3f2fd',
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            {activeStep > 0 && (
+              <Button
+                onClick={handleBack}
+                sx={{
+                  minWidth: 120,
+                  color: '#1976d2',
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  backgroundColor: 'transparent',
+                  boxShadow: 'none',
+                  fontSize: '1.08rem',
+                  '&:hover': {
+                    backgroundColor: '#e3f2fd',
+                  },
+                }}
+              >
+                Back
+              </Button>
+            )}
             {activeStep === 0 ? (
-              <Button onClick={handleNext}>Next</Button>
+              <Button
+                onClick={handleNext}
+                variant="contained"
+                sx={{
+                  minWidth: 120,
+                  backgroundColor: '#1976d2',
+                  color: '#fff',
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+                  fontSize: '1.08rem',
+                  '&:hover': {
+                    backgroundColor: '#1565c0',
+                    boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+                  },
+                }}
+              >
+                Next
+              </Button>
             ) : (
               <form onSubmit={handleSubmit} style={{ display: "inline" }}>
                 <Button
@@ -1067,6 +1331,19 @@ const SyllabusManage = () => {
                   variant="contained"
                   color="primary"
                   disabled={createSyllabusMutation.isPending}
+                  sx={{
+                    minWidth: 120,
+                    backgroundColor: '#1976d2',
+                    color: '#fff',
+                    fontWeight: 700,
+                    borderRadius: 2,
+                    boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+                    fontSize: '1.08rem',
+                    '&:hover': {
+                      backgroundColor: '#1565c0',
+                      boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+                    },
+                  }}
                 >
                   {createSyllabusMutation.isPending ? (
                     <CircularProgress size={24} />
@@ -1104,8 +1381,11 @@ const SyllabusManage = () => {
         fullWidth
         sx={{
           "& .MuiDialog-paper": {
-            borderRadius: 2,
-            background: "linear-gradient(to bottom, #ffffff, #f8f9fa)",
+            borderRadius: 4,
+            background: "linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)",
+            boxShadow: '0 8px 32px rgba(25,118,210,0.18)',
+            p: 0,
+            fontFamily: 'Inter, Roboto, Arial, sans-serif',
           },
         }}
       >
@@ -1113,15 +1393,18 @@ const SyllabusManage = () => {
           sx={{
             textAlign: "center",
             borderBottom: "2px solid #e3f2fd",
-            backgroundColor: "#bbdefb",
+            background: "linear-gradient(90deg, #e3f2fd 60%, #fff 100%)",
             color: "#1976d2",
-            fontWeight: "bold",
-            py: 2,
+            fontWeight: 900,
+            fontSize: '2rem',
+            py: 3,
+            letterSpacing: 1,
+            fontFamily: 'Inter, Roboto, Arial, sans-serif',
           }}
         >
           Syllabus Details
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 0 }}>
           {isLoadingDetail ? (
             <Box
               sx={{
@@ -1134,128 +1417,150 @@ const SyllabusManage = () => {
               <CircularProgress size={40} />
             </Box>
           ) : detailData?.data?.data ? (
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: { xs: 2, sm: 4 }, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
               {/* Block 1: Syllabus Information */}
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  mb: 3,
-                  borderRadius: 3,
-                  borderLeft: '6px solid #38bdf8',
-                  background: 'linear-gradient(90deg, #e0f2fe 60%, #fff 100%)',
-                  boxShadow: '0 2px 8px rgba(56,189,248,0.08)',
-                }}
-              >
-                <Typography variant="h5" sx={{ fontWeight: 800, color: '#0ea5e9', mb: 2, letterSpacing: 0.5 }}>
-                  Syllabus Information
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Paper sx={{ display: 'flex', alignItems: 'center', p: 2, borderRadius: 2, bgcolor: '#fff', boxShadow: 'none', minHeight: 56 }}>
-                      <LayersIcon sx={{ color: '#38bdf8', mr: 1, fontSize: 20 }} />
-                      <Box>
-                        <Typography fontSize="0.97rem" color="#888" fontWeight={500} sx={{ mb: 0.2 }}>Grade :</Typography>
-                        <Typography fontWeight={700} color="#222" fontSize="1.08rem">{detailData.data.data.grade}</Typography>
-                      </Box>
-                    </Paper>
+              <Box sx={{
+                borderRadius: 4,
+                boxShadow: '0 4px 24px rgba(56,189,248,0.10)',
+                borderLeft: '6px solid #1976d2',
+                mb: 4,
+                background: 'linear-gradient(90deg, #e3f0fd 60%, #fff 100%)',
+                overflow: 'hidden',
+              }}>
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  px: 3,
+                  py: 2.5,
+                  background: 'linear-gradient(90deg, #e3f2fd 60%, #bbdefb 100%)',
+                  borderTopLeftRadius: 18,
+                  borderTopRightRadius: 18,
+                }}>
+                  <LayersIcon sx={{ color: '#1976d2', fontSize: 32 }} />
+                  <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#1976d2', fontFamily: 'inherit' }}>
+                    Syllabus Information
+                  </Typography>
+                </Box>
+                <Grid container spacing={3} sx={{ p: 3 }}>
+                  {/* Hàng 1: Subject, Number of Week, Hours of Syllabus */}
+                  <Grid item xs={12} sm={4}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <LibraryBooksIcon sx={{ color: '#90caf9', fontSize: 22 }} />
+                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 90 }}>Subject:</Typography>
+                    </Box>
+                    <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.08rem', fontFamily: 'inherit', ml: 4 }}>{detailData.data.data.subject}</Typography>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Paper sx={{ display: 'flex', alignItems: 'center', p: 2, borderRadius: 2, bgcolor: '#fff', boxShadow: 'none', minHeight: 56 }}>
-                      <AccessTimeIcon sx={{ color: '#1976d2', mr: 1, fontSize: 20 }} />
-                      <Box>
-                        <Typography fontSize="0.97rem" color="#888" fontWeight={500} sx={{ mb: 0.2 }}>Duration :</Typography>
-                        <Typography fontWeight={700} color="#222" fontSize="1.08rem">{detailData.data.data.numberOfWeek} weeks</Typography>
-                      </Box>
-                    </Paper>
+                  <Grid item xs={12} sm={4}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <AccessTimeIcon sx={{ color: '#90caf9', fontSize: 22 }} />
+                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 140 }}>Number of Week:</Typography>
+                    </Box>
+                    <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.08rem', fontFamily: 'inherit', ml: 4 }}>{detailData.data.data.numberOfWeek} weeks</Typography>
                   </Grid>
-                  <Grid item xs={12} sm={12}>
-                    <Paper sx={{ display: 'flex', alignItems: 'center', p: 2, borderRadius: 2, bgcolor: '#fff', boxShadow: 'none', minHeight: 56 }}>
-                      <InfoIcon sx={{ color: '#0ea5e9', mr: 1, fontSize: 20 }} />
-                      <Box>
-                        <Typography fontSize="0.97rem" color="#888" fontWeight={500} sx={{ mb: 0.2 }}>Description :</Typography>
-                        <Typography fontWeight={700} color="#222" fontSize="1.08rem" sx={{ whiteSpace: 'pre-wrap' }}>{detailData.data.data.description}</Typography>
-                      </Box>
-                    </Paper>
+                  <Grid item xs={12} sm={4}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <AccessTimeIcon sx={{ color: '#90caf9', fontSize: 22 }} />
+                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 120 }}>Hours of Syllabus:</Typography>
+                    </Box>
+                    <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.08rem', fontFamily: 'inherit', ml: 4 }}>{(detailData.data.data.numberOfWeek * 30) || 'N/A'} hours</Typography>
+                  </Grid>
+                  {/* Hàng 2: Grade, Description */}
+                  <Grid item xs={12} sm={4}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <LayersIcon sx={{ color: '#90caf9', fontSize: 22 }} />
+                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 110 }}>Grade:</Typography>
+                    </Box>
+                    <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.08rem', fontFamily: 'inherit', ml: 4 }}>{detailData.data.data.grade}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={8}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <InfoIcon sx={{ color: '#90caf9', fontSize: 22 }} />
+                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 120 }}>Description:</Typography>
+                    </Box>
+                    <Typography sx={{ fontWeight: 500, color: '#222', fontSize: '1.08rem', fontFamily: 'inherit', background: '#f5faff', borderRadius: 2, px: 2, py: 1, ml: 4 }}>{detailData.data.data.description}</Typography>
                   </Grid>
                 </Grid>
-              </Paper>
+              </Box>
 
               {/* Block 2: Lessons */}
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  borderRadius: 3,
-                  borderLeft: '6px solid #22c55e',
-                  background: 'linear-gradient(90deg, #dcfce7 60%, #fff 100%)',
-                  boxShadow: '0 2px 8px rgba(34,197,94,0.08)',
-                }}
-              >
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#16a34a', mb: 2 }}>
-                  Lessons
-                </Typography>
-                {isLoadingAssignedLessons ? (
-                  <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : assignedLessonsData?.data?.data?.length > 0 ? (
-                  <Grid container spacing={2.5}>
-                    {assignedLessonsData.data.data.map((lesson) => (
-                      <Grid item xs={12} sm={6} md={4} lg={3} key={lesson.id}>
-                        <Paper
-                          elevation={0}
-                          sx={{
-                            p: 2.5,
-                            height: "100%",
-                            bgcolor: "#fff",
-                            border: "1px solid #e0e0e0",
-                            borderRadius: 2,
-                            transition: "all 0.2s ease",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                            '&:hover': {
-                              bgcolor: '#f0fdfa',
-                              borderColor: '#22c55e',
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 4px 8px rgba(34,197,94,0.08)',
-                            },
-                          }}
-                        >
-                          <Typography
+              <Box sx={{
+                borderRadius: 4,
+                boxShadow: '0 4px 24px rgba(34,197,94,0.10)',
+                borderLeft: '6px solid #16a34a',
+                background: 'linear-gradient(90deg, #e8fbe9 60%, #fff 100%)',
+                overflow: 'hidden',
+              }}>
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  px: 3,
+                  py: 2.5,
+                  background: 'linear-gradient(90deg, #e8fbe9 60%, #bbf7d0 100%)',
+                  borderTopLeftRadius: 18,
+                  borderTopRightRadius: 18,
+                }}>
+                  <LibraryBooksIcon sx={{ color: '#16a34a', fontSize: 32 }} />
+                  <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#16a34a', fontFamily: 'inherit' }}>
+                    Lessons
+                  </Typography>
+                </Box>
+                <Box sx={{ p: 3 }}>
+                  {isLoadingAssignedLessons ? (
+                    <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                      <CircularProgress size={24} />
+                    </Box>
+                  ) : assignedLessonsData?.data?.data?.length > 0 ? (
+                    <Grid container spacing={3}>
+                      {assignedLessonsData.data.data.map((lesson) => (
+                        <Grid item xs={12} sm={6} md={4} lg={3} key={lesson.id}>
+                          <Box
                             sx={{
-                              fontWeight: 500,
-                              color: "#2c3e50",
-                              textAlign: "center",
-                              lineHeight: 1.3,
-                              fontSize: "0.95rem",
+                              p: 2.5,
+                              borderRadius: 3,
+                              bgcolor: '#fff',
+                              boxShadow: '0 2px 8px rgba(34,197,94,0.10)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              transition: 'all 0.2s',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: '#f0fdfa',
+                                boxShadow: '0 6px 16px rgba(34,197,94,0.18)',
+                                transform: 'translateY(-2px) scale(1.03)',
+                              },
                             }}
                           >
-                            {lesson.topic}
-                          </Typography>
-                        </Paper>
-                      </Grid>
-                    ))}
-                  </Grid>
-                ) : (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 3,
-                      textAlign: "center",
-                      bgcolor: "#f8f9fa",
-                      border: "1px solid #e0e0e0",
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Typography color="text.secondary">
-                      No lessons assigned.
-                    </Typography>
-                  </Paper>
-                )}
-              </Paper>
+                            <LibraryBooksIcon sx={{ color: '#16a34a', fontSize: 28 }} />
+                            <Typography sx={{ fontWeight: 700, color: '#222', fontSize: '1.08rem', fontFamily: 'inherit' }}>{lesson.topic}</Typography>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  ) : (
+                    <Box
+                      sx={{
+                        p: 4,
+                        textAlign: "center",
+                        bgcolor: "#f8f9fa",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 3,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 2
+                      }}
+                    >
+                      <LibraryBooksIcon sx={{ color: '#bdbdbd', fontSize: 40, mb: 1 }} />
+                      <Typography color="text.secondary" fontWeight={600} fontSize="1.1rem">
+                        No lessons assigned.
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
             </Box>
           ) : (
             <Box sx={{ p: 4, textAlign: "center" }}>
@@ -1285,6 +1590,11 @@ const SyllabusManage = () => {
               "&:hover": {
                 backgroundColor: "#1565c0",
               },
+              fontWeight: 700,
+              borderRadius: 2,
+              fontSize: '1.08rem',
+              boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+              fontFamily: 'inherit',
             }}
           >
             Close

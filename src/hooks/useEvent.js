@@ -59,8 +59,8 @@ export const useCancelEvent = () => {
 
   return useMutation({
     mutationKey: ['cancelEvent'],
-    mutationFn: async (id) => {
-      const response = await eventService.cancelEvent(id);
+    mutationFn: async ({ id, reason }) => {
+      const response = await eventService.cancelEvent({ id, reason });
       return response.data;
     },
     onSuccess: (data, { id }) => {
@@ -118,5 +118,12 @@ export const useChildren = () => {
   return useQuery({
     queryKey: ['children'],
     queryFn: eventService.getChildren,
+  });
+};
+
+export const useRegisteredEvents = () => {
+  return useQuery({
+    queryKey: ['registeredEvents'],
+    queryFn: eventService.getRegisteredEvents,
   });
 };

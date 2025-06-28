@@ -30,9 +30,9 @@ export const createEvent = async (data) => {
     }
 };
 
-export const cancelEvent = async (id) => {
+export const cancelEvent = async ({ id, reason }) => {
     try {
-        const response = await apiClient.put(`/education/event/cancel?id=${id}`);
+        const response = await apiClient.put(`/education/event/cancel?id=${id}`, { reason });
         return response;
     } catch (error) {
         console.error(`Cancel event error for ID ${id}:`, error);
@@ -92,6 +92,16 @@ export const getChildren = async () => {
         return response.data;
     } catch (error) {
         console.error("Error fetching children:", error);
+        throw error;
+    }
+};
+
+export const getRegisteredEvents = async () => {
+    try {
+        const response = await apiClient.get("/parent/event/register");
+        return response;
+    } catch (error) {
+        console.error("Get registered events error:", error);
         throw error;
     }
 };
