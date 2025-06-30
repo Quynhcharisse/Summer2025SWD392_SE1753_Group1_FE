@@ -44,6 +44,73 @@ import dayjs from 'dayjs';
 import CloseIcon from '@mui/icons-material/Close';
 import { uploadImageToCloudinary, deleteImageFromCloudinary, getPublicIdFromUrl, validateImage } from '@utils/cloudinary';
 import { useTeacherList } from "@hooks/useTeacher";
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import StepConnector, { stepConnectorClasses } from '@mui/material/StepConnector';
+import { styled } from '@mui/material/styles';
+
+// Custom Step Icon hiện đại, đối xứng
+const ModernStepIconRoot = styled('div')(({ ownerState }) => ({
+  backgroundColor: ownerState.active
+    ? '#1976d2'
+    : ownerState.completed
+    ? '#009688'
+    : '#e3f2fd',
+  zIndex: 1,
+  color: ownerState.active || ownerState.completed ? '#fff' : '#90caf9',
+  width: 40,
+  height: 40,
+  display: 'flex',
+  borderRadius: '50%',
+  justifyContent: 'center',
+  alignItems: 'center',
+  fontWeight: 900,
+  fontSize: '1.25rem',
+  boxShadow: ownerState.active
+    ? '0 4px 16px rgba(25,118,210,0.18)'
+    : ownerState.completed
+    ? '0 4px 16px rgba(0,150,136,0.18)'
+    : '0 2px 8px rgba(158,158,158,0.08)',
+  border: ownerState.active
+    ? '2.5px solid #1976d2'
+    : ownerState.completed
+    ? '2.5px solid #009688'
+    : '2.5px solid #e3f2fd',
+  transition: 'all 0.2s',
+}));
+
+function ModernStepIcon(props) {
+  const { active, completed, className, icon } = props;
+  return (
+    <ModernStepIconRoot ownerState={{ active, completed }} className={className}>
+      {completed ? <span style={{ fontSize: 22, fontWeight: 900 }}>✓</span> : icon}
+    </ModernStepIconRoot>
+  );
+}
+
+const ModernConnector = styled(StepConnector)(({ theme }) => ({
+  [`&.${stepConnectorClasses.alternativeLabel}`]: {
+    top: '50%',
+    transform: 'translateY(-50%)',
+    left: 'calc(-50% + 20px)',
+    right: 'calc(50% + 20px)',
+    width: 'auto',
+  },
+  [`& .${stepConnectorClasses.line}`]: {
+    borderColor: '#e3f2fd',
+    borderTopWidth: 4,
+    borderRadius: 2,
+    transition: 'border-color 0.2s',
+  },
+  [`&.${stepConnectorClasses.active} .${stepConnectorClasses.line}`]: {
+    borderColor: '#1976d2',
+  },
+  [`&.${stepConnectorClasses.completed} .${stepConnectorClasses.line}`]: {
+    borderColor: '#009688',
+  },
+}));
 
 const EventManage = () => {
   const navigate = useNavigate();
@@ -72,6 +139,7 @@ const EventManage = () => {
   });
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [hoveredEventId, setHoveredEventId] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   // TanStack Query hooks
   const { data: eventResponse, isLoading, isError, error } = useEventList();
@@ -138,6 +206,7 @@ const EventManage = () => {
       hostName: '',
       emails: []
     });
+    setCancelReason('');
   };
 
   const handleInputChange = (e) => {
@@ -240,18 +309,26 @@ const EventManage = () => {
     try {
       const processedData = {
         name: formData.name.trim(),
-        startTime: formData.startTime.toISOString(),
-        endTime: formData.endTime.toISOString(),
+        startTime: formData.startTime ? formData.startTime.format('YYYY-MM-DDTHH:mm:ss') : '',
+        endTime: formData.endTime ? formData.endTime.format('YYYY-MM-DDTHH:mm:ss') : '',
         location: formData.location.trim(),
         description: formData.description.trim(),
-        registrationDeadline: formData.registrationDeadline.toISOString(),
+        registrationDeadline: formData.registrationDeadline ? formData.registrationDeadline.format('YYYY-MM-DDTHH:mm:ss') : '',
         attachmentImg: formData.attachmentImg.trim(),
         hostName: formData.hostName.trim(),
         emails: Array.from(new Set(formData.emails)),
       };
 
       if (editingId) {
-        await cancelEventMutation.mutateAsync(editingId);
+        if (!cancelReason.trim()) {
+          setSnackbar({
+            open: true,
+            message: 'Please provide a reason for cancellation.',
+            severity: 'error'
+          });
+          return;
+        }
+        await cancelEventMutation.mutateAsync({ id: editingId, reason: cancelReason });
         setSnackbar({
           open: true,
           message: 'Event cancelled successfully',
@@ -261,7 +338,7 @@ const EventManage = () => {
         await createEventMutation.mutateAsync(processedData);
         setSnackbar({
           open: true,
-          message: 'Event created successfully',
+          message: 'Event created successfully!',
           severity: 'success'
         });
       }
@@ -270,7 +347,7 @@ const EventManage = () => {
       console.error('Operation error:', error);
       setSnackbar({
         open: true,
-        message: error.message || 'An error occurred',
+        message: error?.response?.data?.message || error.message || 'An error occurred',
         severity: 'error'
       });
     }
@@ -285,8 +362,9 @@ const EventManage = () => {
     setPage(0);
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setSnackbar({ ...snackbar, open: false });
   };
 
   const handleViewDetail = (id) => {
@@ -419,40 +497,53 @@ const EventManage = () => {
           pb: 2,
         }}
       >
-        <Box>
-          <Typography
-            variant="h4"
-            component="h1"
-            sx={{
-              color: "#1976d2",
-              fontWeight: "bold",
-              mb: 1,
-            }}
-          >
-            Event Management
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              color: "#666",
-              fontWeight: "medium",
-            }}
-          >
-            Total Events: {totalItems}
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <EventNoteIcon sx={{ color: '#1976d2', fontSize: 38 }} />
+          <Box>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                color: "#1976d2",
+                fontWeight: "bold",
+                mb: 1,
+              }}
+            >
+              Event Management
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                color: "#666",
+                fontWeight: "medium",
+              }}
+            >
+              Total Events: {totalItems}
+            </Typography>
+          </Box>
         </Box>
         <Button
           variant="contained"
           sx={{
-            backgroundColor: "#1976d2",
-            "&:hover": {
-              backgroundColor: "#1565c0",
-            },
+            background: "linear-gradient(90deg, #1976d2 60%, #42a5f5 100%)",
+            color: '#fff',
+            fontWeight: 700,
+            borderRadius: 2,
+            boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
             px: 3,
+            py: 1.2,
+            fontSize: '1.08rem',
+            '&:hover': {
+              background: "linear-gradient(90deg, #1565c0 60%, #42a5f5 100%)",
+              boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+            },
+            gap: 1.2
           }}
+          color="primary"
           onClick={() => showModal()}
+          startIcon={<AddCircleOutlineIcon />}
         >
-          Create New Event
+          CREATE NEW EVENT
         </Button>
       </Box>
 
@@ -465,9 +556,10 @@ const EventManage = () => {
           component={Paper}
           elevation={0}
           sx={{ 
-            borderRadius: 2,
+            borderRadius: 3,
             overflow: 'hidden',
-            border: '1px solid #e0e0e0',
+            border: '1.5px solid #e3f2fd',
+            boxShadow: '0 4px 24px rgba(25,118,210,0.08)',
             '& .MuiTableCell-root': {
               borderColor: '#e0e0e0',
               py: 2.5,
@@ -482,38 +574,48 @@ const EventManage = () => {
         >
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Name</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Start Time</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>End Time</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Location</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Host Name</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Status</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.05rem' }}>Actions</TableCell>
+              <TableRow sx={{ background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)' }}>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Name</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Start Time</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>End Time</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Location</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Host Name</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Status</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {displayedData.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell align="center">{row.name || '-'}</TableCell>
+                <TableRow key={row.id}
+                  sx={{
+                    transition: 'background 0.2s',
+                    '&:hover': { backgroundColor: '#f1f8fd' },
+                    '&:last-child td, &:last-child th': { borderBottom: 0 }
+                  }}
+                >
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>{row.name || '-'}</TableCell>
                   <TableCell align="center">{row.startTime || '-'}</TableCell>
                   <TableCell align="center">{row.endTime || '-'}</TableCell>
                   <TableCell align="center">{row.location || '-'}</TableCell>
                   <TableCell align="center">{row.hostName || '-'}</TableCell>
                   <TableCell align="center">{renderStatusBadge(row.status)}</TableCell>
                   <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
                       <Button
                         variant="contained"
                         sx={{
                           backgroundColor: '#42a5f5',
                           color: '#fff',
-                          minWidth: 80,
+                          minWidth: 44,
+                          borderRadius: 2,
+                          boxShadow: '0 2px 8px rgba(66,165,245,0.10)',
                           '&:hover': { backgroundColor: '#1976d2' },
-                          fontWeight: 600
+                          fontWeight: 600,
+                          p: 1.2
                         }}
                         onClick={() => handleViewDetail(row.id)}
                         size="small"
+                        startIcon={<VisibilityIcon />}
                       >
                         View
                       </Button>
@@ -522,12 +624,16 @@ const EventManage = () => {
                         sx={{
                           backgroundColor: '#ef5350',
                           color: '#fff',
-                          minWidth: 80,
+                          minWidth: 44,
+                          borderRadius: 2,
+                          boxShadow: '0 2px 8px rgba(239,83,80,0.10)',
                           '&:hover': { backgroundColor: '#b71c1c' },
-                          fontWeight: 600
+                          fontWeight: 600,
+                          p: 1.2
                         }}
                         onClick={() => showModal(row)}
                         size="small"
+                        startIcon={<EditIcon />}
                       >
                         Cancel
                       </Button>
@@ -545,6 +651,12 @@ const EventManage = () => {
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{
+              borderTop: '1.5px solid #e3f2fd',
+              background: '#f8fafc',
+              '.MuiTablePagination-toolbar': { fontWeight: 600 },
+              '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { color: '#1976d2' }
+            }}
           />
         </TableContainer>
       )}
@@ -553,13 +665,17 @@ const EventManage = () => {
         <Dialog
           open={isModalOpen}
           onClose={handleClose}
-          maxWidth="md"
+          maxWidth={editingId ? "sm" : "sm"}
           fullWidth
           PaperProps={{
             sx: {
               minHeight: editingId ? "auto" : "70vh",
               display: "flex",
               flexDirection: "column",
+              borderRadius: 4,
+              boxShadow: '0 8px 32px rgba(25,118,210,0.18)',
+              border: '2px solid #e3f2fd',
+              background: 'linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)',
             },
           }}
         >
@@ -567,22 +683,38 @@ const EventManage = () => {
             // Cancel Event Confirmation
             <form onSubmit={handleSubmit}>
               <DialogTitle sx={{
-                borderBottom: '2px solid #e3f2fd',
-                backgroundColor: '#bbdefb',
-                color: '#1976d2',
-                fontWeight: 'bold',
-                py: 2
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                fontWeight: 800,
+                color: '#d32f2f',
+                fontSize: '1.5rem',
+                background: 'linear-gradient(90deg, #ffebee 60%, #fff 100%)',
+                borderBottom: '2px solid #ffcdd2',
+                py: 2.5,
+                px: 3
               }}>
+                <EditIcon sx={{ color: '#d32f2f', fontSize: 28 }} />
                 Cancel Event
               </DialogTitle>
-              <DialogContent>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2.5 }}>
+              <DialogContent sx={{ px: 4, py: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2 }}>
                   <Typography variant="h6" color="error" sx={{ mb: 2 }}>
                     Are you sure you want to cancel this event?
                   </Typography>
                   <Typography variant="body1">
                     This action cannot be undone. The event will be marked as cancelled and participants will be notified.
                   </Typography>
+                  <TextField
+                    label="Reason for cancellation"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    required
+                    fullWidth
+                    multiline
+                    rows={3}
+                    sx={{ mt: 2 }}
+                  />
                 </Box>
               </DialogContent>
               <DialogActions sx={{ 
@@ -616,69 +748,76 @@ const EventManage = () => {
             // Create Form with Stepper
             <Box sx={{ width: "100%" }}>
               <DialogTitle sx={{
-                borderBottom: '2px solid #e3f2fd',
-                backgroundColor: '#bbdefb',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                fontWeight: 800,
                 color: '#1976d2',
-                fontWeight: 'bold',
-                py: 2
+                fontSize: '1.5rem',
+                background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)',
+                borderBottom: '2px solid #e3f2fd',
+                py: 2.5,
+                px: 3
               }}>
+                <AddCircleOutlineIcon sx={{ color: '#1976d2', fontSize: 28 }} />
                 Create New Event
               </DialogTitle>
-              <DialogContent>
+              <DialogContent sx={{ px: 4, py: 3 }}>
                 <Box sx={{ width: "100%", mt: 2 }}>
                   <Box sx={{ 
-                    width: "70%", 
+                    width: "60%", 
+                    minWidth: 320,
+                    maxWidth: 500,
                     margin: "0 auto",
                     display: "flex",
                     justifyContent: "center"
                   }}>
-                    <Stepper 
+                    <Stepper
                       activeStep={activeStep}
+                      orientation="horizontal"
                       sx={{
-                        width: "100%",
-                        '& .MuiStepLabel-root': {
-                          padding: '24px 12px',
+                        width: '100%',
+                        px: 2,
+                        mb: 2,
+                        gap: 4,
+                        justifyContent: 'center',
+                        '& .MuiStep-root': {
+                          flex: 1,
+                          maxWidth: 'none',
+                          minWidth: 180,
                         },
-                        '& .MuiStepIcon-root': {
-                          width: '35px',
-                          height: '35px',
-                          color: '#e3f2fd',
-                          '&.Mui-active': {
-                            color: '#1976d2',
-                          },
-                          '&.Mui-completed': {
-                            color: '#2e7d32',
-                          },
+                        '& .MuiStepLabel-root': {
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          minWidth: 140,
+                          px: 1,
                         },
                         '& .MuiStepLabel-label': {
-                          fontSize: '1.1rem',
-                          fontWeight: 500,
+                          fontSize: '1.08rem',
+                          fontWeight: 700,
+                          color: '#bdbdbd',
+                          textAlign: 'left',
+                          ml: 1,
+                          transition: 'color 0.2s',
                           '&.Mui-active': {
                             color: '#1976d2',
-                            fontWeight: 600,
+                            fontWeight: 900,
                           },
                           '&.Mui-completed': {
-                            color: '#2e7d32',
-                            fontWeight: 600,
+                            color: '#009688',
+                            fontWeight: 900,
                           },
                         },
-                        '& .MuiStepConnector-line': {
-                          borderColor: '#e3f2fd',
-                          borderWidth: '3px',
-                        },
-                        '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
-                          borderColor: '#1976d2',
-                        },
-                        '& .MuiStepConnector-root.Mui-completed .MuiStepConnector-line': {
-                          borderColor: '#2e7d32',
-                        },
                       }}
+                      connector={<ModernConnector />}
+                      alternativeLabel
                     >
                       <Step>
-                        <StepLabel>Basic Information</StepLabel>
+                        <StepLabel StepIconComponent={ModernStepIcon}>Basic Information</StepLabel>
                       </Step>
                       <Step>
-                        <StepLabel>Teacher Emails</StepLabel>
+                        <StepLabel StepIconComponent={ModernStepIcon}>Teacher Emails</StepLabel>
                       </Step>
                     </Stepper>
                   </Box>
@@ -686,7 +825,7 @@ const EventManage = () => {
                   <Box sx={{ mt: 4 }}>
                     {activeStep === 0 ? (
                       // Step 1 content
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                      <Stack spacing={3}>
                         <TextField
                           name="name"
                           label="Event Name"
@@ -840,7 +979,7 @@ const EventManage = () => {
                             )}
                           </Box>
                         </Box>
-                      </Box>
+                      </Stack>
                     ) : (
                       // Step 2 content - Teacher Emails only
                       <Box>

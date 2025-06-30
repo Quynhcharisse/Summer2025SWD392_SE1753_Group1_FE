@@ -185,7 +185,7 @@ const UserLayout = ({ children }) => {
           { 
             key: '/user/education/syllabus', 
             icon: BookOpen, 
-            label: 'Curriculum',
+            label: 'Syllabus',
             path: '/user/education/syllabus'
           },
           { 
