@@ -32,7 +32,7 @@ import {getFormTracking, processAdmissionForm} from "@/api/services/admissionSer
 import { parseISO } from "date-fns";
 import {enqueueSnackbar} from "notistack";
 import {CircularProgress} from "@mui/material";
-import LoadingOverlay from "@/components/LoadingOverlay";
+import LoadingOverlay from "@/components/none-shared/LoadingOverlay.jsx";
 
 
 function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {

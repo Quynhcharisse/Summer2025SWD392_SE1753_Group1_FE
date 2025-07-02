@@ -688,20 +688,60 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
     const validateForm = () => {
         const newErrors = {};
 
-        // Required field validations
+        // 1. Validate student selection
         if (selectedStudentId === null) {
             newErrors.student = "Please select a student";
+            return false;
         }
-        if (!input.address.trim()) {
+
+        // 2. Find selected student
+        const selectedStudent = studentList.find(s => s.id === selectedStudentId);
+        if (!selectedStudent) {
+            newErrors.student = "Selected student not found";
+            return false;
+        }
+
+        // 3. Validate student age
+        const birthYear = new Date(selectedStudent.dateOfBirth).getFullYear();
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - birthYear;
+        
+        if (age < 3 || age > 5) {
+            newErrors.student = "Student must be between 3 and 5 years old";
+            enqueueSnackbar("Student's age must be between 3 and 5 years old", {
+                variant: "error",
+                autoHideDuration: 5000
+            });
+            setErrors(newErrors);
+            return false;
+        }
+
+        // 4. Check if student has active/pending form
+        const hasActiveForm = selectedStudent.admissionForms?.some(form => 
+            form.status === 'approved' || form.status === 'pending approval'
+        );
+
+        if (hasActiveForm) {
+            newErrors.student = "This student already has an active or pending admission form";
+            enqueueSnackbar("Cannot submit: Student already has an active or pending form", {
+                variant: "warning",
+                autoHideDuration: 5000
+            });
+            setErrors(newErrors);
+            return false;
+        }
+
+        // 5. Validate required fields
+        if (!input.address?.trim()) {
             newErrors.address = "Household registration address is required";
         }
 
-        // File validations
         if (!uploadedFile.childCharacteristicsForm) {
-            newErrors.childCharacteristicsForm = "Child characteristics form is required";
+            newErrors.childCharacteristicsFormImg = "Child characteristics form is required";
         }
+
         if (!uploadedFile.commit) {
-            newErrors.commit = "Commitment form is required";
+            newErrors.commitmentImg = "Commitment form is required";
         }
 
         setErrors(newErrors);
@@ -850,23 +890,73 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             setLoadingMessage('Submitting form...');
             const formData = {
                 studentId: selectedStudentId,
-                householdRegistrationAddress: input.address,
+                householdRegistrationAddress: input.address.trim(),
                 childCharacteristicsFormImg: uploadResult.childCharacteristicsFormLink,
                 commitmentImg: uploadResult.commitLink,
-                note: input.note || ""
+                note: input.note?.trim() || ""
             };
 
             const response = await submittedForm(formData);
 
             if (response && response.success) {
-                enqueueSnackbar(response.message, {variant: 'success'});
+                enqueueSnackbar(response.message || "Form submitted successfully", {
+                    variant: 'success',
+                    autoHideDuration: 3000
+                });
                 await GetForm();
                 handleClosePopUp();
+            } else {
+                const errorMessage = response?.message || "Failed to submit form";
+                
+                // Case 1: No active admission term
+                if (errorMessage.includes("No active admission term")) {
+                    enqueueSnackbar("⚠️ There is currently no active admission term", {
+                        variant: "error",
+                        autoHideDuration: 3500,
+                        anchorOrigin: {
+                            vertical: 'top',
+                            horizontal: 'center'
+                        }
+                    });
+                    handleClosePopUp();
+                    return;
+                }
+                
+                // Case 2: Student already has active/pending form
+                if (errorMessage.includes("already been submit") || errorMessage.includes("pending form")) {
+                    setErrors(prev => ({
+                        ...prev,
+                        student: "This student already has an active or pending admission form"
+                    }));
+                    enqueueSnackbar("⚠️ Cannot submit: Student already has an active or pending form", {
+                        variant: "warning",
+                        autoHideDuration: 3500
+                    });
+                    return;
+                }
+                
+                // Case 3: Age not suitable
+                if (errorMessage.includes("birth year") || errorMessage.includes("required age")) {
+                    setErrors(prev => ({
+                        ...prev,
+                        student: "Student's age must be between 3 and 5 years old"
+                    }));
+                    enqueueSnackbar("⚠️ Student's age does not meet the requirements (3-5 years old)", {
+                        variant: "error",
+                        autoHideDuration: 3500
+                    });
+                    return;
+                }
+
+                // Default error handling
+                enqueueSnackbar(`❌ ${errorMessage}`, {
+                    variant: "error",
+                    autoHideDuration: 3500
+                });
             }
         } catch (error) {
-            console.error('Error submitting form:', error);
             if (error.response?.status === 403) {
-                enqueueSnackbar("Your session has expired. Please login again.", {
+                enqueueSnackbar("⚠️ Your session has expired. Please login again.", {
                     variant: "error",
                     action: (
                         <Button color="inherit" size="small" onClick={() => {
@@ -877,12 +967,15 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     )
                 });
             } else {
-                enqueueSnackbar(error.message || "Failed to submit form", {variant: "error"});
+                const errorMessage = error.response?.data?.message || "Failed to submit form";
+                enqueueSnackbar(`❌ ${errorMessage}`, {
+                    variant: "error",
+                    autoHideDuration: 3500
+                });
             }
         } finally {
             setIsLoading(false);
             setLoadingMessage('');
-            setUploadProgress({});
         }
     }
 
