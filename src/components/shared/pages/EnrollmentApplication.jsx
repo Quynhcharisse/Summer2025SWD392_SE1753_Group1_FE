@@ -227,14 +227,14 @@ const EnrollmentApplication = () => {
     // Redirect to login with return URL
     navigate('/auth/login', { 
       state: { 
-        returnUrl: '/user/parent/enrollment',
+        returnUrl: '/user/parent/add-child',
         message: 'Vui lòng đăng nhập để tiếp tục đăng ký nhập học.'
       }
     });
   };
 
   const handleManageApplications = () => {
-    navigate('/user/parent/enrollment/my-applications');
+    navigate('/user/parent/forms');
   };
 
   // Show loading while checking authentication

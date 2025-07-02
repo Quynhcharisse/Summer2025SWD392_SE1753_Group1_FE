@@ -45,7 +45,7 @@ export const submitEnrollmentApplication = async (applicationData) => {
 // Get user's enrollment applications
 export const getUserEnrollmentApplications = async () => {
   try {
-    const response = await apiClient.get('/user/parent/enrollment/my-applications');
+    const response = await apiClient.get('/user/parent/forms');
     return response.data;
   } catch (error) {
     console.error('Get user enrollment applications failed:', error);

@@ -27,7 +27,7 @@ const MyApplications = () => {
     if (!isAuthenticated()) {
       navigate('/login', { 
         state: { 
-          returnUrl: '/user/parent/enrollment/my-applications',
+          returnUrl: '/user/parent/forms',
           message: 'Vui lòng đăng nhập để xem đơn đăng ký của bạn.'
         }
       });
@@ -94,8 +94,8 @@ const MyApplications = () => {
   if (loading) {
     return (
       <PageTemplate
-        title="Đơn đăng ký của tôi"
-        subtitle="Quản lý các đơn đăng ký nhập học"
+        title="My Applications"
+        subtitle="Manage your enrollment applications"
       >
         <div className="text-center py-12">
           <Spinner size="lg" className="mx-auto mb-4" />
@@ -108,8 +108,8 @@ const MyApplications = () => {
   if (error) {
     return (
       <PageTemplate
-        title="Đơn đăng ký của tôi"
-        subtitle="Quản lý các đơn đăng ký nhập học"
+        title="My Applications"
+        subtitle="Manage your enrollment applications"
       >
         <div className="text-center py-12">
           <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -122,12 +122,12 @@ const MyApplications = () => {
 
   return (
     <PageTemplate
-      title="Đơn đăng ký của tôi"
-      subtitle="Quản lý các đơn đăng ký nhập học"
+      title="My Applications"
+      subtitle="Manage your enrollment applications"
       actions={
         <Button 
           variant="primary" 
-          onClick={() => navigate('/user/parent/enrollment')}
+          onClick={() => navigate('/user/parent/add-child')}
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />

@@ -16,6 +16,8 @@ import { themeClasses } from '../../../../theme/index.js';
 import { useAuth } from '../../../../hooks/useAuth.js';
 import { AUTH_ROUTES, getDashboardRoute } from '../../../../constants/routes.js';
 import { Button } from '../../../atoms/Button.jsx';
+import { useTranslation } from 'react-i18next';
+import { getLocalizedRoutes } from '../../../../utils/i18nRoutes.js';
 
 const Navigation = ({ 
   variant = 'default',
@@ -25,54 +27,44 @@ const Navigation = ({
   const location = useLocation();
   const navigate = useNavigate();
   const { user, authenticated, loading } = useAuth();
+  const { t } = useTranslation('home'); // Use the home namespace
+  const localizedRoutes = getLocalizedRoutes();
 
   const navigationItems = [
     {
       id: 'home',
-      label: 'HOME',
-      path: '/homepage',
+      label: localizedRoutes.home.label,
+      path: localizedRoutes.home.path,
       icon: Home
     },
     {
       id: 'admission',
-      label: 'ADMISSION',
-      path: '/homepage/admission',
+      label: localizedRoutes.admission.label,
+      path: localizedRoutes.admission.path,
       icon: GraduationCap
     },
     {
       id: 'events',
-      label: 'EVENTS',
-      path: '/homepage/events',
+      label: localizedRoutes.events.label,
+      path: localizedRoutes.events.path,
       icon: Calendar
     },
     {
       id: 'classes',
-      label: 'CLASSES',
-      path: '/homepage/classes',
+      label: localizedRoutes.classes.label,
+      path: localizedRoutes.classes.path,
       icon: Users
     },
     {
       id: 'about',
-      label: 'ABOUT US',
-      path: '/homepage/about-us',
+      label: localizedRoutes.about.label,
+      path: localizedRoutes.about.path,
       icon: Info
     },
     {
       id: 'contact',
-      label: 'CONTACT',
-      path: '/homepage/contact',
-      icon: Info
-    },
-    {
-      id: 'book-story-demo',
-      label: 'BOOK STORY DEMO',
-      path: '/demo/book-story',
-      icon: Info
-    },
-    {
-      id: 'theme-test',
-      label: 'THEME TEST',
-      path: '/demo/theme-test',
+      label: localizedRoutes.contact.label,
+      path: localizedRoutes.contact.path,
       icon: Info
     }
   ];
@@ -232,7 +224,7 @@ const Navigation = ({
                   className={`flex items-center ${currentSize.gap} ${currentSize.button}`}
                 >
                   <LogIn className={currentSize.icon} />
-                  <span>Sign In</span>
+                  <span>{t('auth.sign_in')}</span>
                 </Button>
                 <Button
                   onClick={handleSignUpClick}
@@ -241,7 +233,7 @@ const Navigation = ({
                   className={`flex items-center ${currentSize.gap} ${currentSize.button} bg-blue-600 hover:bg-blue-700 text-white`}
                 >
                   <UserPlus className={currentSize.icon} />
-                  <span>Sign Up</span>
+                  <span>{t('auth.sign_up')}</span>
                 </Button>
               </>
             ) : (
@@ -252,7 +244,7 @@ const Navigation = ({
                 className={`flex items-center ${currentSize.gap} ${currentSize.button} bg-green-600 hover:bg-green-700 text-white`}
               >
                 <User className={currentSize.icon} />
-                <span>My SunShine Profile</span>
+                <span>{t('auth.my_profile')}</span>
               </Button>
             )}
           </div>

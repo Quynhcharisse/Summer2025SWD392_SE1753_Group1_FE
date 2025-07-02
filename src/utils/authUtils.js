@@ -131,9 +131,7 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
       // Navigate to the target route
       navigate(targetRoute);
       
-      if (showNotification) {
-        showNotification('Chuyển đến trang đăng ký thành công', 'success');
-      }
+     
       
       return true;
     } else {
@@ -141,7 +139,7 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
       const currentUrl = window.location.pathname;
       
       // For unauthenticated users, redirect to public enrollment route after login
-      const targetEnrollmentRoute = redirectPath || "/user/parent/enrollment";
+      const targetEnrollmentRoute = redirectPath || "/user/parent/add-child";
       
       // Create login URL with proper redirect parameters
       const loginUrl = getLoginURL(targetEnrollmentRoute, currentUrl);
@@ -166,7 +164,7 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
     console.error('🚫 handleEnrollmentNavigation - Error:', error);
     
     // Fallback to login page with default enrollment route
-    const defaultEnrollmentRoute = "/user/parent/enrollment";
+    const defaultEnrollmentRoute = "/user/parent/forms";
     navigate(getLoginURL(defaultEnrollmentRoute));
     
     if (showNotification) {

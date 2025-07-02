@@ -1,0 +1,55 @@
+{
+  "child_form": {
+    "title": "Đăng Ký Thông Tin Trẻ",
+    "subtitle": "Vui lòng điền thông tin của trẻ một cách cẩn thận",
+    "back": "Quay lại",
+    "breadcrumb": {
+      "dashboard": "Trang chính",
+      "children_list": "Danh sách trẻ",
+      "add_child": "Thêm trẻ mới"
+    },
+    "basic_info": "Thông tin cơ bản",
+    "required_docs": "Tài liệu yêu cầu",
+    "labels": {
+      "full_name": "Họ và tên",
+      "gender": "Giới tính",
+      "date_of_birth": "Ngày sinh",
+      "place_of_birth": "Nơi sinh",
+      "profile_image": "Ảnh hồ sơ",
+      "birth_certificate": "Giấy khai sinh",
+      "household_registration": "Sổ hộ khẩu",
+      "age_range": "Trẻ phải từ {min}-{max} tuổi, sinh giữa năm {minYear} và {maxYear}"
+    },
+    "placeholders": {
+      "enter_name": "Nhập họ tên đầy đủ của trẻ",
+      "select_gender": "Chọn giới tính",
+      "enter_place_of_birth": "Nhập nơi sinh",
+      "profile_upload": "Nhấn để tải ảnh hồ sơ",
+      "birth_upload": "Nhấn để tải giấy khai sinh",
+      "household_upload": "Nhấn để tải sổ hộ khẩu"
+    },
+    "gender_options": {
+      "male": "Nam",
+      "female": "Nữ",
+      "other": "Khác"
+    },
+    "validation": {
+      "required_name": "Vui lòng nhập họ tên đầy đủ",
+      "required_gender": "Vui lòng chọn giới tính",
+      "required_dob": "Vui lòng chọn ngày sinh",
+      "invalid_age": "Trẻ phải từ {min} đến {max} tuổi (sinh giữa năm {minYear} và {maxYear})",
+      "required_pob": "Vui lòng nhập nơi sinh",
+      "file_type": "Vui lòng chỉ tải lên ảnh PNG, JPG hoặc WebP",
+      "file_size_individual": "Kích thước tệp vượt quá giới hạn {size}MB",
+      "file_size_combined": "Tổng kích thước tệp vượt quá giới hạn {size}MB",
+      "file_size_label": "Tối đa: {size}MB"
+    },
+    "buttons": {
+      "cancel": "Hủy",
+      "register": "Đăng ký trẻ",
+      "registering": "Đang đăng ký..."
+    },
+    "success": "Đăng ký trẻ thành công",
+    "error": "Đăng ký thất bại. Vui lòng kiểm tra thông tin của bạn."
+  }
+}
