@@ -351,7 +351,7 @@ const SyllabusManage = () => {
     if (!subject) {
       setSnackbar({
         open: true,
-        message: "Subject is required",
+        message: "Syllabus Name is required",
         severity: "error",
       });
       return;
@@ -616,7 +616,7 @@ const SyllabusManage = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)' }}>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Subject</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Syllabus Name</TableCell>
                 <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Description</TableCell>
                 <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Number of Week</TableCell>
                 <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Hours of Syllabuses</TableCell>
@@ -785,7 +785,7 @@ const SyllabusManage = () => {
             <form onSubmit={handleSubmit}>
               <Stack spacing={3} sx={{ pt: 2 }}>
                 <TextField
-                  label="Subject"
+                  label="Syllabus Name"
                   inputRef={subjectRef}
                   fullWidth
                   required
@@ -1447,7 +1447,7 @@ const SyllabusManage = () => {
                   <Grid item xs={12} sm={4}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                       <LibraryBooksIcon sx={{ color: '#90caf9', fontSize: 22 }} />
-                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 90 }}>Subject:</Typography>
+                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 90 }}>Syllabus Name:</Typography>
                     </Box>
                     <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.08rem', fontFamily: 'inherit', ml: 4 }}>{detailData.data.data.subject}</Typography>
                   </Grid>

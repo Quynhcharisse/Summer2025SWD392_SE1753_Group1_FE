@@ -57,7 +57,6 @@ const LessonManage = () => {
   const topicRef = useRef();
   const descriptionRef = useRef();
   const objectiveRef = useRef();
-  const toolsRequiredRef = useRef();
   const durationRef = useRef();
 
   // Hooks API
@@ -107,7 +106,6 @@ const LessonManage = () => {
         topicRef.current.value = record.topic ?? "";
         descriptionRef.current.value = record.description ?? "";
         objectiveRef.current.value = record.objective ?? "";
-        toolsRequiredRef.current.value = record.toolsRequired ?? "";
         durationRef.current.value =
           record.duration != null ? String(record.duration) : "";
         setEditingId(record.id);
@@ -115,7 +113,6 @@ const LessonManage = () => {
         topicRef.current.value = "";
         descriptionRef.current.value = "";
         objectiveRef.current.value = "";
-        toolsRequiredRef.current.value = "";
         durationRef.current.value = "";
         setEditingId(null);
       }
@@ -144,14 +141,13 @@ const LessonManage = () => {
     const topic = topicRef.current.value.trim();
     const description = descriptionRef.current.value.trim();
     const objective = objectiveRef.current.value.trim();
-    const toolsRequired = toolsRequiredRef.current.value.trim();
     const durationVal = Number(durationRef.current.value);
 
     // Validate cơ bản
     if (!topic) {
       setSnackbar({
         open: true,
-        message: "Topic is required",
+        message: "Lesson name is required",
         severity: "error",
       });
       return;
@@ -169,7 +165,6 @@ const LessonManage = () => {
       topic,
       description,
       objective,
-      toolsRequired,
       duration: durationVal,
     };
 
@@ -216,8 +211,7 @@ const LessonManage = () => {
       return (
         lesson.topic?.toLowerCase().includes(searchLower) ||
         lesson.description?.toLowerCase().includes(searchLower) ||
-        lesson.objective?.toLowerCase().includes(searchLower) ||
-        lesson.toolsRequired?.toLowerCase().includes(searchLower)
+        lesson.objective?.toLowerCase().includes(searchLower)
       );
     })
     .sort((a, b) => {
@@ -324,7 +318,7 @@ const LessonManage = () => {
             setPage(0);
           }}
           sx={{ minWidth: 300 }}
-          placeholder="Search by topic, description, objective, or tools..."
+          placeholder="Search by lesson name, description, or objective..."
         />
 
         <Box sx={{ flexGrow: 1 }} />
@@ -355,10 +349,9 @@ const LessonManage = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)' }}>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Topic</TableCell>
+                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Lesson Name</TableCell>
                 <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Description</TableCell>
                 <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Objective</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Required Tools</TableCell>
                 <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Duration per week (Hours)</TableCell>
                 <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Actions</TableCell>
               </TableRow>
@@ -378,7 +371,6 @@ const LessonManage = () => {
                     <TableCell align="center" sx={{ fontWeight: 600 }}>{row.topic ?? "-"}</TableCell>
                     <TableCell align="center">{row.description ?? "-"}</TableCell>
                     <TableCell align="center">{row.objective ?? "-"}</TableCell>
-                    <TableCell align="center">{row.toolsRequired ?? "-"}</TableCell>
                     <TableCell align="center">{typeof row.duration === "number" ? row.duration : "-"}</TableCell>
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
@@ -477,10 +469,9 @@ const LessonManage = () => {
         <form onSubmit={handleSubmit}>
           <DialogContent sx={{ px: 4, py: 3 }}>
             <Stack spacing={3} sx={{ pt: 2 }}>
-              <TextField label="Topic" inputRef={topicRef} fullWidth required />
+              <TextField label="Lesson Name" inputRef={topicRef} fullWidth required />
               <TextField label="Description" inputRef={descriptionRef} fullWidth multiline rows={2} required />
               <TextField label="Objective" inputRef={objectiveRef} fullWidth multiline rows={2} required />
-              <TextField label="Required Tools" inputRef={toolsRequiredRef} fullWidth />
               <TextField label="Duration per week (Hours)" inputRef={durationRef} type="number" fullWidth required inputProps={{ min: 1, max: 1000 }} />
             </Stack>
           </DialogContent>
@@ -612,7 +603,7 @@ const LessonManage = () => {
                               }}
                             >
                               <Typography sx={{ color: '#888', fontWeight: 600, fontSize: '1.08rem', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
-                                Topic
+                                Lesson Name
                               </Typography>
                               <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '1.15rem', letterSpacing: 0.5, fontFamily: 'Inter, Roboto, Arial, sans-serif', whiteSpace: 'pre-line' }}>
                                 {lessonDetail.topic ?? '-'}
@@ -643,15 +634,6 @@ const LessonManage = () => {
                           </Grid>
                         </Grid>
                       </Box>
-                      {/* 3 card data trải ngang, tách nhau bằng line ngang */}
-                      <Card sx={{ bgcolor: '#e3f2fd', borderRadius: 3, p: 2.5, mb: 0 }}>
-                        <Typography sx={{ color: '#888', fontWeight: 600, fontSize: '1.08rem', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
-                          Required Tools
-                        </Typography>
-                        <Typography sx={{ color: '#1976d2', fontWeight: 600, fontSize: '1.15rem', fontFamily: 'Inter, Roboto, Arial, sans-serif', whiteSpace: 'pre-line' }}>
-                          {lessonDetail.toolsRequired ?? '-'}
-                        </Typography>
-                      </Card>
                       <Divider sx={{ my: 2, background: '#bbdefb', height: 2, borderRadius: 1 }} />
                       <Card sx={{ bgcolor: '#e3f2fd', borderRadius: 3, p: 2.5, mb: 0 }}>
                         <Typography sx={{ color: '#888', fontWeight: 600, fontSize: '1.08rem', mb: 1, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
