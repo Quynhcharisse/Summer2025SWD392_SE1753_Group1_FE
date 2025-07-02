@@ -4,6 +4,19 @@
   "admission_link": "Đăng ký nhập học",
   "discover_programs": "Khám phá các chương trình và dịch vụ giáo dục của chúng tôi",
   "search_placeholder": "Tìm kiếm chương trình, tin tức, thông tin tuyển sinh...",
+  "navigation": {
+    "home": "TRANG CHỦ",
+    "admission": "TUYỂN SINH",
+    "events": "SỰ KIỆN",
+    "classes": "LỚP HỌC",
+    "about": "VỀ CHÚNG TÔI",
+    "contact": "LIÊN HỆ"
+  },
+  "auth": {
+    "sign_in": "Đăng nhập",
+    "sign_up": "Đăng ký",
+    "my_profile": "Hồ sơ của tôi"
+  },
   "search_results": "Kết quả tìm kiếm:",
   "type_page": "Trang",
   "type_program": "Chương trình",

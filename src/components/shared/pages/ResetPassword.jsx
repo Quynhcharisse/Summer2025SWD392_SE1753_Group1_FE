@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { PageTemplate } from "@templates";
 import authService from "@services/authService";
 import { AUTH_ROUTES } from "@/constants/routes";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation("auth");
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const [formData, setFormData] = useState({
@@ -44,7 +46,7 @@ const ResetPassword = () => {
     const newErrors = {};
     
     if (!formData.email.trim()) {
-      newErrors.email = 'Email không được để trống';
+      newErrors.email = t("forgotPassword.errors.invalidEmail");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email không hợp lệ';
     }
@@ -117,7 +119,7 @@ const ResetPassword = () => {
   if (success) {
     return (
       <PageTemplate
-        title="Đặt lại mật khẩu thành công"
+        title="Password reset successful"
         showHeader={false}
         showFooter={false}
       >
@@ -158,7 +160,7 @@ const ResetPassword = () => {
   if (!token) {
     return (
       <PageTemplate
-        title="Liên kết không hợp lệ"
+        title="Invalid link"
         showHeader={false}
         showFooter={false}
       >
@@ -202,8 +204,8 @@ const ResetPassword = () => {
   // Form state
   return (
     <PageTemplate
-      title="Đặt lại mật khẩu"
-      subtitle="Nhập mật khẩu mới của bạn"
+      title="Reset password"
+      subtitle="Enter your new password"
       showHeader={false}
       showFooter={false}
     >

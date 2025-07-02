@@ -46,7 +46,7 @@ const EnrollmentApplicationList = () => {
   };
 
   const handleViewApplication = (applicationId) => {
-    navigate(`/user/parent/enrollment/application/${applicationId}`);
+    navigate(`/user/parent/forms/${applicationId}`);
   };
 
   const handleNewApplication = () => {

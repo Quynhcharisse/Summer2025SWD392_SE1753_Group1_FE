@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { PageTemplate } from "@templates";
 import authService from "@services/authService";
 import { AUTH_ROUTES } from "@/constants/routes";
 
 const ForgotPassword = () => {
+  const { t } = useTranslation("auth");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -20,12 +22,12 @@ const ForgotPassword = () => {
     setError("");
 
     if (!email.trim()) {
-      setError("Vui lòng nhập email");
+      setError(t("forgotPassword.errors.invalidEmail"));
       return;
     }
 
     if (!validateEmail(email)) {
-      setError("Email không hợp lệ");
+      setError(t("forgotPassword.errors.invalidEmail"));
       return;
     }
 
