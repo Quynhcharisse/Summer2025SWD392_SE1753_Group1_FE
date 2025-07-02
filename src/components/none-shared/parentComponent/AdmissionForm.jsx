@@ -41,7 +41,7 @@ import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {parseISO} from "date-fns";
-import {enqueueSnackbar} from "notistack";
+import {useSnackbar} from 'notistack';
 import axios from "axios";
 import {cancelAdmission, getFormInformation, refillForm, submittedForm} from "@api/services/parentService.js";
 
@@ -63,7 +63,7 @@ function LoadingOverlay({ open, message }) {
     );
 }
 
-async function uploadToCloudinary(file, onProgress, signal) {
+async function uploadToCloudinary(file, onProgress, signal, enqueueSnackbar) {
     try {
         const formData = new FormData();
         formData.append("file", file);
@@ -385,6 +385,22 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
         }
     }
 
+    const calculateAge = (dateOfBirth) => {
+        if (!dateOfBirth) return '';
+        const birthDate = new Date(dateOfBirth);
+        const today = new Date();
+        
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        // If birthday hasn't occurred this year, subtract 1
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        
+        return age;
+    };
+
     return (
         <Dialog
             fullScreen
@@ -646,36 +662,25 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
 }
 
 function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) {
-    //Lưu id học sinh được chọn từ dropdown
+    const {enqueueSnackbar} = useSnackbar();
     const [selectedStudentId, setSelectedStudentId] = useState(null);
-
-    //Hiển thị trạng thái đang xử lý (true khi submit, upload...)
     const [isLoading, setIsLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
-
-    //Lưu trữ lỗi khi validate (ví dụ thiếu địa chỉ, file...)
     const [errors, setErrors] = useState({});
-
-    //Lưu nội dung nhập từ form: địa chỉ thường trú, ghi chú
     const [input, setInput] = useState({
         address: '',
         note: ''
     });
-
-    //Lưu các file thô (ảnh, giấy tờ) được người dùng upload
     const [uploadedFile, setUploadedFile] = useState({
         childCharacteristicsForm: '',
         commit: ''
     });
-
     const [uploadProgress, setUploadProgress] = useState({});
     const [isCancelDialogOpen, setCancelDialogOpen] = useState(false);
     const abortControllerRef = useRef(null);
 
     const student = studentList.find(s => s.id === selectedStudentId) || null;
 
-    //Khi studentList thay đổi
-    // Nếu chưa chọn học sinh (selectedStudentId rỗng), thì chọn học sinh đầu tiên chưa có đơn nhập học
     useEffect(() => {
         if (Array.isArray(studentList) && studentList.length > 0 && !selectedStudentId) {
             const availableStudent = studentList.find(student => !student.hadForm);
@@ -684,6 +689,22 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             }
         }
     }, [studentList, selectedStudentId]);
+
+    const calculateAge = (dateOfBirth) => {
+        if (!dateOfBirth) return '';
+        const birthDate = new Date(dateOfBirth);
+        const today = new Date();
+        
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        // If birthday hasn't occurred this year, subtract 1
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        
+        return age;
+    };
 
     const validateForm = () => {
         const newErrors = {};
@@ -811,7 +832,8 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     uploadToCloudinary(
                         uploadedFile.childCharacteristicsForm,
                         (progress) => setUploadProgress(prev => ({...prev, childCharacteristicsForm: progress})),
-                        signal
+                        signal,
+                        enqueueSnackbar
                     ).then(url => {
                         uploadResults.childCharacteristicsFormLink = url;
                     })
@@ -823,7 +845,8 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     uploadToCloudinary(
                         uploadedFile.commit,
                         (progress) => setUploadProgress(prev => ({...prev, commit: progress})),
-                        signal
+                        signal,
+                        enqueueSnackbar
                     ).then(url => {
                         uploadResults.commitLink = url;
                     })
@@ -866,13 +889,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
 
         return true;
     };
-
-    function CheckAge(dateOfBirth) {
-        const birthYear = new Date(dateOfBirth).getFullYear()
-        const currentYear = new Date().getFullYear()
-        const age = currentYear - birthYear
-        return age >= 3 && age <= 5
-    }
 
     async function HandleSubmit() {
         try {
@@ -955,24 +971,11 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                 });
             }
         } catch (error) {
-            if (error.response?.status === 403) {
-                enqueueSnackbar("⚠️ Your session has expired. Please login again.", {
-                    variant: "error",
-                    action: (
-                        <Button color="inherit" size="small" onClick={() => {
-                            window.location.href = '/auth/login';
-                        }}>
-                            Login
-                        </Button>
-                    )
-                });
-            } else {
-                const errorMessage = error.response?.data?.message || "Failed to submit form";
-                enqueueSnackbar(`❌ ${errorMessage}`, {
-                    variant: "error",
-                    autoHideDuration: 3500
-                });
-            }
+            const errorMessage = error.response?.data?.message || "Failed to submit form";
+            enqueueSnackbar(`❌ ${errorMessage}`, {
+                variant: "error",
+                autoHideDuration: 3500
+            });
         } finally {
             setIsLoading(false);
             setLoadingMessage('');
@@ -1078,7 +1081,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         >
                             {studentList && studentList.length > 0 ? (
                                 studentList
-                                    .filter(student => CheckAge(student.dateOfBirth))
+                                    .filter(student => calculateAge(student.dateOfBirth) >= 3 && calculateAge(student.dateOfBirth) <= 5)
                                     .map((student) => {
                                         // Kiểm tra xem học sinh có form đang pending approval hoặc approved không
                                         const hasActiveForm = student.hadForm &&
@@ -1156,6 +1159,16 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                         InputProps={{readOnly: true}}
                                     />
                                 </Grid>
+
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Age"
+                                        value={`${calculateAge(student.dateOfBirth)} years old`}
+                                        InputProps={{readOnly: true}}
+                                    />
+                                </Grid>
+
                                 <Grid item xs={12} md={6}>
                                     <TextField
                                         fullWidth

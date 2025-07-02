@@ -18,8 +18,8 @@ import Unauthorized from "@pages/Unauthorized";
 
 // Lazy import pages
 const Home = lazy(() => import("@pages/Home"));
-const Login = lazy(() => import("@pages/Login"));
-const SignUp = lazy(() => import("@pages/SignUp"));
+// const Login = lazy(() => import("@pages/Login"));
+// const SignUp = lazy(() => import("@pages/SignUp"));
 const ForgotPassword = lazy(() => import("@pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("@pages/ResetPassword"));
 const Admission = lazy(() => import("@pages/Admission"));

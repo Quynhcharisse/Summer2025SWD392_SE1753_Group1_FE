@@ -26,9 +26,6 @@ export const submittedForm = async (formData) => {
     const response = await apiClient.post("/parent/form/submit", {
       studentId: formData.studentId,
       householdRegistrationAddress: formData.householdRegistrationAddress,
-      profileImage: formData.profileImage,
-      birthCertificateImg: formData.birthCertificateImg,
-      householdRegistrationImg: formData.householdRegistrationImg,
       childCharacteristicsFormImg: formData.childCharacteristicsFormImg,
       commitmentImg: formData.commitmentImg,
       note: formData.note,

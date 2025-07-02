@@ -16,7 +16,7 @@ apiClient.interceptors.response.use(
     async error => {
       const originalRequest = error.config;
 
-      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      if (error.response && error.response.status === 403) {
         if (originalRequest.url === "/auth/refresh") {
           console.error("Refresh token request failed, redirecting to the login.");
           window.location.href = "/login";
@@ -34,8 +34,10 @@ apiClient.interceptors.response.use(
           console.error("Refresh token request failed", refreshError);
           window.location.href = "/login";
         }
+      } else {
+        window.location.href = "/login";
       }
-      return Promise.reject(error);
+      return Promise.reject(error)
     }
 );
 
