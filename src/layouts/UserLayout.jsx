@@ -1,26 +1,25 @@
-import React, { useState } from "react";
-import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
-import { themeClasses } from "@theme/colors";
+import authService from "@services/authService";
 import { getCurrentTokenData } from "@services/JWTService.jsx";
-import PropTypes from "prop-types";
+import { themeClasses } from "@theme/colors";
 import {
-  Users,
   BookOpen,
   Calendar,
-  MessageSquare,
-  Settings,
-  FileText,
-  UserCheck,
-  TrendingUp,
-  Bell,
-  Menu,
-  X,
-  LogOut,
   Home,
-  User,
+  ListTodo,
+  LogOut,
+  Menu,
+  MessageSquare,
   RotateCcw,
-  ListTodo
+  Settings,
+  TrendingUp,
+  User,
+  UserCheck,
+  Users,
+  X
 } from "lucide-react";
+import PropTypes from "prop-types";
+import { useState } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const UserLayout = ({ children }) => {
   const navigate = useNavigate();
@@ -44,31 +43,22 @@ const UserLayout = ({ children }) => {
             path: "/user/parent/dashboard",
           },
           {
+            key: "/user/parent/child-list",
+            icon: Users,
+            label: "Children List",
+            path: "/user/parent/child-list",
+          },
+          {
             key: "/user/parent/calendar",
             icon: Calendar,
             label: "Class Schedule",
             path: "/user/parent/calendar",
           },
           {
-
             key: "/user/parent/forms",
             icon: ListTodo,
             label: "Submit Form",
             path: "/user/parent/forms",
-
-          },
-          {
-            key: "/user/parent/gallery",
-            icon: BookOpen,
-            label: "Photo Gallery",
-            path: "/user/parent/gallery",
-
-          },
-          {
-            key: "/user/parent/messages",
-            icon: MessageSquare,
-            label: "Messages",
-            path: "/user/parent/messages",
           },
           {
             key: "/user/shared/profile",
@@ -274,10 +264,15 @@ const UserLayout = ({ children }) => {
 
   const navigationItems = getNavigationItems();
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/auth/login");
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      navigate("/auth/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still navigate to login even if API call fails
+      navigate("/auth/login");
+    }
   };
 
   const handleNavigation = (path) => {
@@ -429,21 +424,7 @@ const UserLayout = ({ children }) => {
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg">
-              <Bell className="w-5 h-5" />
-            </button>
-            <div className="hidden sm:flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 font-semibold text-sm">
-                  {userName.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <span className="text-sm font-medium text-gray-900">
-                {userName}
-              </span>
-            </div>
-          </div>
+        
         </header>
 
         {/* Content */}

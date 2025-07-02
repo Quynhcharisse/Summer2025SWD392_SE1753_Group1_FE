@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import authService from "@services/authService";
 import { ROUTES, AUTH_ROUTES } from "@/constants/routes";
 import { Spinner } from "../atoms";
@@ -8,67 +9,71 @@ import SignUpForm from "../molecules/forms/SignUpForm";
 import { CheckCircle } from "lucide-react";
 
 // Success message component following Atomic Design principles
-const SuccessMessage = ({ onContinue }) => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 py-8 px-4">
-    <div className="w-full max-w-md mx-auto space-y-8">
-      {/* Logo and Header */}
-      <div className="text-center">
-        <div className="flex justify-center mb-6">
-          <img
-            src="/SUNSHINE.png"
-            alt="Sunshine Preschool"
-            className="h-16 w-auto"
-          />
-        </div>
-        
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Đăng ký thành công!
-        </h2>
-        
-        <p className="text-sm text-gray-600">
-          Tài khoản của bạn đã được tạo thành công
-        </p>
-      </div>
-      
-      {/* Success Content */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="text-center space-y-6">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-            <CheckCircle className="w-10 h-10 text-white" />
+const SuccessMessage = ({ onContinue }) => {
+  const { t } = useTranslation("auth");
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 py-8 px-4">
+      <div className="w-full max-w-md mx-auto space-y-8">
+        {/* Logo and Header */}
+        <div className="text-center">
+          <div className="flex justify-center mb-6">
+            <img
+              src="/SUNSHINE.png"
+              alt="Sunshine Preschool"
+              className="h-16 w-auto"
+            />
           </div>
           
-          <div className="space-y-3">
-            <p className="text-gray-600">
-              Chúc mừng! Tài khoản của bạn đã được tạo thành công.
-            </p>
-            <p className="text-sm text-gray-500">
-              Đang chuyển hướng đến trang đăng nhập...
-            </p>
-          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            {t("register.success")}
+          </h2>
           
-          <div className="flex justify-center">
-            <Spinner size="md" className="text-green-500" />
-          </div>
-          
-          <p className="text-sm text-gray-500">
-            Nếu không tự động chuyển hướng,{" "}
-            <button
-              onClick={onContinue}
-              className="text-green-600 hover:underline font-medium"
-            >
-              nhấn vào đây
-            </button>
+          <p className="text-sm text-gray-600">
+            {t("register.success")}
           </p>
         </div>
-      </div>
       
-      {/* Footer */}
-      <div className="text-center text-sm text-gray-500">
-        © 2025 Sunshine Preschool. All rights reserved.
+        {/* Success Content */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="text-center space-y-6">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-white" />
+            </div>
+            
+            <div className="space-y-3">
+              <p className="text-gray-600">
+                {t("register.success")}
+              </p>
+              <p className="text-sm text-gray-500">
+                {t("login.redirectInfo.generic")}
+              </p>
+            </div>
+          
+            <div className="flex justify-center">
+              <Spinner size="md" className="text-green-500" />
+            </div>
+          
+            <p className="text-sm text-gray-500">
+              {t("register.backToLogin")}{" "}
+              <button
+                onClick={onContinue}
+                className="text-green-600 hover:underline font-medium"
+              >
+                {t("register.signIn")}
+              </button>
+            </p>
+          </div>
+        </div>
+      
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-500">
+          © 2025 Sunshine Preschool. All rights reserved.
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 SuccessMessage.propTypes = {
   onContinue: PropTypes.func.isRequired,
@@ -99,38 +104,42 @@ ErrorAlert.propTypes = {
 };
 
 // SignUp Footer component (Molecule)
-const SignUpFooter = () => (
-  <div className="mt-6 text-center space-y-4">
-    <div className="flex items-center">
-      <div className="flex-1 border-t border-gray-200"></div>
-      <span className="px-4 text-gray-500 text-sm">hoặc</span>
-      <div className="flex-1 border-t border-gray-200"></div>
-    </div>
+const SignUpFooter = () => {
+  const { t } = useTranslation("auth");
+  return (
+    <div className="mt-6 text-center space-y-4">
+      <div className="flex items-center">
+        <div className="flex-1 border-t border-gray-200"></div>
+        <span className="px-4 text-gray-500 text-sm">or</span>
+        <div className="flex-1 border-t border-gray-200"></div>
+      </div>
       <p className="text-gray-600">
-      Đã có tài khoản?{" "}      <Link
-        to={ROUTES.LOGIN}
-        className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
-      >
-        Đăng nhập ngay
-      </Link>
-    </p>
-    
-    <p className="text-xs text-gray-500 leading-relaxed">
-      Bằng việc tạo tài khoản, bạn đồng ý với{" "}
-      <button className="text-blue-600 hover:underline">
-        Điều khoản dịch vụ
-      </button>{" "}
-      và{" "}
-      <button className="text-blue-600 hover:underline">
-        Chính sách bảo mật
-      </button>{" "}
-      của chúng tôi.
-    </p>
-  </div>
-);
+        Already have an account?{" "}
+        <Link
+          to={ROUTES.LOGIN}
+          className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
+        >
+          Sign in now
+        </Link>
+      </p>
+      
+      <p className="text-xs text-gray-500 leading-relaxed">
+        By creating an account, you agree to our{" "}
+        <button className="text-blue-600 hover:underline">
+          Terms of Service
+        </button>{" "}
+        and{" "}
+        <button className="text-blue-600 hover:underline">
+          Privacy Policy
+        </button>
+      </p>
+    </div>
+  );
+};
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation("auth");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -167,15 +176,17 @@ const SignUp = () => {
       } else if (error.message) {
         setSubmitError(error.message);
       } else {
-        setSubmitError("Đăng ký thất bại. Vui lòng thử lại.");
+        setSubmitError(t("register.errors.genericError"));
       }
     } finally {
       setLoading(false);
     }
-  };  const handleContinueToLogin = (email) => {
+  };
+
+  const handleContinueToLogin = (email) => {
     navigate(ROUTES.LOGIN, {
       state: {
-        message: "Đăng ký thành công! Vui lòng đăng nhập.",
+        message: "Registration successful! Please sign in.",
         email: email
       }
     });
@@ -207,11 +218,11 @@ const SignUp = () => {
           </div>
           
           <h2 className="text-2xl font-bold text-gray-900 mb-1">
-            Tạo tài khoản mới
+            Create New Account
           </h2>
           
           <p className="text-sm text-gray-600">
-            Tham gia cùng chúng tôi để bắt đầu hành trình học tập thú vị
+            Join us to start your learning journey
           </p>
         </div>
         
@@ -237,29 +248,28 @@ const SignUp = () => {
           <div className="w-full max-w-md text-center space-y-2">
             <div className="flex items-center">
               <div className="flex-1 border-t border-gray-200"></div>
-              <span className="px-3 text-gray-500 text-xs">hoặc</span>
+              <span className="px-3 text-gray-500 text-xs">or</span>
               <div className="flex-1 border-t border-gray-200"></div>
             </div>
             <p className="text-gray-600 text-sm">
-              Đã có tài khoản?{" "}      
+              Already have an account?{" "}      
               <Link
                 to={ROUTES.LOGIN}
                 className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
               >
-                Đăng nhập ngay
+                Sign in now
               </Link>
             </p>
             
             <p className="text-xs text-gray-500 leading-relaxed">
-              Bằng việc tạo tài khoản, bạn đồng ý với{" "}
+              By creating an account, you agree to our{" "}
               <button className="text-blue-600 hover:underline">
-                Điều khoản dịch vụ
+                Terms of Service
               </button>{" "}
-              và{" "}
+              and{" "}
               <button className="text-blue-600 hover:underline">
-                Chính sách bảo mật
-              </button>{" "}
-              của chúng tôi.
+                Privacy Policy
+              </button>
             </p>
           </div>
         </div>

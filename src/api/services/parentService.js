@@ -122,3 +122,29 @@ export const refillForm = async (formData) => {
     throw error;
   }
 };
+
+// Update child info (PUT)
+export const updateChild = async (childData) => {
+  try {
+    if (!childData?.id) throw new Error("Missing child ID");
+    const response = await apiClient.put("/parent/child", childData);
+    if (!response?.data) throw new Error("Failed to update child");
+    return response.data;
+  } catch (error) {
+    console.error("Error updating child:", error);
+    throw error;
+  }
+};
+
+// Delete child (DELETE)
+export const deleteChild = async (childId) => {
+  try {
+    if (!childId) throw new Error("Missing child ID");
+    const response = await apiClient.delete(`/parent/child/${childId}`);
+    if (!response?.data) throw new Error("Failed to delete child");
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting child:", error);
+    throw error;
+  }
+};

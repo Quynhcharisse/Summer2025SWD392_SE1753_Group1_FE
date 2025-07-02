@@ -51,7 +51,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
           variant: "error",
         });
         // Should create an UNAUTHORIZED route in routes.js if needed
-        return <Navigate to="/" replace />;
+        return <Navigate to="/unauthorized" replace />;
       }
 
       console.log("Access granted for role:", decoded.role);

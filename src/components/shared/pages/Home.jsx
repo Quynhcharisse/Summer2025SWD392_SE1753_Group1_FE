@@ -24,7 +24,7 @@ export default function Home() {
     statusMessage: "",
   });
   useEffect(() => {
-    document.title = t("welcome") + " - Sunshine Preschool";
+    // Title is now handled by PageTitleUpdater component
 
     // Check if browser supports Speech Recognition
     const SpeechRecognition =
