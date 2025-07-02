@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Button, Badge } from '@atoms';
+import dayjs from 'dayjs';
 
 /**
  * EventCard - A reusable card component for displaying event information
@@ -21,17 +22,21 @@ const EventCard = ({
   className = '',
   showCategory = true,
   showDescription = true,
-  showLocation = true
+  showLocation = true,
+  childrenNames,
+  
 }) => {
   const {
     title,
     description,
+    deadline,
     date,
     time,
     location,
     category,
     color = 'blue',
-    featured = false
+    featured = false,
+    attachmentImg
   } = event;
 
   const getColorClasses = (color) => {
@@ -73,6 +78,22 @@ const EventCard = ({
 
   return (
     <div className={`${baseClasses} ${variantClasses[variant]} ${className}`}>
+      {/* Event image */}
+      {attachmentImg && (
+        <div className="mb-3 rounded overflow-hidden">
+          <img src={attachmentImg} alt={title} className="w-full h-56 object-cover" />
+        </div>
+      )}
+      {/* Hiển thị deadline nếu có */}
+      {deadline && (
+        <div className="flex justify-end mb-2">
+          <div className="flex items-center text-orange-700 text-xs font-semibold bg-white bg-opacity-90 px-3 py-1 rounded-full shadow">
+            <Clock className="h-3 w-3 mr-1" />
+            Registration Deadline: {deadline}
+          </div>
+        </div>
+      )}
+
       {/* Header with badges */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex gap-2">
@@ -110,16 +131,7 @@ const EventCard = ({
       {/* Event details for non-featured variants */}
       {variant !== 'featured' && (
         <div className="text-sm text-gray-600 mb-2">
-          <div className="flex items-center mb-1">
-            <Calendar className="h-3 w-3 mr-1" />
             {date}
-          </div>
-          {time && (
-            <div className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              {time}
-            </div>
-          )}
         </div>
       )}
 
@@ -127,6 +139,22 @@ const EventCard = ({
       <h3 className={`${titleClasses[variant]} text-gray-900 mb-2`}>
         {title}
       </h3>
+      {/* Hiển thị thời gian event (time) ngay dưới tiêu đề */}
+      {time && (
+        <div className="text-xs text-gray-700 font-medium mb-2">
+          <div className="flex items-center mb-1">
+            <Calendar className="h-3 w-3 mr-1" />
+            {time}
+          </div>
+        </div>
+      )}
+      
+      {/* Hiển thị tên con tham gia nếu có */}
+      {childrenNames && (
+        <div className="text-xs text-blue-700 font-medium mb-2">
+          {Array.isArray(childrenNames) ? childrenNames.join(', ') : childrenNames}
+        </div>
+      )}
 
       {/* Description */}
       {showDescription && description && (
@@ -185,10 +213,12 @@ EventCard.propTypes = {
     description: PropTypes.string,
     date: PropTypes.string.isRequired,
     time: PropTypes.string,
+    deadline: PropTypes.string,
     location: PropTypes.string,
     category: PropTypes.string,
     color: PropTypes.oneOf(['blue', 'green', 'purple', 'orange', 'pink', 'yellow']),
-    featured: PropTypes.bool
+    featured: PropTypes.bool,
+    attachmentImg: PropTypes.string
   }).isRequired,
   /** Visual variant of the card */
   variant: PropTypes.oneOf(['default', 'featured', 'compact']),
@@ -203,7 +233,11 @@ EventCard.propTypes = {
   /** Whether to show event description */
   showDescription: PropTypes.bool,
   /** Whether to show event location */
-  showLocation: PropTypes.bool
+  showLocation: PropTypes.bool,
+  /** Array of children names */
+  childrenNames: PropTypes.oneOfType([PropTypes.array, PropTypes.string]),
+  /** Deadline for the event */
+  deadline: PropTypes.string
 };
 
 export default EventCard;

@@ -36,6 +36,7 @@ const HRDashboard = lazy(() => import("@pages/HRDashboard"));
 const EducationDashboard = lazy(() => import("@pages/EducationDashboard"));
 const UserProfile = lazy(() => import("@pages/UserProfile"));
 const ComingSoon = lazy(() => import("@pages/ComingSoon"));
+const EventDetail = lazy(() => import("@pages/EventDetail"));
 
 
 const Syllabus = lazy(() => import("@pages/SyllabusManage"));
@@ -97,55 +98,63 @@ PublicPageWrapper.propTypes = {
 
 // ROUTE CONFIG
 const router = createBrowserRouter([
-    // === PUBLIC PAGES (Home, About, ...): both modern & legacy ===
-    {
-        path: ROUTES.HOME,
-        element: (
-            <PublicPageWrapper>
-                <Home/>
-            </PublicPageWrapper>
-        ),
-    },
-    {
-        path: ROUTES.HOMEPAGE,
-        element: (
-            <PublicPageWrapper>
-                <Home/>
-            </PublicPageWrapper>
-        ),
-    },
-    {
-        path: ROUTES.HOMEPAGE_ADMISSION,
-        element: (
-            <PublicPageWrapper>
-                <Admission/>
-            </PublicPageWrapper>
-        ),
-    },
-    {
-        path: ROUTES.HOMEPAGE_ABOUT,
-        element: (
-            <PublicPageWrapper>
-                <AboutUs/>
-            </PublicPageWrapper>
-        ),
-    },
-    {
-        path: ROUTES.HOMEPAGE_CLASSES,
-        element: (
-            <PublicPageWrapper>
-                <Classes/>
-            </PublicPageWrapper>
-        ),
-    },
-    {
-        path: ROUTES.HOMEPAGE_EVENTS,
-        element: (
-            <PublicPageWrapper>
-                <Events/>
-            </PublicPageWrapper>
-        ),
-    },
+  // === PUBLIC PAGES (Home, About, ...): both modern & legacy ===
+  {
+    path: ROUTES.HOME,
+    element: (
+      <PublicPageWrapper>
+        <Home />
+      </PublicPageWrapper>
+    ),
+  },
+  {
+    path: ROUTES.HOMEPAGE,
+    element: (
+      <PublicPageWrapper>
+        <Home />
+      </PublicPageWrapper>
+    ),
+  },
+  {
+    path: ROUTES.HOMEPAGE_ADMISSION,
+    element: (
+      <PublicPageWrapper>
+        <Admission />
+      </PublicPageWrapper>
+    ),
+  },
+  {
+    path: ROUTES.HOMEPAGE_ABOUT,
+    element: (
+      <PublicPageWrapper>
+        <AboutUs />
+      </PublicPageWrapper>
+    ),
+  },
+  {
+    path: ROUTES.HOMEPAGE_CLASSES,
+    element: (
+      <PublicPageWrapper>
+        <Classes />
+      </PublicPageWrapper>
+    ),
+  },
+  {
+    path: ROUTES.HOMEPAGE_EVENTS,
+    element: (
+      <PublicPageWrapper>
+        <Events />
+      </PublicPageWrapper>
+    ),
+  },
+  {
+    path: "/homepage/events/:id",
+    element: (
+      <PublicPageWrapper>
+        <EventDetail />
+      </PublicPageWrapper>
+    ),
+  },
 
     // === LEGACY PUBLIC (for compatibility) ===
     {

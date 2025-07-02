@@ -59,8 +59,8 @@ export const useCancelEvent = () => {
 
   return useMutation({
     mutationKey: ['cancelEvent'],
-    mutationFn: async (id) => {
-      const response = await eventService.cancelEvent(id);
+    mutationFn: async ({ id, reason }) => {
+      const response = await eventService.cancelEvent({ id, reason });
       return response.data;
     },
     onSuccess: (data, { id }) => {
@@ -90,5 +90,40 @@ export const useEventTeachers = (eventId) => {
     queryKey: [...eventKeys.detail(eventId), 'teachers'],
     queryFn: () => eventService.getEventTeachers(eventId),
     enabled: !!eventId,
+  });
+};
+
+export const useEventActive = () => {
+  return useQuery({
+    queryKey: [...eventKeys.all, 'getEventActive'],
+    queryFn: eventService.getEventActive,
+  });
+};
+
+export const useEventActiveDetail = (id) => {
+  return useQuery({
+    queryKey: [...eventKeys.all, 'getEventActiveDetail', id],
+    queryFn: () => eventService.getEventActiveDetail(id),
+    enabled: !!id,
+  });
+};
+
+export const useRegisterEvent = () => {
+  return useMutation({
+    mutationFn: ({ eventId, studentIds }) => eventService.registerEvent({ eventId, studentIds }),
+  });
+};
+
+export const useChildren = () => {
+  return useQuery({
+    queryKey: ['children'],
+    queryFn: eventService.getChildren,
+  });
+};
+
+export const useRegisteredEvents = () => {
+  return useQuery({
+    queryKey: ['registeredEvents'],
+    queryFn: eventService.getRegisteredEvents,
   });
 };
