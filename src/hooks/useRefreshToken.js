@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { refreshToken, getCurrentTokenData, isAuthenticated } from "@services/JWTService.jsx";
 import { useAuth } from "./useAuth";
+import { authService } from "@api/services/authService";
+import Cookies from "js-cookie";
 
 const useRefreshToken = (options = {}) => {
   const {
@@ -10,21 +11,30 @@ const useRefreshToken = (options = {}) => {
   } = options;
   
   const intervalRef = useRef(null);
-  const { setAuth, auth } = useAuth();
+  const { setAuth } = useAuth();
+
+  const parseJwt = (token) => {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+      return null;
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
 
     const checkAndRefreshToken = async () => {
       try {
-        if (!isAuthenticated()) {
-          console.log("🔄 useRefreshToken - User not authenticated, skipping refresh");
+        const accessToken = Cookies.get("access");
+        if (!accessToken) {
+          console.log("🔄 useRefreshToken - No access token found");
           return;
         }
 
-        const tokenData = getCurrentTokenData();
+        const tokenData = parseJwt(accessToken);
         if (!tokenData) {
-          console.log("🔄 useRefreshToken - No token data found");
+          console.log("🔄 useRefreshToken - Invalid token format");
           return;
         }
 
@@ -37,16 +47,42 @@ const useRefreshToken = (options = {}) => {
         if (timeUntilExpiry > 0 && timeUntilExpiry <= refreshThreshold) {
           console.log("🔄 useRefreshToken - Token expires soon, refreshing...");
           
-          await refreshToken();
-          console.log("✅ useRefreshToken - Token refresh successful");
+          const response = await authService.refreshToken();
+          if (response) {
+            // The server will set the new access token cookie automatically
+            console.log("✅ useRefreshToken - Token refresh successful");
+            
+            // Update auth context if needed
+            if (setAuth) {
+              setAuth(prev => ({
+                ...prev,
+                isAuthenticated: true
+              }));
+            }
+          }
         } else if (timeUntilExpiry <= 0) {
           console.log("🔄 useRefreshToken - Token expired, attempting refresh...");
           
           try {
-            await refreshToken();
+            await authService.refreshToken();
             console.log("✅ useRefreshToken - Expired token refresh successful");
+            
+            // Update auth context if needed
+            if (setAuth) {
+              setAuth(prev => ({
+                ...prev,
+                isAuthenticated: true
+              }));
+            }
           } catch (error) {
             console.error("❌ useRefreshToken - Failed to refresh expired token:", error);
+            // Update auth context to reflect failed authentication
+            if (setAuth) {
+              setAuth(prev => ({
+                ...prev,
+                isAuthenticated: false
+              }));
+            }
           }
         }
       } catch (error) {
@@ -72,7 +108,7 @@ const useRefreshToken = (options = {}) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [checkInterval, refreshThreshold, enablePeriodicCheck]);
+  }, [checkInterval, refreshThreshold, enablePeriodicCheck, setAuth]);
 
   return null;
 };

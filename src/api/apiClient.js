@@ -6,19 +6,13 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Quan trọng: cho phép gửi cookies trong cross-origin requests
+  withCredentials: true, // Important: allows sending cookies in cross-origin requests
 });
 
 // Debug function to check token
 const getToken = () => {
-  // Try to get from cookie first
-  let token = Cookies.get("access");
-  
-  // If not in cookie, try localStorage
-  if (!token) {
-    token = localStorage.getItem('accessToken');
-  }
-  
+  // Get token from cookie only
+  const token = Cookies.get("access");
   console.log('Current token:', token ? 'Present' : 'Not found');
   return token;
 };
@@ -26,10 +20,9 @@ const getToken = () => {
 const validateToken = (token) => {
   try {
     if (!token) {
-      console.warn('No token found in both cookie and localStorage');
+      console.warn('No token found in cookie');
       return false;
     }
-    // Log token info for debugging
     console.log('Token present in request');
     return true;
   } catch (error) {
@@ -71,7 +64,6 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response) {
-      // Log detailed error information
       console.error('API Error Details:', {
         status: error.response.status,
         data: error.response.data,
@@ -86,28 +78,29 @@ apiClient.interceptors.response.use(
             originalRequest._retry = true;
             try {
               console.log('Attempting token refresh...');
-              const response = await apiClient.post("/auth/refresh");
-              if (response && response.data) {
-                const newToken = response.data.accessToken;
-                localStorage.setItem('accessToken', newToken);
-                console.log('Token refreshed successfully');
-                
-                // Retry the original request with new token
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                return apiClient(originalRequest);
-              }
+              // The server will automatically set the new access token cookie in the response
+              await apiClient.post("/auth/refresh");
+              console.log('Token refreshed successfully');
+              
+              // No need to manually set token since it's handled by cookies
+              // Just retry the original request - cookies will be sent automatically
+              return apiClient(originalRequest);
             } catch (refreshError) {
               console.error("Token refresh failed:", refreshError);
-              localStorage.removeItem('accessToken');
-              window.location.href = '/auth/login';
+              // Check if we're already on the login page to avoid refresh
+              if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/auth/login';
+              }
               return Promise.reject(refreshError);
             }
           }
           break;
         case 401:
-          console.log('Unauthorized access, redirecting to login...');
-          localStorage.removeItem('accessToken');
-          window.location.href = '/auth/login';
+          console.log('Unauthorized access detected');
+          // Check if we're already on the login page to avoid refresh
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/auth/login';
+          }
           break;
         default:
           console.error('Unhandled API Error:', error.response.data);

@@ -50,7 +50,7 @@ const ParentDashboard = () => {
           {
             id: 1,
             type: "info",
-            title: "Thông báo mới",
+            title: "New Notification",
             message: "Lịch phỏng vấn đã được sắp xếp cho ngày 10/06/2025",
             date: "2025-06-05",
             read: false,
@@ -58,8 +58,8 @@ const ParentDashboard = () => {
           {
             id: 2,
             type: "success",
-            title: "Đơn đăng ký được duyệt",
-            message: "Đơn đăng ký của bé đã được xem xét và chấp thuận",
+            title: "Application Approved",
+            message: "Your child's application has been reviewed and approved",
             date: "2025-06-04",
             read: true,
           },
@@ -68,17 +68,17 @@ const ParentDashboard = () => {
         setUpcomingEvents([
           {
             id: 1,
-            title: "Phỏng vấn nhập học",
+            title: "Enrollment Interview",
             date: "2025-06-10",
             time: "09:00 AM",
-            location: "Phòng 101",
+            location: "Room 101",
           },
           {
             id: 2,
-            title: "Họp phụ huynh",
+            title: "Parent Meeting",
             date: "2025-06-15",
             time: "02:00 PM",
-            location: "Hội trường",
+            location: "Auditorium",
           },
         ]);
       } catch (error) {
@@ -93,11 +93,11 @@ const ParentDashboard = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      SUBMITTED: { variant: "default", text: "Đã nộp" },
-      UNDER_REVIEW: { variant: "warning", text: "Đang xem xét" },
-      APPROVED: { variant: "success", text: "Đã duyệt" },
-      REJECTED: { variant: "destructive", text: "Bị từ chối" },
-      WAITLISTED: { variant: "secondary", text: "Danh sách chờ" },
+      SUBMITTED: { variant: "default", text: "Submitted" },
+      UNDER_REVIEW: { variant: "warning", text: "Under Review" },
+      APPROVED: { variant: "success", text: "Approved" },
+      REJECTED: { variant: "destructive", text: "Rejected" },
+      WAITLISTED: { variant: "secondary", text: "Waitlisted" },
     };
 
     const config = statusConfig[status] || { variant: "default", text: status };
@@ -105,7 +105,7 @@ const ParentDashboard = () => {
   };
 
   const handleViewApplication = (applicationId) => {
-    navigate(`/user/parent/enrollment-list`); // Xem danh sách đơn
+    navigate(`/user/parent/forms`); // Xem danh sách đơn
   };
   const handleNewApplication = () => {
     navigate("/user/parent/child-list"); // Đăng ký mới: chuyển sang danh sách child để chọn hoặc thêm child
@@ -113,10 +113,10 @@ const ParentDashboard = () => {
 
   if (loading) {
     return (
-      <PageTemplate title="Dashboard phụ huynh">
+      <PageTemplate title="Parent Dashboard">
         <div className="text-center py-8">
           <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải thông tin...</p>
+          <p className="text-gray-600">Loading information...</p>
         </div>
       </PageTemplate>
     );
@@ -131,14 +131,14 @@ const ParentDashboard = () => {
           <Button
             variant="outline"
             size="md"
-            onClick={() => navigate("/user/parent/enrollment-list")}
+            onClick={() => navigate("/user/parent/forms")}
           >
             <FileText className="w-4 h-4 mr-2" />
             My Applications
           </Button>
           <Button variant="primary" size="md" onClick={handleNewApplication}>
             <Baby className="w-4 h-4 mr-2" />
-            New Enrollment
+            Create New Application
           </Button>
         </div>
       }
@@ -147,30 +147,30 @@ const ParentDashboard = () => {
         {/* Quick Stats */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Đơn đăng ký"
+            title="Applications"
             value={applications.length}
-            description="Tổng số đơn"
+            description="Total applications"
             icon={FileText}
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="Thông báo mới"
+            title="New Notifications"
             value={notifications.filter((n) => !n.read).length}
-            description="Chưa đọc"
+            description="Unread"
             icon={Bell}
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="Sự kiện"
+            title="Events"
             value={upcomingEvents.length}
-            description="Sắp tới"
+            description="Upcoming"
             icon={Calendar}
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="Tin nhắn"
+            title="Messages"
             value={0}
-            description="Tin mới"
+            description="New messages"
             icon={MessageSquare}
             trend={{ value: 0, isPositive: true }}
           />
@@ -184,16 +184,16 @@ const ParentDashboard = () => {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">
-                  Đơn đăng ký gần đây
+                  Recent Applications
                 </h3>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() =>
-                    navigate("/user/parent/enrollment/my-applications")
+                    navigate("/user/parent/forms")
                   }
                 >
-                  Xem tất cả
+                  View All
                 </Button>
               </div>
 
@@ -214,13 +214,13 @@ const ParentDashboard = () => {
                             {getStatusBadge(application.status)}
                           </div>
                           <p className="text-sm text-gray-600">
-                            Chương trình: {application.program}
+                            Program: {application.program}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Ngày nộp:{" "}
+                            Submitted on:{" "}
                             {new Date(
                               application.applicationDate
-                            ).toLocaleDateString("vi-VN")}
+                            ).toLocaleDateString("en-US")}
                           </p>
                         </div>
                         <Button
@@ -228,7 +228,7 @@ const ParentDashboard = () => {
                           size="sm"
                           onClick={() => handleViewApplication(application.id)}
                         >
-                          Xem chi tiết
+                          View Details
                         </Button>
                       </div>
                     </div>
@@ -238,10 +238,10 @@ const ParentDashboard = () => {
                 <div className="text-center py-8">
                   <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 mb-4">
-                    Bạn chưa có đơn đăng ký nào
+                    You have no applications yet
                   </p>
                   <Button variant="primary" onClick={handleNewApplication}>
-                    Tạo đơn đăng ký mới
+                    Create New Application
                   </Button>
                 </div>
               )}
@@ -250,7 +250,7 @@ const ParentDashboard = () => {
             {/* Upcoming Events */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Sự kiện sắp tới
+                Upcoming Events
               </h3>
               {upcomingEvents.length > 0 ? (
                 <div className="space-y-3">
@@ -267,7 +267,7 @@ const ParentDashboard = () => {
                           {event.title}
                         </h4>
                         <p className="text-sm text-gray-600">
-                          {new Date(event.date).toLocaleDateString("vi-VN")} •{" "}
+                          {new Date(event.date).toLocaleDateString("en-US")} •{" "}
                           {event.time}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -275,14 +275,14 @@ const ParentDashboard = () => {
                         </p>
                       </div>
                       <Button variant="ghost" size="sm">
-                        Chi tiết
+                        Details
                       </Button>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-gray-500 text-center py-4">
-                  Không có sự kiện nào sắp tới
+                  No upcoming events
                 </p>
               )}
             </div>
@@ -293,7 +293,7 @@ const ParentDashboard = () => {
             {/* Notifications */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Thông báo
+                Notifications
               </h3>
               {notifications.length > 0 ? (
                 <div className="space-y-3">
@@ -321,7 +321,7 @@ const ParentDashboard = () => {
                           </p>
                           <p className="text-xs text-gray-500 mt-2">
                             {new Date(notification.date).toLocaleDateString(
-                              "vi-VN"
+                              "en-US"
                             )}
                           </p>
                         </div>
@@ -331,7 +331,7 @@ const ParentDashboard = () => {
                 </div>
               ) : (
                 <p className="text-gray-500 text-center py-4">
-                  Không có thông báo mới
+                  No new notifications
                 </p>
               )}
             </div>
@@ -339,7 +339,7 @@ const ParentDashboard = () => {
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Thao tác nhanh
+                Quick Actions
               </h3>
               <div className="space-y-3">
                 <Button
@@ -353,7 +353,7 @@ const ParentDashboard = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/user/parent/enrollment-list")}
+                  onClick={() => navigate("/user/parent/forms")}
                 >
                   <FileText className="w-4 h-4 mr-3" />
                   My Applications
@@ -364,7 +364,7 @@ const ParentDashboard = () => {
                   onClick={() => navigate("/user/parent/schedule")}
                 >
                   <Calendar className="w-4 h-4 mr-3" />
-                  Đặt lịch hẹn
+                  Book Appointment
                 </Button>
                 <Button
                   variant="outline"
@@ -372,7 +372,7 @@ const ParentDashboard = () => {
                   onClick={() => navigate("/user/parent/payments")}
                 >
                   <CreditCard className="w-4 h-4 mr-3" />
-                  Thanh toán
+                  Payments
                 </Button>
                 <Button
                   variant="outline"
@@ -380,7 +380,7 @@ const ParentDashboard = () => {
                   onClick={() => navigate("/user/parent/profile")}
                 >
                   <Settings className="w-4 h-4 mr-3" />
-                  Cài đặt tài khoản
+                  Account Settings
                 </Button>
               </div>
             </div>

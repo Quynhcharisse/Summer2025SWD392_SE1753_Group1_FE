@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { AUTH_ROUTES, getDashboardRoute } from "@/constants/routes";
 import authService from "@services/authService";
-import { getCurrentTokenData, waitForTokenAvailability } from "@services/JWTService.jsx";
-import { getDashboardRoute, AUTH_ROUTES } from "@/constants/routes";
+import { getCurrentTokenData } from "@services/JWTService.jsx";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Input from "../atoms/Input";
 
 // Helper function to handle role-based navigation
@@ -34,9 +35,21 @@ const storeUserData = (userData, email) => {
     localStorage.setItem('user', JSON.stringify(userInfo));
 };
 
+// Helper function to get the appropriate redirect message based on context
+const getRedirectMessage = (redirectUrl, fromUrl, t) => {
+    if (redirectUrl.includes('enrollment')) {
+        return t("login.redirectInfo.enrollment");
+    } else if (fromUrl?.includes('admission')) {
+        return t("login.redirectInfo.admission");
+    } else {
+        return t("login.redirectInfo.generic");
+    }
+};
+
 function Login() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { t } = useTranslation("auth");
     
     // Get success message and pre-filled email from signup redirect
     const successMessage = location.state?.message;
@@ -72,26 +85,23 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setErrors({});        try {
+        setErrors({});
+
+        try {
             console.log("🔑 Starting login process...");
             const response = await authService.login({ email, password });
-            console.log("🔑 Login response:", response);            if (response?.success !== false) { // Accept any response that's not explicitly failed
+            console.log("🔑 Login response:", response);
+
+            if (response && response.data) { // Check if response exists and has data
                 console.log("🔑 Login successful, storing user data...");
-                  // Store user data
-                storeUserData(response?.data || response, email);                // Wait for token to be available in cookies (with retry mechanism)
-                console.log("🔑 Waiting for token availability...");
-                let tokenData = await waitForTokenAvailability();
+                // Store user data immediately
+                storeUserData(response?.data || response, email);
+                
+                // Get token data directly without waiting, avoid delays
+                const tokenData = getCurrentTokenData();
                 
                 if (!tokenData) {
-                    console.error("🔑 Token not available after login, trying fallback");
-                    // Fallback: try to get token immediately
-                    tokenData = getCurrentTokenData();
-                    if (!tokenData) {
-                        console.error("🔑 No token data available, login may have failed");
-                        setErrors({ submit: "Đăng nhập thất bại. Vui lòng thử lại." });
-                        return;
-                    }
-                    console.log("🔑 Fallback token data:", tokenData);
+                    console.error("🔑 No token data available, but proceeding with login");
                 }
                 
                 console.log("🔑 Final token data for navigation:", tokenData);
@@ -134,22 +144,33 @@ function Login() {
                 }
             } else {
                 console.error("🔑 Login failed: Invalid response format");
-                setErrors({ submit: "Đăng nhập thất bại. Vui lòng thử lại." });
+                setErrors({ submit: t("login.errors.genericError") });
             }
         } catch (error) {
             console.error("🔑 Login error:", error);
             
+            // Clear password for security (keep email for UX)
+            setPassword('');
+            
             if (error.response?.status === 401) {
                 setErrors({ 
-                    submit: "Email hoặc mật khẩu không đúng. Vui lòng thử lại." 
+                    submit: t("login.errors.invalidCredentials")
                 });
             } else if (error.response?.data?.message) {
                 setErrors({ submit: error.response.data.message });
             } else {
                 setErrors({ 
-                    submit: "Đã xảy ra lỗi. Vui lòng thử lại sau." 
+                    submit: t("login.errors.genericError")
                 });
             }
+            
+            // Auto focus to password field for retry
+            setTimeout(() => {
+                const passwordField = document.querySelector('input[name="password"]');
+                if (passwordField) {
+                    passwordField.focus();
+                }
+            }, 100);
         } finally {
             setIsLoading(false);
         }
@@ -165,11 +186,7 @@ function Login() {
         successMessage,        redirectInfo: redirectUrl ? {
             isFromEnrollment: redirectUrl.includes('enrollment'),
             fromUrl: fromUrl,
-            message: redirectUrl.includes('enrollment') 
-                ? "Vui lòng đăng nhập để tiếp tục đăng ký nhập học."
-                : fromUrl?.includes('admission')
-                ? "Vui lòng đăng nhập để tiếp tục từ trang tuyển sinh."
-                : "Vui lòng đăng nhập để tiếp tục."
+            message: getRedirectMessage(redirectUrl, fromUrl, t)
         } : null
     };    return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
@@ -186,18 +203,18 @@ function Login() {
                     </div>
                     <div>
                         <h2 className="text-3xl font-bold text-gray-800 tracking-tight mb-2">
-                            Chào mừng trở lại
+                            {t("login.title")}
                         </h2>
                         <p className="text-gray-600 text-lg font-medium mb-4">
-                            Đăng nhập để tiếp tục hành trình học tập
+                            {t("login.subtitle")}
                         </p>
                         <p className="text-gray-500 text-sm">
-                            Chưa có tài khoản?{' '}
+                            {t("login.noAccount")}{' '}
                             <Link
                                 to={AUTH_ROUTES.REGISTER}
                                 className="font-semibold text-blue-600 hover:text-purple-600 underline underline-offset-2 transition-colors"
                             >
-                                Đăng ký ngay
+                                {t("login.signUp")}
                             </Link>
                         </p>
                     </div>
@@ -244,7 +261,7 @@ function Login() {
                                 size="md"
                                 variant="default"
                                 className="pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20 bg-white/80 backdrop-blur-sm text-gray-800 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 group-hover:shadow-md"
-                                placeholder="Địa chỉ email của bạn"
+                                placeholder={t("login.email")}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
@@ -264,7 +281,7 @@ function Login() {
                                 size="md"
                                 variant="default"
                                 className="pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20 bg-white/80 backdrop-blur-sm text-gray-800 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 group-hover:shadow-md"
-                                placeholder="Mật khẩu của bạn"
+                                placeholder={t("login.password")}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
@@ -291,14 +308,14 @@ function Login() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    <span>Đang đăng nhập...</span>
+                                    <span>{t("login.signingIn")}</span>
                                 </>
                             ) : (
                                 <>
                                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                     </svg>
-                                    <span>Đăng nhập ngay</span>
+                                    <span>{t("login.signInButton")}</span>
                                 </>
                             )}
                         </button>
@@ -308,7 +325,7 @@ function Login() {
                         to={AUTH_ROUTES.FORGOT_PASSWORD}
                         className="font-medium text-blue-600 hover:text-purple-600 underline underline-offset-2 transition-colors text-sm"
                     >
-                        Quên mật khẩu?
+                        {t("login.forgotPassword")}
                     </Link>
                 </div>
             </div>
