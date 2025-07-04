@@ -45,13 +45,21 @@ import {
     Visibility
 } from '@mui/icons-material';
 import {useEffect, useMemo, useState} from "react";
-import {createTerm, getDefaultGrade, getTermList, getTermYears, updateTermStatus, createExtraTerm} from "@services/admissionService.js";
+import {
+    createExtraTerm,
+    createTerm,
+    getDefaultGrade,
+    getTermList,
+    getTermYears,
+    updateTermStatus
+} from "@services/admissionService.js";
 import {useSnackbar} from "notistack";
-import {format} from 'date-fns';
 import {formatVND} from "@/components/none-shared/formatVND.jsx";
-import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
-import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import { viVN } from '@mui/x-date-pickers/locales';
+import dayjs from "dayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 
 function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
     const [page, setPage] = useState(0);
@@ -171,7 +179,7 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                     <TableCell align="center">
                                         <Stack spacing={0.5}>
                                             <Typography variant="body2">
-                                                {format(new Date(term.startDate), 'dd/MM/yyyy HH:mm')}
+                                                {term.startDate}
                                             </Typography>
                                         </Stack>
                                     </TableCell>
@@ -179,7 +187,7 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                     <TableCell align="center">
                                         <Stack spacing={0.5}>
                                             <Typography variant="body2">
-                                                {format(new Date(term.endDate), 'dd/MM/yyyy HH:mm')}
+                                                {term.endDate}
                                             </Typography>
                                         </Stack>
                                     </TableCell>
@@ -233,18 +241,6 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
     )
 }
 
-const formatDate = (dateString) => {
-    if (!dateString) return 'Not set';
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Invalid date';
-        return format(date, 'dd/MM/yyyy HH:mm');
-    } catch (error) {
-        console.error('Error formatting date:', error);
-        return 'Invalid date';
-    }
-};
-
 function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm}) {
     const {enqueueSnackbar} = useSnackbar();
     const [showExtraTermForm, setShowExtraTermForm] = useState(false);
@@ -293,7 +289,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
         const firstGradeWithMissing = Object.keys(missingInfoByGrade)[0];
         if (firstGradeWithMissing) {
             const gradeInfo = missingInfoByGrade[firstGradeWithMissing];
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
                 maxNumberRegistration: gradeInfo.missingStudents || 0,
                 expectedClasses: gradeInfo.expectedClasses || 0
@@ -311,16 +307,16 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
         }
 
         // Validate date order
-        if (new Date(formData.startDate) >= new Date(formData.endDate)) {
+        if (dayjs(formData.startDate) >= dayjs(formData.endDate)) {
             enqueueSnackbar('End date must be after start date', { variant: 'error' });
             return;
         }
 
         // Validate against parent term dates
-        const parentStartDate = new Date(selectedTerm.startDate);
-        const parentEndDate = new Date(selectedTerm.endDate);
-        const extraStartDate = new Date(formData.startDate);
-        const extraEndDate = new Date(formData.endDate);
+        const parentStartDate = dayjs(selectedTerm.startDate);
+        const parentEndDate = dayjs(selectedTerm.endDate);
+        const extraStartDate = dayjs(formData.startDate);
+        const extraEndDate = dayjs(formData.endDate);
 
         if (extraStartDate < parentStartDate || extraEndDate > parentEndDate) {
             enqueueSnackbar('Extra term dates must be within parent term dates', { variant: 'error' });
@@ -334,8 +330,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
         try {
             const response = await createExtraTerm({
                 parentTermId: selectedTerm.id,
-                startDate: format(extraStartDate, "yyyy-MM-dd'T'HH:mm:ss"),
-                endDate: format(extraEndDate, "yyyy-MM-dd'T'HH:mm:ss"),
+                startDate: dayjs(extraStartDate),
+                endDate: dayjs(extraEndDate),
                 maxNumberRegistration: gradeInfo?.missingStudents || 0,
                 expectedClasses: gradeInfo?.expectedClasses || 0
             });
@@ -365,6 +361,21 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
         setShowExtraTermDetail(false);
         setSelectedExtraTerm(null);
     };
+
+    const handleLockTerm = async () => {
+        try {
+            const response = await updateTermStatus(selectedTerm.id);
+            if (response.success) {
+                enqueueSnackbar(response.message || 'Term locked successfully', { variant: 'success' });
+                await GetTerm();
+            } else {
+                enqueueSnackbar(response.message || 'Failed to lock term', { variant: 'error' });
+            }
+        } catch (error) {
+            enqueueSnackbar(error.response?.data?.message || 'Error locking term', { variant: 'error' });
+        }
+    };
+
 
     return (
         <>
@@ -413,13 +424,39 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                             </Stack>
                         </Box>
 
-                        <Typography sx={{
-                            color: 'white',
-                            backgroundColor: isLocked ? 'red' : 'white',
-                            width: '10vw',
-                            height: '5vh'
-                        }}>
-                            {selectedTerm.status}
+                        <Typography
+                            sx={{
+                                display: 'inline-block',
+                                px: 3,
+                                py: 1,
+                                minWidth: 110,
+                                textAlign: 'center',
+                                fontWeight: 700,
+                                borderRadius: 10,
+                                fontSize: '1rem',
+                                letterSpacing: 1,
+                                textTransform: 'uppercase',
+                                bgcolor:
+                                    selectedTerm.status === 'locked'
+                                        ? '#d32f2f'
+                                        : selectedTerm.status === 'active'
+                                            ? '#2e7d32'
+                                            : selectedTerm.status === 'inactive'
+                                                ? '#fbc02d'
+                                                : '#eeeeee',
+                                color:
+                                    selectedTerm.status === 'locked'
+                                        ? 'white'
+                                        : selectedTerm.status === 'active'
+                                            ? 'white'
+                                            : selectedTerm.status === 'inactive'
+                                                ? 'white'
+                                                : '#616161',
+                                boxShadow: 2,
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            {selectedTerm.status.toUpperCase()}
                         </Typography>
                     </Toolbar>
                 </AppBar>
@@ -484,7 +521,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                             Start Date
                                         </Typography>
                                         <Typography variant="body2" sx={{color: '#333'}}>
-                                            {formatDate(selectedTerm.startDate)}
+                                            {dayjs(selectedTerm.startDate).toISOString()}
                                         </Typography>
                                     </Box>
                                 </Grid>
@@ -499,7 +536,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                             End Date
                                         </Typography>
                                         <Typography variant="body2" sx={{color: '#333'}}>
-                                            {formatDate(selectedTerm.endDate)}
+                                            {dayjs(selectedTerm.endDate).toISOString()}
                                         </Typography>
                                     </Box>
                                 </Grid>
@@ -970,7 +1007,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                 }}>
                                                     <EventOutlined sx={{fontSize: 16, mr: 0.5}}/>
                                                     <Typography variant="caption">
-                                                        {formatDate(extraTerm.startDate)} - {formatDate(extraTerm.endDate)}
+                                                        {dayjs(extraTerm.startDate)} - {dayjs(extraTerm.endDate)}
                                                     </Typography>
                                                 </Box>
                                             </Box>
@@ -998,32 +1035,31 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                         )}
                                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                             <Typography variant="body2" color="textSecondary">
-                                                Parent Term: {format(new Date(selectedTerm.startDate), 'dd/MM/yyyy HH:mm')} - {format(new Date(selectedTerm.endDate), 'dd/MM/yyyy HH:mm')}
+                                                Parent Term: {dayjs(selectedTerm.startDate).toISOString()} - {(dayjs(selectedTerm.endDate).toISOString())}
                                             </Typography>
 
                                             {/* Date Selection */}
-                                            <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                                <DateTimePicker
-                                                    label="Start Date"
-                                                    value={formData.startDate}
-                                                    onChange={(newValue) => {
-                                                        setFormData(prev => ({ ...prev, startDate: newValue }));
-                                                    }}
-                                                    renderInput={(params) => <TextField {...params} fullWidth required />}
-                                                    minDateTime={new Date(selectedTerm.startDate)}
-                                                    maxDateTime={new Date(selectedTerm.endDate)}
-                                                />
-                                                <DateTimePicker
-                                                    label="End Date"
-                                                    value={formData.endDate}
-                                                    onChange={(newValue) => {
-                                                        setFormData(prev => ({ ...prev, endDate: newValue }));
-                                                    }}
-                                                    renderInput={(params) => <TextField {...params} fullWidth required />}
-                                                    minDateTime={formData.startDate || new Date(selectedTerm.startDate)}
-                                                    maxDateTime={new Date(selectedTerm.endDate)}
-                                                />
-                                            </LocalizationProvider>
+                                            <DateTimePicker
+                                                label="Start Date"
+                                                value={formData.startDate ? dayjs(formData.startDate) : dayjs(new Date())}
+                                                onChange={(newValue) => {
+                                                    setFormData(prev => ({ ...prev, startDate: newValue }));
+                                                }}
+                                                renderInput={(params) => <TextField {...params} fullWidth required />}
+                                                minDate={dayjs(selectedTerm.startDate)}
+                                                maxDate={dayjs(selectedTerm.endDate)}
+                                            />
+                                            <DateTimePicker
+                                                label="End Date"
+                                                value={formData.endDate ? dayjs(formData.endDate) : dayjs(new Date())}
+                                                onChange={(newValue) => {
+                                                    setFormData(prev => ({ ...prev, endDate: newValue }));
+                                                }}
+                                                renderInput={(params) => <TextField {...params} fullWidth required />}
+                                                minDate={dayjs(formData.startDate) || dayjs(selectedTerm.startDate)}
+                                                maxDate={dayjs(selectedTerm.endDate)}
+                                            />
+
 
                                             {/* Registration Info */}
                                             <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
@@ -1095,45 +1131,36 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                         gap: 1.5
                     }}>
                         <Button
-                            variant="outlined"
+                            variant="contained"
                             onClick={handleClosePopUp}
                             size="small"
+                            color={"warning"}
                             sx={{
-                                borderColor: '#07663a',
-                                color: '#07663a',
+                                color: 'white',
                                 px: 3,
                                 fontSize: '0.875rem',
                                 textTransform: 'none',
-                                '&:hover': {
-                                    borderColor: '#07663a',
-                                    backgroundColor: 'rgba(7, 102, 58, 0.04)'
-                                }
                             }}
                         >
                             Close
                         </Button>
-                        {!isLocked && Object.keys(missingInfoByGrade).length > 0 && (
+                        {!isLocked &&
                             <Button
                                 variant="contained"
-                                onClick={() => setShowExtraTermForm(true)}
-                                startIcon={<Add sx={{ fontSize: 18 }} />}
+                                onClick={handleLockTerm}
                                 size="small"
+                                color={"error"}
                                 sx={{
-                                    backgroundColor: '#07663a',
                                     color: 'white',
                                     px: 3,
                                     fontSize: '0.875rem',
                                     textTransform: 'none',
                                     boxShadow: '0 2px 4px rgba(7, 102, 58, 0.25)',
-                                    '&:hover': {
-                                        backgroundColor: '#05512e',
-                                        boxShadow: '0 2px 6px rgba(7, 102, 58, 0.35)'
-                                    }
                                 }}
                             >
-                                Create Extra Term
+                                Locked
                             </Button>
-                        )}
+                        }
                     </Box>
                 </Box>
             </Dialog>
@@ -1181,7 +1208,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                     Start Date
                                 </Typography>
                                 <Typography variant="body1">
-                                    {formatDate(selectedExtraTerm.startDate)}
+                                    {dayjs(selectedExtraTerm.startDate)}
                                 </Typography>
                             </Box>
 
@@ -1190,7 +1217,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                     End Date
                                 </Typography>
                                 <Typography variant="body1">
-                                    {formatDate(selectedExtraTerm.endDate)}
+                                    {dayjs(selectedExtraTerm.endDate)}
                                 </Typography>
                             </Box>
 
@@ -1259,11 +1286,14 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
 }
 
 function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(today.getDate() + 1)
+
     const {enqueueSnackbar} = useSnackbar();
     const [formData, setFormData] = useState({
-
-        startDate: '',
-        endDate: '',
+        startDate: dayjs(today),
+        endDate: dayjs(tomorrow),
         termItemList: []
     });
 
@@ -1280,6 +1310,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
         reservationFee: 0,
         serviceFee: 0,
     });
+
 
     // Calculate remaining available grades
     const remainingGrades = availableGrades.filter(
@@ -1383,15 +1414,35 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                 return;
             }
 
-            const payloadItems = formData.termItemList.map(item => ({
+            // Format dates to ISO string
+            const startDateISO = new Date(formData.startDate).toISOString();
+            const endDateISO = new Date(formData.endDate).toISOString();
+
+            // Prepare term items with all required fields
+            const termItems = formData.termItemList.map(item => ({
+                grade: item.grade,
                 expectedClasses: Number(item.expectedClasses),
-                grade: item.grade
+                studentsPerClass: Number(item.studentsPerClass),
+                maxNumberRegistration: Number(item.maxNumberRegistration),
+                feeList: {
+                    facilityFee: Number(item.facilityFee),
+                    uniformFee: Number(item.uniformFee),
+                    learningMaterialFee: Number(item.learningMaterialFee),
+                    reservationFee: Number(item.reservationFee),
+                    serviceFee: Number(item.serviceFee)
+                }
             }));
 
+            console.log('Creating term with data:', {
+                startDate: startDateISO,
+                endDate: endDateISO,
+                termItemList: termItems
+            });
+
             const response = await createTerm(
-                formData.startDate,
-                formData.endDate,
-                payloadItems
+                startDateISO,
+                endDateISO,
+                termItems
             );
 
             if (response.success) {
@@ -1406,8 +1457,6 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
             enqueueSnackbar(error.response?.data?.message || "Error creating term", {variant: "error"});
         }
     };
-
-
 
     return (
         <Dialog
@@ -1571,77 +1620,17 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                                     Term Duration
                                 </Typography>
                                 <Stack direction="row" spacing={2}>
-                                    <TextField
+                                    <DateTimePicker
                                         label="Start Date"
-                                        type="datetime-local"
-                                        value={formData.startDate}
-                                        onChange={(e) => setFormData(prev => ({...prev, startDate: e.target.value}))}
-                                        required
-                                        fullWidth
-                                        InputProps={{
-                                            startAdornment: (
-                                                <Box sx={{mr: 1, color: '#07663a'}}>
-                                                    <EventOutlined/>
-                                                </Box>
-                                            )
-                                        }}
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                backgroundColor: '#ffffff',
-                                                '& fieldset': {
-                                                    borderColor: '#e0e0e0',
-                                                    borderWidth: '2px'
-                                                },
-                                                '&:hover fieldset': {
-                                                    borderColor: '#07663a'
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: '#07663a'
-                                                }
-                                            },
-                                            '& .MuiInputLabel-root': {
-                                                color: '#07663a',
-                                                '&.Mui-focused': {
-                                                    color: '#07663a'
-                                                }
-                                            }
-                                        }}
+                                        format={'HH:mm DD/MM/YYYY'}
+                                        value={dayjs(formData.startDate)}
+                                        onChange={(newDate) => setFormData({...formData, startDate: newDate})}
                                     />
-                                    <TextField
+                                    <DateTimePicker
                                         label="End Date"
-                                        type="datetime-local"
-                                        value={formData.endDate}
-                                        onChange={(e) => setFormData(prev => ({...prev, endDate: e.target.value}))}
-                                        required
-                                        fullWidth
-                                        InputProps={{
-                                            startAdornment: (
-                                                <Box sx={{mr: 1, color: '#07663a'}}>
-                                                    <EventOutlined/>
-                                                </Box>
-                                            )
-                                        }}
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                backgroundColor: '#ffffff',
-                                                '& fieldset': {
-                                                    borderColor: '#e0e0e0',
-                                                    borderWidth: '2px'
-                                                },
-                                                '&:hover fieldset': {
-                                                    borderColor: '#07663a'
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: '#07663a'
-                                                }
-                                            },
-                                            '& .MuiInputLabel-root': {
-                                                color: '#07663a',
-                                                '&.Mui-focused': {
-                                                    color: '#07663a'
-                                                }
-                                            }
-                                        }}
+                                        format={'HH:mm DD/MM/YYYY'}
+                                        value={dayjs(formData.endDate)}
+                                        onChange={(newDate) => setFormData({...formData, endDate: newDate})}
                                     />
                                 </Stack>
                             </Box>
@@ -2281,7 +2270,7 @@ export default function TermAdmission() {
     }
 
     return (
-        <>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'vi-VN'} localeText={viVN.components.MuiLocalizationProvider.defaultProps.localeText}>
             <RenderPage
                 terms={data.terms}
                 openFormPopUpFunc={() => handleOpenPopUp('form')}
@@ -2305,6 +2294,6 @@ export default function TermAdmission() {
                     GetTerm={GetTerm}
                 />
             )}
-        </>
+        </LocalizationProvider>
     );
 }

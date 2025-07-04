@@ -53,7 +53,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
         openDetailPopUpFunc();
     }
 
-    const filteredForms = forms?.filter(form => form.status !== "cancelled") || [];
+    const filteredForms = forms?.filter(form => form.status !== "cancelled" && (form.status !== "refilled")) || [];
 
     return (
         <Paper sx={{

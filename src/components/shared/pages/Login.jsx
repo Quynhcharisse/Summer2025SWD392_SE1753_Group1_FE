@@ -14,7 +14,6 @@ const handleRoleBasedNavigation = (navigate, tokenData) => {
     }
     
     const role = tokenData.role.toLowerCase();
-    console.log("User role:", role);
     
     // Use the centralized dashboard route logic
     const dashboardRoute = getDashboardRoute(role);
@@ -57,14 +56,7 @@ function Login() {
     const urlParams = new URLSearchParams(location.search);
     const redirectUrl = urlParams.get('redirect') || location.state?.returnUrl;
     const fromUrl = urlParams.get('from');
-    
-    console.log("🔑 Login redirect parameters:", { 
-        redirectUrl, 
-        fromUrl, 
-        search: location.search,
-        state: location.state 
-    });
-    
+
     const [email, setEmail] = useState(prefilledEmail);
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -88,12 +80,9 @@ function Login() {
         setErrors({});
 
         try {
-            console.log("🔑 Starting login process...");
             const response = await authService.login({ email, password });
-            console.log("🔑 Login response:", response);
 
             if (response && response.data) { // Check if response exists and has data
-                console.log("🔑 Login successful, storing user data...");
                 // Store user data immediately
                 storeUserData(response?.data || response, email);
                 
@@ -103,8 +92,7 @@ function Login() {
                 if (!tokenData) {
                     console.error("🔑 No token data available, but proceeding with login");
                 }
-                
-                console.log("🔑 Final token data for navigation:", tokenData);
+                // console.log("🔑 Final token data for navigation:", tokenData);
 
                 // Check for first login indicators
                 const responseData = response?.data || response;
@@ -113,7 +101,6 @@ function Login() {
                                    responseData?.requirePasswordChange ||
                                    responseData?.isFirstLogin;                // Handle redirect logic
                 if (redirectUrl) {
-                    console.log("🔑 Redirecting to:", redirectUrl);
                     // Ensure redirect URL is properly formatted
                     const cleanRedirectUrl = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`;
                     
@@ -130,7 +117,6 @@ function Login() {
                     });
                 } else if (isFirstLogin) {
                     // Redirect to profile page for first login
-                    console.log("🔑 First login detected, redirecting to profile...");
                     navigate('/user/shared/profile', { 
                         replace: true,
                         state: { 
@@ -143,11 +129,9 @@ function Login() {
                     handleRoleBasedNavigation(navigate, tokenData);
                 }
             } else {
-                console.error("🔑 Login failed: Invalid response format");
                 setErrors({ submit: t("login.errors.genericError") });
             }
         } catch (error) {
-            console.error("🔑 Login error:", error);
             
             // Clear password for security (keep email for UX)
             setPassword('');

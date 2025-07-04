@@ -266,14 +266,19 @@ const UserLayout = ({ children }) => {
 
   const handleLogout = async () => {
     try {
+      // Gọi API logout trước (để backend xóa session/JWT cookie)
       await authService.logout();
-      navigate("/auth/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // Still navigate to login even if API call fails
-      navigate("/auth/login");
+    } catch (e) {
+      // Dù lỗi vẫn tiếp tục xóa FE và chuyển trang
+      console.error("Logout API failed:", e);
     }
+    // Sau đó xóa local FE
+    localStorage.removeItem('user');
+    sessionStorage.clear();
+    // Chuyển về login
+    navigate("/auth/login");
   };
+
 
   const handleNavigation = (path) => {
     navigate(path);

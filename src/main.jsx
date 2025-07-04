@@ -15,7 +15,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ThemeProvider defaultTheme="light">
-          <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
+          <SnackbarProvider maxSnack={3} autoHideDuration={1000}>
             <AppRouter />
           </SnackbarProvider>
         </ThemeProvider>
