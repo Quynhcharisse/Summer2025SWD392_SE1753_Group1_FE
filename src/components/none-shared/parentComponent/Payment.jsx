@@ -4,9 +4,8 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import HomeIcon from '@mui/icons-material/Home';
 import {Box, Button, Divider, Paper, Stack, Typography, Zoom} from "@mui/material";
-import {useEffect} from "react";
+import {useEffect, useRef} from "react";
 import {createTransaction} from "@services/parentService.js";
-import {enqueueSnackbar} from "notistack";
 
 function formatMoney(amount, s = "0 VND") {
     if (!amount) return;
@@ -45,7 +44,12 @@ export default function Payment() {
         note = "Giao dịch của bạn đang được xử lý.";
     }
 
+    const called = useRef(false);
+
     useEffect(() => {
+        if (called.current) return; // Đã gọi thì không gọi lại nữa
+        called.current = true;
+
         async function CreateTransaction() {
             const formId = localStorage.getItem("form")
             if (formId) {
@@ -62,7 +66,7 @@ export default function Payment() {
     }, [])
 
     const handleBackHome = () => {
-        navigate('/');
+        navigate('/user/parent/dashboard');
     };
 
     return (

@@ -257,19 +257,21 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                             sx={{
                                                 color:
                                                     form.status === "approved" ? "#07663a" :
-                                                        form.status === "rejected" || form.status === "cancelled" ? "#dc3545" :
-                                                            form.status === "pending approval" ? "#0d6efd" :
-                                                                form.status === "refilled" ? "#FF7722" : // Màu cam nổi bật
-                                                                    form.status === "waiting payment" ? "#000080" : // Màu cam nổi bật
-                                                                    "black",
+                                                        form.status === "approved paid" ? "#2E7D32" : // màu xanh lá cây đậm cho approved paid
+                                                            form.status === "rejected" || form.status === "cancelled" ? "#dc3545" :
+                                                                form.status === "pending approval" ? "#0d6efd" :
+                                                                    form.status === "refilled" ? "#FF7722" :
+                                                                        form.status === "waiting payment" ? "#000080" :
+                                                                            "black",
                                                 fontWeight: "600",
                                                 padding: '6px 16px',
                                                 backgroundColor:
                                                     form.status === "approved" ? "rgba(7, 102, 58, 0.08)" :
-                                                        form.status === "rejected" || form.status === "cancelled" ? "rgba(220, 53, 69, 0.07)" :
-                                                            form.status === "pending approval" ? "rgba(13, 110, 253, 0.08)" :
-                                                                form.status === "refilled" ? "rgba(255, 152, 0, 0.10)" : // Màu nền cam nhạt
-                                                                    "transparent",
+                                                        form.status === "approved paid" ? "rgba(46, 125, 50, 0.08)" : // nền xanh lá cho approved paid
+                                                            form.status === "rejected" || form.status === "cancelled" ? "rgba(220, 53, 69, 0.07)" :
+                                                                form.status === "pending approval" ? "rgba(13, 110, 253, 0.08)" :
+                                                                    form.status === "refilled" ? "rgba(255, 152, 0, 0.10)" :
+                                                                        "transparent",
                                                 borderRadius: '20px',
                                                 fontSize: '0.89rem',
                                                 letterSpacing: 1,
