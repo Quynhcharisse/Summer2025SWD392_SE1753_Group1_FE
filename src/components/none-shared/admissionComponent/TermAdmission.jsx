@@ -57,7 +57,7 @@ import {useSnackbar} from "notistack";
 import {formatVND} from "@/components/none-shared/formatVND.jsx";
 import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import { viVN } from '@mui/x-date-pickers/locales';
+import {viVN} from '@mui/x-date-pickers/locales';
 import dayjs from "dayjs";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 
@@ -191,12 +191,39 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                             </Typography>
                                         </Stack>
                                     </TableCell>
-
                                     <TableCell align="center">
                                         <Stack spacing={0.5}>
-                                            <Typography variant="body2">
-                                                {term.status}
-                                            </Typography>
+                                            <TableCell align="center" sx={{ padding: '12px 8px' }}>
+                                                <Typography
+                                                    component="span"
+                                                    sx={{
+                                                        color:
+                                                            term.status === "active" ? "#07663a"
+                                                                : term.status === "inactive" ? "#b27a00"
+                                                                    : term.status === "locked" ? "#d32f2f"
+                                                                        : "#333",
+                                                        fontWeight: 600,
+                                                        padding: '6px 16px',
+                                                        backgroundColor:
+                                                            term.status === "active" ? "rgba(7, 102, 58, 0.08)"
+                                                                : term.status === "inactive" ? "rgba(255, 193, 7, 0.12)"
+                                                                    : term.status === "locked" ? "rgba(211, 47, 47, 0.10)"
+                                                                        : "transparent",
+                                                        borderRadius: '20px',
+                                                        fontSize: '0.89rem',
+                                                        letterSpacing: 1,
+                                                        textTransform: "capitalize",
+                                                        minWidth: 90,
+                                                        display: "inline-block",
+                                                        textAlign: "center"
+                                                    }}
+                                                >
+                                                    {term.status}
+                                                </Typography>
+                                            </TableCell>
+                                            {/*<Typography variant="body2">*/}
+                                            {/*    {term.status}*/}
+                                            {/*</Typography>*/}
                                         </Stack>
                                     </TableCell>
 
@@ -259,8 +286,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
     // Check if there's an active/inactive extra term
     const hasActiveExtraTerm = useMemo(() => {
         if (!selectedTerm.extraTerms || selectedTerm.extraTerms.length === 0) return false;
-        return selectedTerm.extraTerms.some(term => 
-            term.status.toLowerCase() === 'active' || 
+        return selectedTerm.extraTerms.some(term =>
+            term.status.toLowerCase() === 'active' ||
             term.status.toLowerCase() === 'inactive'
         );
     }, [selectedTerm.extraTerms]);
@@ -268,7 +295,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
     // Calculate missing registrations and classes per grade
     const missingInfoByGrade = useMemo(() => {
         if (!selectedTerm.termItemList) return {};
-        
+
         return selectedTerm.termItemList.reduce((acc, item) => {
             const missingCount = item.maxNumberRegistration - (item.approvedForm || 0);
             if (missingCount > 0) {
@@ -299,16 +326,16 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
 
     const handleCreateExtraTerm = async (e) => {
         e.preventDefault();
-        
+
         // Basic validation
         if (!formData.startDate || !formData.endDate) {
-            enqueueSnackbar('Please select both start and end dates', { variant: 'error' });
+            enqueueSnackbar('Please select both start and end dates', {variant: 'error'});
             return;
         }
 
         // Validate date order
         if (dayjs(formData.startDate) >= dayjs(formData.endDate)) {
-            enqueueSnackbar('End date must be after start date', { variant: 'error' });
+            enqueueSnackbar('End date must be after start date', {variant: 'error'});
             return;
         }
 
@@ -319,7 +346,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
         const extraEndDate = dayjs(formData.endDate);
 
         if (extraStartDate < parentStartDate || extraEndDate > parentEndDate) {
-            enqueueSnackbar('Extra term dates must be within parent term dates', { variant: 'error' });
+            enqueueSnackbar('Extra term dates must be within parent term dates', {variant: 'error'});
             return;
         }
 
@@ -337,17 +364,17 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
             });
 
             if (response.success) {
-                enqueueSnackbar(response.message || 'Extra term created successfully', { variant: 'success' });
+                enqueueSnackbar(response.message || 'Extra term created successfully', {variant: 'success'});
                 await GetTerm();
                 setShowExtraTermForm(false);
             } else {
-                enqueueSnackbar(response.message || 'Failed to create extra term', { variant: 'error' });
+                enqueueSnackbar(response.message || 'Failed to create extra term', {variant: 'error'});
             }
         } catch (error) {
             console.error('Error creating extra term:', error);
             enqueueSnackbar(
-                error.response?.data?.message || 'Error creating extra term', 
-                { variant: 'error' }
+                error.response?.data?.message || 'Error creating extra term',
+                {variant: 'error'}
             );
         }
     };
@@ -366,13 +393,13 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
         try {
             const response = await updateTermStatus(selectedTerm.id);
             if (response.success) {
-                enqueueSnackbar(response.message || 'Term locked successfully', { variant: 'success' });
+                enqueueSnackbar(response.message || 'Term locked successfully', {variant: 'success'});
                 await GetTerm();
             } else {
-                enqueueSnackbar(response.message || 'Failed to lock term', { variant: 'error' });
+                enqueueSnackbar(response.message || 'Failed to lock term', {variant: 'error'});
             }
         } catch (error) {
-            enqueueSnackbar(error.response?.data?.message || 'Error locking term', { variant: 'error' });
+            enqueueSnackbar(error.response?.data?.message || 'Error locking term', {variant: 'error'});
         }
     };
 
@@ -409,7 +436,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                 }
                             }}
                         >
-                            <Close fontSize="small" />
+                            <Close fontSize="small"/>
                         </IconButton>
                         <Box sx={{
                             display: 'flex',
@@ -544,8 +571,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                         </Paper>
 
                         {/* Term Items */}
-                        <Paper 
-                            elevation={0} 
+                        <Paper
+                            elevation={0}
                             sx={{
                                 p: 2,
                                 border: '1px solid #e0e0e0',
@@ -602,7 +629,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                         }}
                                     >
                                         {/* Grade Badge */}
-                                        <Box sx={{ mb: 3 }}>
+                                        <Box sx={{mb: 3}}>
                                             <Typography
                                                 component="span"
                                                 sx={{
@@ -844,9 +871,9 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                                 {formatVND(item.feeList.serviceFee)}
                                                             </Typography>
                                                         </Box>
-                                                        <Box sx={{ 
-                                                            display: 'flex', 
-                                                            justifyContent: 'space-between', 
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
                                                             alignItems: 'center'
                                                         }}>
                                                             <Typography
@@ -858,10 +885,10 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                             >
                                                                 Learning Material Fee:
                                                             </Typography>
-                                                            <Typography 
-                                                                variant="body1" 
-                                                                sx={{ 
-                                                                    color: '#07663a', 
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: '#07663a',
                                                                     fontWeight: 600,
                                                                     fontSize: '0.95rem',
                                                                     ml: 2
@@ -870,24 +897,24 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                                 {formatVND(item.feeList.learningMaterialFee)}
                                                             </Typography>
                                                         </Box>
-                                                        <Box sx={{ 
-                                                            display: 'flex', 
-                                                            justifyContent: 'space-between', 
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
                                                             alignItems: 'center'
                                                         }}>
-                                                            <Typography 
-                                                                variant="body1" 
-                                                                sx={{ 
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
                                                                     color: 'text.secondary',
                                                                     fontSize: '0.95rem'
                                                                 }}
                                                             >
                                                                 Reservation Fee:
                                                             </Typography>
-                                                            <Typography 
-                                                                variant="body1" 
-                                                                sx={{ 
-                                                                    color: '#07663a', 
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: '#07663a',
                                                                     fontWeight: 600,
                                                                     fontSize: '0.95rem',
                                                                     ml: 2
@@ -907,8 +934,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
 
                         {/* Extra Terms Section */}
                         {selectedTerm.extraTerms && selectedTerm.extraTerms.length > 0 && (
-                            <Paper 
-                                elevation={0} 
+                            <Paper
+                                elevation={0}
                                 sx={{
                                     p: 2,
                                     border: '1px solid #e0e0e0',
@@ -934,17 +961,17 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                             'active': {
                                                 light: '#e8f5e9',
                                                 main: '#2e7d32',
-                                                icon: <CheckCircleOutlined sx={{fontSize: 16}} />
+                                                icon: <CheckCircleOutlined sx={{fontSize: 16}}/>
                                             },
                                             'inactive': {
                                                 light: '#fff3e0',
                                                 main: '#ed6c02',
-                                                icon: <PauseCircleOutlined sx={{fontSize: 16}} />
+                                                icon: <PauseCircleOutlined sx={{fontSize: 16}}/>
                                             },
                                             'locked': {
                                                 light: '#ffebee',
                                                 main: '#d32f2f',
-                                                icon: <LockOutlined sx={{fontSize: 16}} />
+                                                icon: <LockOutlined sx={{fontSize: 16}}/>
                                             }
                                         };
                                         const statusStyle = statusColors[extraTerm.status.toLowerCase()];
@@ -965,10 +992,11 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                     justifyContent: 'space-between',
                                                     mb: 1
                                                 }}>
-                                                    <Typography variant="subtitle2" sx={{color: statusStyle.main, fontWeight: 600}}>
+                                                    <Typography variant="subtitle2"
+                                                                sx={{color: statusStyle.main, fontWeight: 600}}>
                                                         {extraTerm.name}
                                                     </Typography>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                                                         <Tooltip title="View Details">
                                                             <IconButton
                                                                 size="small"
@@ -980,7 +1008,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                                     }
                                                                 }}
                                                             >
-                                                                <Visibility fontSize="small" />
+                                                                <Visibility fontSize="small"/>
                                                             </IconButton>
                                                         </Tooltip>
                                                         <Box sx={{
@@ -994,7 +1022,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                             border: `1px solid ${statusStyle.main}`
                                                         }}>
                                                             {statusStyle.icon}
-                                                            <Typography variant="caption" sx={{ml: 0.5, fontWeight: 600}}>
+                                                            <Typography variant="caption"
+                                                                        sx={{ml: 0.5, fontWeight: 600}}>
                                                                 {extraTerm.status.toUpperCase()}
                                                             </Typography>
                                                         </Box>
@@ -1019,23 +1048,25 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
 
                         {/* Extra Term Form Dialog */}
                         {showExtraTermForm && (
-                            <Dialog 
-                                open={true} 
-                                onClose={() => setShowExtraTermForm(false)} 
-                                maxWidth="sm" 
+                            <Dialog
+                                open={true}
+                                onClose={() => setShowExtraTermForm(false)}
+                                maxWidth="sm"
                                 fullWidth
                             >
                                 <DialogTitle>Create Extra Term</DialogTitle>
                                 <form onSubmit={handleCreateExtraTerm}>
                                     <DialogContent>
                                         {hasActiveExtraTerm && (
-                                            <Alert severity="warning" sx={{ mb: 2 }}>
-                                                There is already an active or pending extra term. Creating a new one may affect the existing term.
+                                            <Alert severity="warning" sx={{mb: 2}}>
+                                                There is already an active or pending extra term. Creating a new one may
+                                                affect the existing term.
                                             </Alert>
                                         )}
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        <Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
                                             <Typography variant="body2" color="textSecondary">
-                                                Parent Term: {dayjs(selectedTerm.startDate).toISOString()} - {(dayjs(selectedTerm.endDate).toISOString())}
+                                                Parent
+                                                Term: {dayjs(selectedTerm.startDate).toISOString()} - {(dayjs(selectedTerm.endDate).toISOString())}
                                             </Typography>
 
                                             {/* Date Selection */}
@@ -1043,9 +1074,9 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                 label="Start Date"
                                                 value={formData.startDate ? dayjs(formData.startDate) : dayjs(new Date())}
                                                 onChange={(newValue) => {
-                                                    setFormData(prev => ({ ...prev, startDate: newValue }));
+                                                    setFormData(prev => ({...prev, startDate: newValue}));
                                                 }}
-                                                renderInput={(params) => <TextField {...params} fullWidth required />}
+                                                renderInput={(params) => <TextField {...params} fullWidth required/>}
                                                 minDate={dayjs(selectedTerm.startDate)}
                                                 maxDate={dayjs(selectedTerm.endDate)}
                                             />
@@ -1053,22 +1084,27 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                 label="End Date"
                                                 value={formData.endDate ? dayjs(formData.endDate) : dayjs(new Date())}
                                                 onChange={(newValue) => {
-                                                    setFormData(prev => ({ ...prev, endDate: newValue }));
+                                                    setFormData(prev => ({...prev, endDate: newValue}));
                                                 }}
-                                                renderInput={(params) => <TextField {...params} fullWidth required />}
+                                                renderInput={(params) => <TextField {...params} fullWidth required/>}
                                                 minDate={dayjs(formData.startDate) || dayjs(selectedTerm.startDate)}
                                                 maxDate={dayjs(selectedTerm.endDate)}
                                             />
 
 
                                             {/* Registration Info */}
-                                            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+                                            <Box sx={{mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1}}>
                                                 <Typography variant="subtitle1" gutterBottom color="primary">
                                                     Missing Registrations Summary
                                                 </Typography>
-                                                
+
                                                 {Object.entries(missingInfoByGrade).map(([grade, info]) => (
-                                                    <Box key={grade} sx={{ mb: 2, pl: 2, borderLeft: '3px solid', borderColor: 'primary.main' }}>
+                                                    <Box key={grade} sx={{
+                                                        mb: 2,
+                                                        pl: 2,
+                                                        borderLeft: '3px solid',
+                                                        borderColor: 'primary.main'
+                                                    }}>
                                                         <Typography variant="h6" gutterBottom>
                                                             Grade {grade}
                                                         </Typography>
@@ -1086,9 +1122,10 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                         </Typography>
                                                     </Box>
                                                 ))}
-                                                
+
                                                 <Typography variant="caption" color="text.secondary">
-                                                    * These values are calculated automatically based on current registrations
+                                                    * These values are calculated automatically based on current
+                                                    registrations
                                                 </Typography>
                                             </Box>
                                         </Box>
@@ -1097,9 +1134,9 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                         <Button onClick={() => setShowExtraTermForm(false)}>
                                             Cancel
                                         </Button>
-                                        <Button 
-                                            type="submit" 
-                                            variant="contained" 
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
                                             color="primary"
                                             disabled={Object.keys(missingInfoByGrade).length === 0}
                                         >
@@ -1166,8 +1203,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
             </Dialog>
 
             {/* Extra Term Detail Dialog */}
-            <Dialog 
-                open={showExtraTermDetail} 
+            <Dialog
+                open={showExtraTermDetail}
                 onClose={handleCloseExtraTermDetail}
                 maxWidth="sm"
                 fullWidth
@@ -1179,10 +1216,10 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                     alignItems: 'center',
                     gap: 1
                 }}>
-                    <EventNoteOutlined />
+                    <EventNoteOutlined/>
                     Extra Term Details
                 </DialogTitle>
-                <DialogContent sx={{ mt: 2 }}>
+                <DialogContent sx={{mt: 2}}>
                     {selectedExtraTerm && (
                         <Stack spacing={2}>
                             <Box>
@@ -1225,12 +1262,12 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                 <Typography variant="subtitle2" color="textSecondary">
                                     Status
                                 </Typography>
-                                <Typography 
-                                    variant="body1" 
+                                <Typography
+                                    variant="body1"
                                     sx={{
-                                        color: selectedExtraTerm.status.toLowerCase() === 'active' ? 'success.main' : 
-                                               selectedExtraTerm.status.toLowerCase() === 'inactive' ? 'warning.main' : 
-                                               'error.main'
+                                        color: selectedExtraTerm.status.toLowerCase() === 'active' ? 'success.main' :
+                                            selectedExtraTerm.status.toLowerCase() === 'inactive' ? 'warning.main' :
+                                                'error.main'
                                     }}
                                 >
                                     {selectedExtraTerm.status}
@@ -1243,7 +1280,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                         Term Items
                                     </Typography>
                                     {selectedExtraTerm.termItemList.map((item, index) => (
-                                        <Box 
+                                        <Box
                                             key={index}
                                             sx={{
                                                 mt: 1,
@@ -1275,7 +1312,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                         </Stack>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ p: 2, borderTop: '1px solid #e0e0e0' }}>
+                <DialogActions sx={{p: 2, borderTop: '1px solid #e0e0e0'}}>
                     <Button onClick={handleCloseExtraTermDetail} variant="outlined">
                         Close
                     </Button>
@@ -2270,7 +2307,8 @@ export default function TermAdmission() {
     }
 
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'vi-VN'} localeText={viVN.components.MuiLocalizationProvider.defaultProps.localeText}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'vi-VN'}
+                              localeText={viVN.components.MuiLocalizationProvider.defaultProps.localeText}>
             <RenderPage
                 terms={data.terms}
                 openFormPopUpFunc={() => handleOpenPopUp('form')}
