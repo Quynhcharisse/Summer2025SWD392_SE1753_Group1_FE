@@ -20,24 +20,11 @@ export const login = async (credentials) => {
   }
 };
 
-export const logout = async () => {
-  try {
-    const response = await apiClient.post("/auth/logout");
+export const logout = async  () => {
+  const response = await apiClient.get('/auth/logout')
+  return response ? response.data : null
+}
 
-    // Server will clear both cookies:
-    // - Regular access token cookie
-    // - HttpOnly refresh token cookie
-
-    // Clear any client-side user data
-    localStorage.removeItem("user");
-
-    return response.data;
-  } catch (error) {
-    console.error("Logout error:", error); // Even if server request fails, clear local data
-    localStorage.removeItem("user");
-    throw error;
-  }
-};
 
 /**
  * Refresh access token using HttpOnly refresh cookie

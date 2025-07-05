@@ -1,7 +1,7 @@
-import { Badge, Button, Spinner } from "@atoms";
-import { StatCard } from "@molecules";
-import { getCurrentTokenData, isAuthenticated } from "@services/JWTService.jsx";
-import { PageTemplate } from "@templates";
+import {Badge, Button, Spinner} from "@atoms";
+import {StatCard} from "@molecules";
+import {getCurrentTokenData, isAuthenticated} from "@services/JWTService.jsx";
+import {PageTemplate} from "@templates";
 import {
   AlertCircle,
   Baby,
@@ -13,9 +13,8 @@ import {
   MessageSquare,
   Settings,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { enrollmentService } from "../../../api/services/enrollmentService";
+import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -41,9 +40,9 @@ const ParentDashboard = () => {
         setUser(tokenData);
 
         // Load applications
-        const userApplications =
-          await enrollmentService.getUserEnrollmentApplications();
-        setApplications(userApplications);
+        // const userApplications =
+        //   await enrollmentService.getUserEnrollmentApplications();
+        // setApplications(userApplications);
 
         // Mock notifications and events for now
         setNotifications([

@@ -1,11 +1,14 @@
 import {
+    Alert,
     AppBar,
     Box,
     Button,
     Dialog,
     DialogActions,
     DialogContent,
+    DialogTitle,
     FormControl,
+    Grid,
     IconButton,
     InputLabel,
     MenuItem,
@@ -24,12 +27,39 @@ import {
     Tooltip,
     Typography
 } from "@mui/material";
-import {Add, Close, FilterList, Visibility} from '@mui/icons-material';
-import {useEffect, useState} from "react";
-import {createTerm, getDefaultGrade, getTermList, getTermYears, updateTermStatus} from "@services/admissionService.js";
+import {
+    Add,
+    CalendarTodayOutlined,
+    CheckCircleOutlined,
+    Close,
+    EditOutlined,
+    EventNoteOutlined,
+    EventOutlined,
+    EventRepeatOutlined,
+    FilterList,
+    GroupsOutlined,
+    LockOutlined,
+    PauseCircleOutlined,
+    PersonOutlined,
+    SchoolOutlined,
+    Visibility
+} from '@mui/icons-material';
+import {useEffect, useMemo, useState} from "react";
+import {
+    createExtraTerm,
+    createTerm,
+    getDefaultGrade,
+    getTermList,
+    getTermYears,
+    updateTermStatus
+} from "@services/admissionService.js";
 import {useSnackbar} from "notistack";
-import {format} from 'date-fns';
-import ExtraTermForm from "./ExtraTermForm.jsx";
+import {formatVND} from "@/components/none-shared/formatVND.jsx";
+import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import { viVN } from '@mui/x-date-pickers/locales';
+import dayjs from "dayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 
 function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
     const [page, setPage] = useState(0);
@@ -43,7 +73,6 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
         setRowsPerPage(event.target.value)
         setPage(0)
     }
-
 
     const handleDetailClick = (term, type) => {
         HandleSelectedTerm(term)
@@ -64,13 +93,10 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
 
     const columns = [
         {label: 'No', minWidth: 80, align: 'center', key: 'no'},
-        {label: 'Grade', minWidth: 100, align: 'center', key: 'grade'},
         {label: 'Academic Year', minWidth: 120, align: 'center', key: 'year'},
-        {label: 'Classes', minWidth: 100, align: 'center', key: 'classes'},
-        {label: 'Registration', minWidth: 160, align: 'center', key: 'registration'},
-        {label: 'Status', minWidth: 120, align: 'center', key: 'status'},
-        {label: 'Extra Terms', minWidth: 100, align: 'center', key: 'extraTermCount'},
-        {label: 'Extra Term Status', minWidth: 140, align: 'center', key: 'extraTermStatus'},
+        {label: 'Start Date', minWidth: 200, align: 'center', key: 'startDate'},
+        {label: 'End Date', minWidth: 200, align: 'center', key: 'endDate'},
+        {label: 'Status', minWidth: 200, align: 'center', key: 'status'},
         {label: 'Action', minWidth: 80, align: 'center', key: 'action'},
     ];
 
@@ -147,118 +173,34 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                         cursor: 'pointer'
                                     }}
                                 >
-                                    <TableCell align="center" sx={{minWidth: 80}}>{idx + 1}</TableCell>
-                                    <TableCell align="center" sx={{minWidth: 100}}>
-                                        <Box sx={{
-                                            display: 'inline-block',
-                                            backgroundColor: term.grade === 'SEED'
-                                                ? '#2e7d32'
-                                                : term.grade === 'BUD'
-                                                    ? '#ed6c02'
-                                                    : '#0288d1',
-                                            padding: '6px 16px',
-                                            borderRadius: '16px',
-                                            minWidth: '90px',
-                                        }}>
-                                            <Typography sx={{
-                                                fontWeight: 600,
-                                                color: '#ffffff',
-                                                textTransform: 'uppercase',
-                                                fontSize: '0.875rem',
-                                                lineHeight: '1.43',
-                                                letterSpacing: '0.01071em',
-                                            }}>
-                                                {term.grade}
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell align="center" sx={{minWidth: 120}}>{term.year}</TableCell>
-                                    <TableCell align="center" sx={{minWidth: 100}}>
-                                        <Typography>
-                                            {term.expectedClasses} classes
-                                            <Typography component="span"
-                                                        sx={{color: 'text.secondary', fontSize: '0.875rem'}}>
-                                                {` (${term.studentsPerClass} students/class)`}
-                                            </Typography>
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell align="center" sx={{minWidth: 160}}>
-                                        <Box sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: 1
-                                        }}>
-                                            <Typography sx={{
-                                                fontWeight: 600,
-                                                color: term.approvedForm >= term.maxNumberRegistration ? '#d32f2f' : '#07663a'
-                                            }}>
-                                                {term.approvedForm || 0}
-                                            </Typography>
-                                            <Typography sx={{color: '#666'}}>/</Typography>
-                                            <Typography sx={{fontWeight: 600}}>
-                                                {term.maxNumberRegistration}
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell align="center" sx={{
-                                        minWidth: 120,
-                                        fontWeight: 700,
-                                        color:
-                                            term.status === 'active'
-                                                ? '#219653' // xanh lá
-                                                : term.status === 'inactive'
-                                                    ? '#bdbdbd' // xám nhạt
-                                                    : term.status === 'locked'
-                                                        ? '#d32f2f' // đỏ
-                                                        : '#2c3e50',
-                                        borderRadius: 2,
-                                        letterSpacing: 1,
-                                        textTransform: 'uppercase'
-                                    }}>
-                                        {term.status}
-                                    </TableCell>
+                                    <TableCell align="center">{idx + 1}</TableCell>
+                                    <TableCell align="center">{term.year}</TableCell>
+
                                     <TableCell align="center">
-                                        <Box sx={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            borderRadius: '16px',
-                                            padding: '4px 12px',
-                                            minWidth: '40px'
-                                        }}>
-                                            <Typography sx={{
-                                                fontWeight: 600,
-                                                color: term.extraTerms?.length > 0 ? '#1976d2' : '#757575'
-                                            }}>
-                                                {term.extraTerms?.length || 0}
+                                        <Stack spacing={0.5}>
+                                            <Typography variant="body2">
+                                                {term.startDate}
                                             </Typography>
-                                        </Box>
+                                        </Stack>
                                     </TableCell>
+
                                     <TableCell align="center">
-                                        {getExtraTermStatus(term.extraTerms) && (
-                                            <Box sx={{
-                                                display: 'inline-block',
-                                                backgroundColor:
-                                                    getExtraTermStatus(term.extraTerms).toLowerCase() === 'active'
-                                                        ? '#4caf50'
-                                                        : getExtraTermStatus(term.extraTerms).toLowerCase() === 'inactive'
-                                                            ? '#ff9800'
-                                                            : '#9e9e9e',
-                                                padding: '4px 12px',
-                                                borderRadius: '12px',
-                                            }}>
-                                                <Typography sx={{
-                                                    color: '#ffffff',
-                                                    fontWeight: 600,
-                                                    fontSize: '0.875rem'
-                                                }}>
-                                                    {getExtraTermStatus(term.extraTerms)}
-                                                </Typography>
-                                            </Box>
-                                        )}
+                                        <Stack spacing={0.5}>
+                                            <Typography variant="body2">
+                                                {term.endDate}
+                                            </Typography>
+                                        </Stack>
                                     </TableCell>
-                                    <TableCell align="center" sx={{minWidth: 80}}>
+
+                                    <TableCell align="center">
+                                        <Stack spacing={0.5}>
+                                            <Typography variant="body2">
+                                                {term.status}
+                                            </Typography>
+                                        </Stack>
+                                    </TableCell>
+
+                                    <TableCell align="center">
                                         <Tooltip title="View">
                                             <IconButton
                                                 color="primary"
@@ -301,390 +243,1206 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
 
 function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm}) {
     const {enqueueSnackbar} = useSnackbar();
+    const [showExtraTermForm, setShowExtraTermForm] = useState(false);
+    const [showExtraTermDetail, setShowExtraTermDetail] = useState(false);
+    const [selectedExtraTerm, setSelectedExtraTerm] = useState(null);
     const [formData, setFormData] = useState({
-        id: null,
-        grade: null,
+        parentTermId: selectedTerm.id,
         startDate: null,
         endDate: null,
         maxNumberRegistration: 0,
-        reservationFee: 0,
-        serviceFee: 0,
-        uniformFee: 0,
-        learningMaterialFee: 0,
-        facilityFee: 0,
-        approvedForm: 0,
-        status: '',
-        extraTerms: [],
-        studentsPerClass: 20,
         expectedClasses: 0
     });
 
-    useEffect(() => {
-        if (selectedTerm) {
-            setFormData({
-                id: selectedTerm.id,
-                grade: selectedTerm.grade ?? '',
-                startDate: selectedTerm.startDate
-                    ? format(new Date(selectedTerm.startDate), "yyyy-MM-dd'T'HH:mm")
-                    : '',
-                endDate: selectedTerm.endDate
-                    ? format(new Date(selectedTerm.endDate), "yyyy-MM-dd'T'HH:mm")
-                    : '',
-                maxNumberRegistration: selectedTerm.maxNumberRegistration ?? 0,
-                reservationFee: selectedTerm.reservationFee ?? 0,
-                serviceFee: selectedTerm.serviceFee ?? 0,
-                uniformFee: selectedTerm.uniformFee ?? 0,
-                learningMaterialFee: selectedTerm.learningMaterialFee ?? 0,
-                facilityFee: selectedTerm.facilityFee ?? 0,
-                approvedForm: selectedTerm.approvedForm ?? 0,
-                status: selectedTerm.status ?? '',
-                extraTerms: selectedTerm.extraTerms ?? [],
-                studentsPerClass: selectedTerm.studentsPerClass ?? 20,
-                expectedClasses: selectedTerm.expectedClasses ?? 0
-            });
-        }
-    }, [selectedTerm]);
+    const isLocked = selectedTerm.status === 'locked';
 
-    const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'active':
-                return '#219653';
-            case 'inactive':
-                return '#bdbdbd';
-            case 'locked':
-                return '#d32f2f';
-            default:
-                return '#2c3e50';
+    // Check if there's an active/inactive extra term
+    const hasActiveExtraTerm = useMemo(() => {
+        if (!selectedTerm.extraTerms || selectedTerm.extraTerms.length === 0) return false;
+        return selectedTerm.extraTerms.some(term => 
+            term.status.toLowerCase() === 'active' || 
+            term.status.toLowerCase() === 'inactive'
+        );
+    }, [selectedTerm.extraTerms]);
+
+    // Calculate missing registrations and classes per grade
+    const missingInfoByGrade = useMemo(() => {
+        if (!selectedTerm.termItemList) return {};
+        
+        return selectedTerm.termItemList.reduce((acc, item) => {
+            const missingCount = item.maxNumberRegistration - (item.approvedForm || 0);
+            if (missingCount > 0) {
+                acc[item.grade] = {
+                    missingStudents: missingCount,
+                    expectedClasses: Math.ceil(missingCount / 40),
+                    maxRegistration: item.maxNumberRegistration,
+                    approvedForms: item.approvedForm || 0
+                };
+            }
+            return acc;
+        }, {});
+    }, [selectedTerm.termItemList]);
+
+    // Update formData when missingInfo changes
+    useEffect(() => {
+        // Get the first grade that has missing students
+        const firstGradeWithMissing = Object.keys(missingInfoByGrade)[0];
+        if (firstGradeWithMissing) {
+            const gradeInfo = missingInfoByGrade[firstGradeWithMissing];
+            setFormData((prev) => ({
+                ...prev,
+                maxNumberRegistration: gradeInfo.missingStudents || 0,
+                expectedClasses: gradeInfo.expectedClasses || 0
+            }));
         }
+    }, [missingInfoByGrade]);
+
+    const handleCreateExtraTerm = async (e) => {
+        e.preventDefault();
+        
+        // Basic validation
+        if (!formData.startDate || !formData.endDate) {
+            enqueueSnackbar('Please select both start and end dates', { variant: 'error' });
+            return;
+        }
+
+        // Validate date order
+        if (dayjs(formData.startDate) >= dayjs(formData.endDate)) {
+            enqueueSnackbar('End date must be after start date', { variant: 'error' });
+            return;
+        }
+
+        // Validate against parent term dates
+        const parentStartDate = dayjs(selectedTerm.startDate);
+        const parentEndDate = dayjs(selectedTerm.endDate);
+        const extraStartDate = dayjs(formData.startDate);
+        const extraEndDate = dayjs(formData.endDate);
+
+        if (extraStartDate < parentStartDate || extraEndDate > parentEndDate) {
+            enqueueSnackbar('Extra term dates must be within parent term dates', { variant: 'error' });
+            return;
+        }
+
+        // Get the first grade that has missing students
+        const firstGradeWithMissing = Object.keys(missingInfoByGrade)[0];
+        const gradeInfo = firstGradeWithMissing ? missingInfoByGrade[firstGradeWithMissing] : null;
+
+        try {
+            const response = await createExtraTerm({
+                parentTermId: selectedTerm.id,
+                startDate: dayjs(extraStartDate),
+                endDate: dayjs(extraEndDate),
+                maxNumberRegistration: gradeInfo?.missingStudents || 0,
+                expectedClasses: gradeInfo?.expectedClasses || 0
+            });
+
+            if (response.success) {
+                enqueueSnackbar(response.message || 'Extra term created successfully', { variant: 'success' });
+                await GetTerm();
+                setShowExtraTermForm(false);
+            } else {
+                enqueueSnackbar(response.message || 'Failed to create extra term', { variant: 'error' });
+            }
+        } catch (error) {
+            console.error('Error creating extra term:', error);
+            enqueueSnackbar(
+                error.response?.data?.message || 'Error creating extra term', 
+                { variant: 'error' }
+            );
+        }
+    };
+
+    const handleViewExtraTermDetail = (extraTerm) => {
+        setSelectedExtraTerm(extraTerm);
+        setShowExtraTermDetail(true);
+    };
+
+    const handleCloseExtraTermDetail = () => {
+        setShowExtraTermDetail(false);
+        setSelectedExtraTerm(null);
     };
 
     const handleLockTerm = async () => {
-        console.log("ID: ", formData.id)
         try {
-            if (!formData.id) {
-                enqueueSnackbar("Invalid term data", {variant: "error"});
-                return;
-            }
-
-            const response = await updateTermStatus(formData.id);
+            const response = await updateTermStatus(selectedTerm.id);
             if (response.success) {
-                enqueueSnackbar("Term locked successfully!", {variant: "success"});
-                handleClosePopUp();
-                GetTerm(); // Refresh the data
+                enqueueSnackbar(response.message || 'Term locked successfully', { variant: 'success' });
+                await GetTerm();
             } else {
-                enqueueSnackbar(response.message || "Failed to lock term", {variant: "error"});
+                enqueueSnackbar(response.message || 'Failed to lock term', { variant: 'error' });
             }
         } catch (error) {
-            console.error("Error locking term:", error);
-            const errorMessage = error.response?.data?.message || "Error locking term";
-            enqueueSnackbar(errorMessage, {
-                variant: "error",
-                autoHideDuration: 5000
-            });
+            enqueueSnackbar(error.response?.data?.message || 'Error locking term', { variant: 'error' });
         }
     };
 
+
     return (
-        <Dialog
-            fullScreen
-            open={isPopUpOpen}
-            onClose={handleClosePopUp}
-        >
-            <AppBar sx={{position: 'relative', backgroundColor: '#07663a'}}>
-                <Toolbar>
-                    <IconButton edge="start"
-                                color="inherit"
-                                onClick={handleClosePopUp}
-                                aria-label="close">
-                        <Close/>
-                    </IconButton>
-                    <Typography sx={{ml: 2, flex: 1}} variant="h6" component="div">
-                        Admission Term Detail
-                    </Typography>
-                    <Box sx={{
-                        backgroundColor: getStatusColor(formData.status),
-                        padding: '6px 16px',
-                        borderRadius: '16px',
-                        marginLeft: 2
-                    }}>
-                        <Typography sx={{
-                            color: '#ffffff',
-                            fontWeight: 600,
-                            textTransform: 'uppercase'
-                        }}>
-                            {formData.status}
-                        </Typography>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-
-            <Box p={4}>
-                <Typography
-                    variant='subtitle1'
-                    sx={{mb: 2, fontWeight: 'bold', fontSize: "2.5rem", textAlign: "center", color: '#07663a'}}
-                >
-                    Term Information
-                </Typography>
-
-                <Stack spacing={3}>
-
-                    {/* Grade Display */}
-                    <Box sx={{
+        <>
+            <Dialog
+                fullScreen
+                open={isPopUpOpen}
+                onClose={handleClosePopUp}
+                PaperProps={{
+                    sx: {
+                        backgroundColor: '#f8faf8',
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        mb: 3
-                    }}>
+                        flexDirection: 'column'
+                    }
+                }}
+            >
+                <AppBar sx={{
+                    position: 'relative',
+                    backgroundColor: '#07663a',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
+                    <Toolbar variant="dense">
+                        <IconButton
+                            edge="start"
+                            color="inherit"
+                            onClick={handleClosePopUp}
+                            aria-label="close"
+                            size="small"
+                            sx={{
+                                '&:hover': {
+                                    backgroundColor: 'rgba(255,255,255,0.1)'
+                                }
+                            }}
+                        >
+                            <Close fontSize="small" />
+                        </IconButton>
                         <Box sx={{
-                            backgroundColor: formData.grade === 'seed'
-                                ? '#2e7d32'
-                                : formData.grade === 'bud'
-                                    ? '#ed6c02'
-                                    : '#0288d1',
-                            padding: '12px 32px',
-                            borderRadius: '24px',
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                            minWidth: '150px',
-                            textAlign: 'center'
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            width: '100%'
                         }}>
-                            <Typography sx={{
-                                color: '#ffffff',
-                                fontWeight: 700,
-                                fontSize: '1.5rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '2px'
-                            }}>
-                                {formData.grade}
-                            </Typography>
+                            <Stack spacing={0.5}>
+                                <Typography variant="subtitle1" sx={{fontWeight: 600}}>
+                                    {selectedTerm.name}
+                                </Typography>
+                            </Stack>
                         </Box>
-                    </Box>
 
-                    <Stack>
-                        <TextField
-                            label="Start Date"
-                            type="datetime-local"
-                            required
-                            fullWidth
-                            name="startDate"
-                            value={formData.startDate}
-                            InputProps={{readOnly: true}}
-                        />
-                    </Stack>
-                    <Stack>
-                        <TextField
-                            label="End Date"
-                            type="datetime-local"
-                            name="endDate"
-                            value={formData.endDate}
-                            required
-                            fullWidth
-                            InputProps={{readOnly: true}}
-                        />
-                    </Stack>
-
-                    <Box sx={{display: 'flex', gap: 2}}>
-                        <TextField
-                            label="Expected Classes"
-                            type="number"
-                            value={formData.expectedClasses}
-                            InputProps={{readOnly: true}}
-                            fullWidth
-                        />
-                        <TextField
-                            label="Students Per Class"
-                            type="number"
-                            value={formData.studentsPerClass}
-                            InputProps={{
-                                readOnly: true
-                            }}
+                        <Typography
                             sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    backgroundColor: '#f5f5f5'
-                                }
+                                display: 'inline-block',
+                                px: 3,
+                                py: 1,
+                                minWidth: 110,
+                                textAlign: 'center',
+                                fontWeight: 700,
+                                borderRadius: 10,
+                                fontSize: '1rem',
+                                letterSpacing: 1,
+                                textTransform: 'uppercase',
+                                bgcolor:
+                                    selectedTerm.status === 'locked'
+                                        ? '#d32f2f'
+                                        : selectedTerm.status === 'active'
+                                            ? '#2e7d32'
+                                            : selectedTerm.status === 'inactive'
+                                                ? '#fbc02d'
+                                                : '#eeeeee',
+                                color:
+                                    selectedTerm.status === 'locked'
+                                        ? 'white'
+                                        : selectedTerm.status === 'active'
+                                            ? 'white'
+                                            : selectedTerm.status === 'inactive'
+                                                ? 'white'
+                                                : '#616161',
+                                boxShadow: 2,
+                                transition: 'all 0.2s',
                             }}
-                        />
-                        <TextField
-                            label="Max Registration"
-                            type="number"
-                            value={formData.maxNumberRegistration}
-                            InputProps={{
-                                readOnly: true
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    backgroundColor: '#f5f5f5'
-                                }
-                            }}
-                        />
-                    </Box>
+                        >
+                            {selectedTerm.status.toUpperCase()}
+                        </Typography>
+                    </Toolbar>
+                </AppBar>
 
-                    <Stack>
-                        <TextField
-                            label="Registration Progress"
-                            type="text"
-                            value={`${formData.approvedForm}/${formData.maxNumberRegistration}`}
-                            required
-                            fullWidth
-                            InputProps={{
-                                readOnly: true,
-                                startAdornment: (
+                {/* Main Content */}
+                <Box sx={{
+                    p: 3,
+                    maxWidth: 900,
+                    mx: 'auto',
+                    width: '100%',
+                    flex: 1,
+                    overflow: 'auto'
+                }}>
+                    <Stack spacing={3}>
+                        {/* Term Duration */}
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 2,
+                                border: '1px solid #e0e0e0',
+                                borderRadius: 2,
+                                backgroundColor: '#ffffff'
+                            }}
+                        >
+                            <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                mb: 2,
+                                pb: 1,
+                                borderBottom: '1px solid #e8f5e9'
+                            }}>
+                                <EventNoteOutlined sx={{color: '#07663a', mr: 1}}/>
+                                <Typography variant="subtitle1" sx={{fontWeight: 600, color: '#07663a'}}>
+                                    Term Duration
+                                </Typography>
+                            </Box>
+                            <Grid container spacing={2} sx={{display: 'flex', flexDirection: 'column'}}>
+                                <Grid item xs={12}>
                                     <Box sx={{
-                                        width: `${(formData.approvedForm / formData.maxNumberRegistration) * 100}%`,
-                                        height: '4px',
-                                        backgroundColor: formData.approvedForm >= formData.maxNumberRegistration ? '#d32f2f' : '#4caf50',
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        left: 0,
-                                        transition: 'width 0.3s ease'
-                                    }}/>
-                                )
+                                        p: 1.5,
+                                        border: '1px solid #e0e0e0',
+                                        borderRadius: 1,
+                                        backgroundColor: '#f8faf8',
+                                        mb: 1
+                                    }}>
+                                        <Typography variant="body1" sx={{color: '#07663a', display: 'block', mb: 0.5}}>
+                                            Academic Year
+                                        </Typography>
+                                        <Typography variant="body2" sx={{color: '#333'}}>
+                                            {selectedTerm.year}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Box sx={{
+                                        p: 1.5,
+                                        border: '1px solid #e0e0e0',
+                                        borderRadius: 1,
+                                        backgroundColor: '#f8faf8'
+                                    }}>
+                                        <Typography variant="body1" sx={{color: '#07663a', display: 'block', mb: 0.5}}>
+                                            Start Date
+                                        </Typography>
+                                        <Typography variant="body2" sx={{color: '#333'}}>
+                                            {dayjs(selectedTerm.startDate).toISOString()}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Box sx={{
+                                        p: 1.5,
+                                        border: '1px solid #e0e0e0',
+                                        borderRadius: 1,
+                                        backgroundColor: '#f8faf8'
+                                    }}>
+                                        <Typography variant="body1" sx={{color: '#07663a', display: 'block', mb: 0.5}}>
+                                            End Date
+                                        </Typography>
+                                        <Typography variant="body2" sx={{color: '#333'}}>
+                                            {dayjs(selectedTerm.endDate).toISOString()}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+                        </Paper>
+
+                        {/* Term Items */}
+                        <Paper 
+                            elevation={0} 
+                            sx={{
+                                p: 2,
+                                border: '1px solid #e0e0e0',
+                                borderRadius: 2,
+                                backgroundColor: '#ffffff'
                             }}
-                        />
+                        >
+                            <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                mb: 2,
+                                pb: 1,
+                                borderBottom: '1px solid #e8f5e9'
+                            }}>
+                                <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                    <SchoolOutlined sx={{color: '#07663a', mr: 1, fontSize: 20}}/>
+                                    <Typography variant="subtitle1" sx={{fontWeight: 600, color: '#07663a'}}>
+                                        Term Items
+                                    </Typography>
+                                </Box>
+                                {Object.keys(missingInfoByGrade).length > 0 && !showExtraTermForm && (
+                                    <Button
+                                        variant="outlined"
+                                        onClick={() => setShowExtraTermForm(true)}
+                                        startIcon={<Add sx={{fontSize: 18}}/>}
+                                        size="small"
+                                        sx={{
+                                            borderColor: '#07663a',
+                                            color: '#07663a',
+                                            '&:hover': {
+                                                borderColor: '#07663a',
+                                                backgroundColor: 'rgba(7, 102, 58, 0.04)'
+                                            }
+                                        }}
+                                    >
+                                        Add Extra Term
+                                    </Button>
+                                )}
+                            </Box>
+
+                            <Stack spacing={2}>
+                                {selectedTerm.termItemList.map((item) => (
+                                    <Box
+                                        key={item.id}
+                                        sx={{
+                                            p: 3,
+                                            border: '1px solid #e0e0e0',
+                                            borderRadius: 2,
+                                            backgroundColor: '#ffffff',
+                                            '&:hover': {
+                                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                                            }
+                                        }}
+                                    >
+                                        {/* Grade Badge */}
+                                        <Box sx={{ mb: 3 }}>
+                                            <Typography
+                                                component="span"
+                                                sx={{
+                                                    display: 'inline-block',
+                                                    px: 2,
+                                                    py: 0.5,
+                                                    bgcolor: '#e8f5e9',
+                                                    color: '#07663a',
+                                                    borderRadius: 2,
+                                                    fontSize: '1rem',
+                                                    fontWeight: 600
+                                                }}
+                                            >
+                                                Grade {item.grade}
+                                            </Typography>
+                                        </Box>
+
+                                        {/* Content Grid */}
+                                        <Grid container spacing={2}>
+                                            {/* Class Information Section */}
+                                            <Grid item xs={12} md={6}>
+                                                <Box sx={{
+                                                    p: 2,
+                                                    border: '1px solid #e0e0e0',
+                                                    borderRadius: 2,
+                                                    height: '100%',
+                                                    backgroundColor: '#fff',
+                                                    display: 'flex',
+                                                    flexDirection: 'column'
+                                                }}>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            color: '#1976d2',
+                                                            mb: 2,
+                                                            pb: 1,
+                                                            borderBottom: '1px solid #e0e0e0',
+                                                            fontSize: '1.1rem',
+                                                            fontWeight: 600
+                                                        }}
+                                                    >
+                                                        Class Information
+                                                    </Typography>
+                                                    <Stack
+                                                        spacing={2.5}
+                                                        sx={{
+                                                            flex: 1,
+                                                            justifyContent: 'space-evenly'
+                                                        }}
+                                                    >
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                    fontSize: '0.95rem'
+                                                                }}
+                                                            >
+                                                                Expected Classes:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: '#07663a',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.95rem',
+                                                                    ml: 2
+                                                                }}
+                                                            >
+                                                                {item.expectedClasses}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                    fontSize: '0.95rem'
+                                                                }}
+                                                            >
+                                                                Students Per Class:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: '#07663a',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.95rem',
+                                                                    ml: 2
+                                                                }}
+                                                            >
+                                                                {item.studentsPerClass}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                    fontSize: '0.95rem'
+                                                                }}
+                                                            >
+                                                                Max Registration:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: '#07663a',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.95rem',
+                                                                    ml: 2
+                                                                }}
+                                                            >
+                                                                {item.maxNumberRegistration}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Stack>
+                                                </Box>
+                                            </Grid>
+
+                                            {/* Fee Structure Section */}
+                                            <Grid item xs={12} md={6}>
+                                                <Box sx={{
+                                                    p: 2,
+                                                    border: '1px solid #e0e0e0',
+                                                    borderRadius: 2,
+                                                    height: '100%',
+                                                    backgroundColor: '#fff',
+                                                    display: 'flex',
+                                                    flexDirection: 'column'
+                                                }}>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            color: '#1976d2',
+                                                            mb: 2,
+                                                            pb: 1,
+                                                            borderBottom: '1px solid #e0e0e0',
+                                                            fontSize: '1.1rem',
+                                                            fontWeight: 600
+                                                        }}
+                                                    >
+                                                        Fee Structure
+                                                    </Typography>
+                                                    <Stack
+                                                        spacing={2.5}
+                                                        sx={{
+                                                            flex: 1,
+                                                            justifyContent: 'space-evenly'
+                                                        }}
+                                                    >
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                    fontSize: '0.95rem'
+                                                                }}
+                                                            >
+                                                                Facility Fee:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: '#07663a',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.95rem',
+                                                                    ml: 2
+                                                                }}
+                                                            >
+                                                                {formatVND(item.feeList.facilityFee)}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                    fontSize: '0.95rem'
+                                                                }}
+                                                            >
+                                                                Uniform Fee:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: '#07663a',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.95rem',
+                                                                    ml: 2
+                                                                }}
+                                                            >
+                                                                {formatVND(item.feeList.uniformFee)}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                    fontSize: '0.95rem'
+                                                                }}
+                                                            >
+                                                                Service Fee:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: '#07663a',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.95rem',
+                                                                    ml: 2
+                                                                }}
+                                                            >
+                                                                {formatVND(item.feeList.serviceFee)}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{ 
+                                                            display: 'flex', 
+                                                            justifyContent: 'space-between', 
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            <Typography
+                                                                variant="body1"
+                                                                sx={{
+                                                                    color: 'text.secondary',
+                                                                    fontSize: '0.95rem'
+                                                                }}
+                                                            >
+                                                                Learning Material Fee:
+                                                            </Typography>
+                                                            <Typography 
+                                                                variant="body1" 
+                                                                sx={{ 
+                                                                    color: '#07663a', 
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.95rem',
+                                                                    ml: 2
+                                                                }}
+                                                            >
+                                                                {formatVND(item.feeList.learningMaterialFee)}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{ 
+                                                            display: 'flex', 
+                                                            justifyContent: 'space-between', 
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            <Typography 
+                                                                variant="body1" 
+                                                                sx={{ 
+                                                                    color: 'text.secondary',
+                                                                    fontSize: '0.95rem'
+                                                                }}
+                                                            >
+                                                                Reservation Fee:
+                                                            </Typography>
+                                                            <Typography 
+                                                                variant="body1" 
+                                                                sx={{ 
+                                                                    color: '#07663a', 
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.95rem',
+                                                                    ml: 2
+                                                                }}
+                                                            >
+                                                                {formatVND(item.feeList.reservationFee)}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Stack>
+                                                </Box>
+                                            </Grid>
+                                        </Grid>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        </Paper>
+
+                        {/* Extra Terms Section */}
+                        {selectedTerm.extraTerms && selectedTerm.extraTerms.length > 0 && (
+                            <Paper 
+                                elevation={0} 
+                                sx={{
+                                    p: 2,
+                                    border: '1px solid #e0e0e0',
+                                    borderRadius: 2,
+                                    backgroundColor: '#ffffff'
+                                }}
+                            >
+                                <Box sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    mb: 2,
+                                    pb: 1,
+                                    borderBottom: '1px solid #e8f5e9'
+                                }}>
+                                    <EventRepeatOutlined sx={{color: '#07663a', mr: 1, fontSize: 20}}/>
+                                    <Typography variant="subtitle1" sx={{fontWeight: 600, color: '#07663a'}}>
+                                        Extra Terms
+                                    </Typography>
+                                </Box>
+                                <Stack spacing={2}>
+                                    {selectedTerm.extraTerms.map((extraTerm) => {
+                                        const statusColors = {
+                                            'active': {
+                                                light: '#e8f5e9',
+                                                main: '#2e7d32',
+                                                icon: <CheckCircleOutlined sx={{fontSize: 16}} />
+                                            },
+                                            'inactive': {
+                                                light: '#fff3e0',
+                                                main: '#ed6c02',
+                                                icon: <PauseCircleOutlined sx={{fontSize: 16}} />
+                                            },
+                                            'locked': {
+                                                light: '#ffebee',
+                                                main: '#d32f2f',
+                                                icon: <LockOutlined sx={{fontSize: 16}} />
+                                            }
+                                        };
+                                        const statusStyle = statusColors[extraTerm.status.toLowerCase()];
+
+                                        return (
+                                            <Box
+                                                key={extraTerm.id}
+                                                sx={{
+                                                    p: 2,
+                                                    border: '1px solid #e0e0e0',
+                                                    borderRadius: 1,
+                                                    backgroundColor: statusStyle.light
+                                                }}
+                                            >
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    mb: 1
+                                                }}>
+                                                    <Typography variant="subtitle2" sx={{color: statusStyle.main, fontWeight: 600}}>
+                                                        {extraTerm.name}
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Tooltip title="View Details">
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() => handleViewExtraTermDetail(extraTerm)}
+                                                                sx={{
+                                                                    color: statusStyle.main,
+                                                                    '&:hover': {
+                                                                        backgroundColor: `${statusStyle.light}80`
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Visibility fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            color: statusStyle.main,
+                                                            bgcolor: 'rgba(255,255,255,0.8)',
+                                                            px: 1,
+                                                            py: 0.5,
+                                                            borderRadius: 1,
+                                                            border: `1px solid ${statusStyle.main}`
+                                                        }}>
+                                                            {statusStyle.icon}
+                                                            <Typography variant="caption" sx={{ml: 0.5, fontWeight: 600}}>
+                                                                {extraTerm.status.toUpperCase()}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    color: '#555'
+                                                }}>
+                                                    <EventOutlined sx={{fontSize: 16, mr: 0.5}}/>
+                                                    <Typography variant="caption">
+                                                        {dayjs(extraTerm.startDate)} - {dayjs(extraTerm.endDate)}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        );
+                                    })}
+                                </Stack>
+                            </Paper>
+                        )}
+
+                        {/* Extra Term Form Dialog */}
+                        {showExtraTermForm && (
+                            <Dialog 
+                                open={true} 
+                                onClose={() => setShowExtraTermForm(false)} 
+                                maxWidth="sm" 
+                                fullWidth
+                            >
+                                <DialogTitle>Create Extra Term</DialogTitle>
+                                <form onSubmit={handleCreateExtraTerm}>
+                                    <DialogContent>
+                                        {hasActiveExtraTerm && (
+                                            <Alert severity="warning" sx={{ mb: 2 }}>
+                                                There is already an active or pending extra term. Creating a new one may affect the existing term.
+                                            </Alert>
+                                        )}
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Parent Term: {dayjs(selectedTerm.startDate).toISOString()} - {(dayjs(selectedTerm.endDate).toISOString())}
+                                            </Typography>
+
+                                            {/* Date Selection */}
+                                            <DateTimePicker
+                                                label="Start Date"
+                                                value={formData.startDate ? dayjs(formData.startDate) : dayjs(new Date())}
+                                                onChange={(newValue) => {
+                                                    setFormData(prev => ({ ...prev, startDate: newValue }));
+                                                }}
+                                                renderInput={(params) => <TextField {...params} fullWidth required />}
+                                                minDate={dayjs(selectedTerm.startDate)}
+                                                maxDate={dayjs(selectedTerm.endDate)}
+                                            />
+                                            <DateTimePicker
+                                                label="End Date"
+                                                value={formData.endDate ? dayjs(formData.endDate) : dayjs(new Date())}
+                                                onChange={(newValue) => {
+                                                    setFormData(prev => ({ ...prev, endDate: newValue }));
+                                                }}
+                                                renderInput={(params) => <TextField {...params} fullWidth required />}
+                                                minDate={dayjs(formData.startDate) || dayjs(selectedTerm.startDate)}
+                                                maxDate={dayjs(selectedTerm.endDate)}
+                                            />
+
+
+                                            {/* Registration Info */}
+                                            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+                                                <Typography variant="subtitle1" gutterBottom color="primary">
+                                                    Missing Registrations Summary
+                                                </Typography>
+                                                
+                                                {Object.entries(missingInfoByGrade).map(([grade, info]) => (
+                                                    <Box key={grade} sx={{ mb: 2, pl: 2, borderLeft: '3px solid', borderColor: 'primary.main' }}>
+                                                        <Typography variant="h6" gutterBottom>
+                                                            Grade {grade}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                            Maximum Registration: {info.maxRegistration}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                            Approved Forms: {info.approvedForms}
+                                                        </Typography>
+                                                        <Typography variant="body1" gutterBottom>
+                                                            Missing Students: <strong>{info.missingStudents}</strong>
+                                                        </Typography>
+                                                        <Typography variant="body1" gutterBottom>
+                                                            Expected Classes: <strong>{info.expectedClasses}</strong>
+                                                        </Typography>
+                                                    </Box>
+                                                ))}
+                                                
+                                                <Typography variant="caption" color="text.secondary">
+                                                    * These values are calculated automatically based on current registrations
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    </DialogContent>
+                                    <DialogActions>
+                                        <Button onClick={() => setShowExtraTermForm(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button 
+                                            type="submit" 
+                                            variant="contained" 
+                                            color="primary"
+                                            disabled={Object.keys(missingInfoByGrade).length === 0}
+                                        >
+                                            Create Extra Term
+                                        </Button>
+                                    </DialogActions>
+                                </form>
+                            </Dialog>
+                        )}
                     </Stack>
+                </Box>
 
-                    <Typography fontWeight="bold" sx={{mt: 1, mb: 0, color: '#07663a'}}>Fees</Typography>
+                {/* Fixed Footer */}
+                <Box sx={{
+                    position: 'sticky',
+                    bottom: 0,
+                    width: '100%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(8px)',
+                    borderTop: '1px solid rgba(7, 102, 58, 0.12)',
+                    boxShadow: '0px -2px 8px rgba(0, 0, 0, 0.05)'
+                }}>
+                    <Box sx={{
+                        maxWidth: 900,
+                        mx: 'auto',
+                        p: 1.5,
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        gap: 1.5
+                    }}>
+                        <Button
+                            variant="contained"
+                            onClick={handleClosePopUp}
+                            size="small"
+                            color={"warning"}
+                            sx={{
+                                color: 'white',
+                                px: 3,
+                                fontSize: '0.875rem',
+                                textTransform: 'none',
+                            }}
+                        >
+                            Close
+                        </Button>
+                        {!isLocked &&
+                            <Button
+                                variant="contained"
+                                onClick={handleLockTerm}
+                                size="small"
+                                color={"error"}
+                                sx={{
+                                    color: 'white',
+                                    px: 3,
+                                    fontSize: '0.875rem',
+                                    textTransform: 'none',
+                                    boxShadow: '0 2px 4px rgba(7, 102, 58, 0.25)',
+                                }}
+                            >
+                                Locked
+                            </Button>
+                        }
+                    </Box>
+                </Box>
+            </Dialog>
 
-                    <Stack>
-                        <TextField label="Reservation Fee"
-                                   type="number"
-                                   name="reservationFee"
-                                   value={formData.reservationFee}
-                                   required
-                                   fullWidth
-                                   InputProps={{readOnly: true}}
-                        />
-                    </Stack>
+            {/* Extra Term Detail Dialog */}
+            <Dialog 
+                open={showExtraTermDetail} 
+                onClose={handleCloseExtraTermDetail}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle sx={{
+                    backgroundColor: '#f8faf8',
+                    borderBottom: '1px solid #e0e0e0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                }}>
+                    <EventNoteOutlined />
+                    Extra Term Details
+                </DialogTitle>
+                <DialogContent sx={{ mt: 2 }}>
+                    {selectedExtraTerm && (
+                        <Stack spacing={2}>
+                            <Box>
+                                <Typography variant="subtitle2" color="textSecondary">
+                                    Name
+                                </Typography>
+                                <Typography variant="body1">
+                                    {selectedExtraTerm.name}
+                                </Typography>
+                            </Box>
 
-                    <Stack>
-                        <TextField label="Service Fee"
-                                   type="number"
-                                   name="serviceFee"
-                                   value={formData.serviceFee}
-                                   required
-                                   fullWidth
-                                   InputProps={{readOnly: true}}
-                        />
-                    </Stack>
+                            <Box>
+                                <Typography variant="subtitle2" color="textSecondary">
+                                    Academic Year
+                                </Typography>
+                                <Typography variant="body1">
+                                    {selectedExtraTerm.year}
+                                </Typography>
+                            </Box>
 
-                    <Stack>
-                        <TextField label="Uniform Fee"
-                                   type="number"
-                                   name="uniformFee"
-                                   value={formData.uniformFee}
-                                   required
-                                   fullWidth
-                                   InputProps={{readOnly: true}}
-                        />
-                    </Stack>
+                            <Box>
+                                <Typography variant="subtitle2" color="textSecondary">
+                                    Start Date
+                                </Typography>
+                                <Typography variant="body1">
+                                    {dayjs(selectedExtraTerm.startDate)}
+                                </Typography>
+                            </Box>
 
-                    <Stack>
-                        <TextField label="Learning Material Fee"
-                                   type="number"
-                                   name="learningMaterialFee"
-                                   value={formData.learningMaterialFee}
-                                   required
-                                   fullWidth
-                                   InputProps={{readOnly: true}}
-                        />
-                    </Stack>
+                            <Box>
+                                <Typography variant="subtitle2" color="textSecondary">
+                                    End Date
+                                </Typography>
+                                <Typography variant="body1">
+                                    {dayjs(selectedExtraTerm.endDate)}
+                                </Typography>
+                            </Box>
 
-                    <Stack>
-                        <TextField label="Facility Fee"
-                                   type="number"
-                                   name="facilityFee"
-                                   value={formData.facilityFee}
-                                   required
-                                   fullWidth
-                                   InputProps={{readOnly: true}}
-                        />
-                    </Stack>
+                            <Box>
+                                <Typography variant="subtitle2" color="textSecondary">
+                                    Status
+                                </Typography>
+                                <Typography 
+                                    variant="body1" 
+                                    sx={{
+                                        color: selectedExtraTerm.status.toLowerCase() === 'active' ? 'success.main' : 
+                                               selectedExtraTerm.status.toLowerCase() === 'inactive' ? 'warning.main' : 
+                                               'error.main'
+                                    }}
+                                >
+                                    {selectedExtraTerm.status}
+                                </Typography>
+                            </Box>
 
-                    {formData.status === 'locked' && (
-                        <ExtraTermForm
-                            formData={formData}
-                            onClose={handleClosePopUp}
-                            getStatusColor={getStatusColor}
-                        />
+                            {selectedExtraTerm.termItemList && selectedExtraTerm.termItemList.length > 0 && (
+                                <Box>
+                                    <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                                        Term Items
+                                    </Typography>
+                                    {selectedExtraTerm.termItemList.map((item, index) => (
+                                        <Box 
+                                            key={index}
+                                            sx={{
+                                                mt: 1,
+                                                p: 1.5,
+                                                border: '1px solid #e0e0e0',
+                                                borderRadius: 1,
+                                                backgroundColor: '#f8faf8'
+                                            }}
+                                        >
+                                            <Typography variant="subtitle2" gutterBottom>
+                                                Grade {item.grade}
+                                            </Typography>
+                                            <Grid container spacing={1}>
+                                                <Grid item xs={6}>
+                                                    <Typography variant="body2" color="textSecondary">
+                                                        Expected Classes: {item.expectedClasses}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item xs={6}>
+                                                    <Typography variant="body2" color="textSecondary">
+                                                        Max Registration: {item.maxNumberRegistration}
+                                                    </Typography>
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            )}
+                        </Stack>
                     )}
-                </Stack>
-            </Box>
-
-            <DialogActions sx={{justifyContent: 'flex-end', px: 4, py: 3}}>
-                {/* Lock Button - Only show if term is not already locked */}
-                {formData.status?.toLowerCase() !== 'locked' && (
-                    <Button
-                        variant="contained"
-                        color="error"
-                        onClick={handleLockTerm}
-                        sx={{
-                            minWidth: 120,
-                            height: '44px',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            fontSize: '1rem'
-                        }}
-                    >
-                        Lock Term
+                </DialogContent>
+                <DialogActions sx={{ p: 2, borderTop: '1px solid #e0e0e0' }}>
+                    <Button onClick={handleCloseExtraTermDetail} variant="outlined">
+                        Close
                     </Button>
-                )}
-
-                <Button
-                    sx={{minWidth: 120, height: '44px'}}
-                    variant="contained"
-                    color="warning"
-                    onClick={handleClosePopUp}
-                >
-                    Close
-                </Button>
-            </DialogActions>
-        </Dialog>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 }
 
-function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
-    const {enqueueSnackbar} = useSnackbar();
+function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(today.getDate() + 1)
 
+    const {enqueueSnackbar} = useSnackbar();
     const [formData, setFormData] = useState({
-        name: '',
-        year: new Date().getFullYear(),
-        startDate: '',
-        endDate: '',
+        startDate: dayjs(today),
+        endDate: dayjs(tomorrow),
+        termItemList: []
+    });
+
+    const [availableGrades] = useState(['SEED', 'BUD', 'LEAF']);
+    const [selectedGrade, setSelectedGrade] = useState('');
+    const [currentTermItem, setCurrentTermItem] = useState({
         grade: '',
         expectedClasses: '',
         studentsPerClass: 20,
         maxNumberRegistration: 0,
-        reservationFee: 0,
-        serviceFee: 0,
+        facilityFee: 0,
         uniformFee: 0,
         learningMaterialFee: 0,
-        facilityFee: 0,
-        status: 'ACTIVE'
+        reservationFee: 0,
+        serviceFee: 0,
     });
 
+
+    // Calculate remaining available grades
+    const remainingGrades = availableGrades.filter(
+        grade => !formData.termItemList.some(item => item.grade === grade)
+    );
+
     useEffect(() => {
-        const numExpectedClasses = parseInt(formData.expectedClasses) || 0;
+        if (currentTermItem.expectedClasses) {
+            setCurrentTermItem(prev => ({
+                ...prev,
+                maxNumberRegistration: parseInt(prev.expectedClasses) * prev.studentsPerClass
+            }));
+        }
+    }, [currentTermItem.expectedClasses]);
+
+    const handleAddTermItem = async () => {
+        if (!selectedGrade) {
+            enqueueSnackbar("Please select a grade", {variant: "error"});
+            return;
+        }
+        if (!currentTermItem.expectedClasses || currentTermItem.expectedClasses <= 0) {
+            enqueueSnackbar("Expected classes must be greater than 0", {variant: "error"});
+            return;
+        }
+
+        try {
+            // Get default fees for the selected grade
+            const response = await getDefaultGrade(selectedGrade);
+            if (response?.success && response?.data) {
+                const newTermItem = {
+                    ...currentTermItem,
+                    grade: selectedGrade,
+                    studentsPerClass: 20,
+                    maxNumberRegistration: parseInt(currentTermItem.expectedClasses) * 20,
+                    facilityFee: parseInt(response.data.facilityFee),
+                    uniformFee: parseInt(response.data.uniformFee),
+                    learningMaterialFee: parseInt(response.data.learningMaterialFee),
+                    reservationFee: parseInt(response.data.reservationFee),
+                    serviceFee: parseInt(response.data.serviceFee),
+                };
+
+                setFormData(prev => ({
+                    ...prev,
+                    termItemList: [...prev.termItemList, newTermItem]
+                }));
+
+                // Reset current term item and selected grade
+                setCurrentTermItem({
+                    grade: '',
+                    expectedClasses: '',
+                    studentsPerClass: 20,
+                    maxNumberRegistration: 0
+                });
+                setSelectedGrade('');
+            }
+        } catch (error) {
+            console.error("Error getting default fees:", error);
+            enqueueSnackbar("Error loading fees", {variant: "error"});
+        }
+    };
+
+    const handleRemoveTermItem = (gradeToRemove) => {
         setFormData(prev => ({
             ...prev,
-            maxNumberRegistration: numExpectedClasses * prev.studentsPerClass,
-            name: `${prev.grade || ''} Term ${prev.year}-${prev.year + 1}`
+            termItemList: prev.termItemList.filter(item => item.grade !== gradeToRemove)
         }));
-    }, [formData.expectedClasses, formData.grade]);
+    };
 
-    const handleCreate = async (formData) => {
+    const validateForm = () => {
+        if (!formData.startDate) {
+            enqueueSnackbar("Start date is required", {variant: "error"});
+            return false;
+        }
+
+        if (!formData.endDate) {
+            enqueueSnackbar("End date is required", {variant: "error"});
+            return false;
+        }
+
+        if (new Date(formData.startDate) >= new Date(formData.endDate)) {
+            enqueueSnackbar("Start date must be before end date", {variant: "error"});
+            return false;
+        }
+
+        if (new Date(formData.startDate) <= new Date()) {
+            enqueueSnackbar("Start date must be in the future", {variant: "error"});
+            return false;
+        }
+
+        if (formData.termItemList.length === 0) {
+            enqueueSnackbar("At least one grade must be included in the term", {variant: "error"});
+            return false;
+        }
+
+        return true;
+    };
+
+    const handleCreate = async () => {
         try {
+            if (!validateForm()) {
+                return;
+            }
+
+            // Format dates to ISO string
+            const startDateISO = new Date(formData.startDate).toISOString();
+            const endDateISO = new Date(formData.endDate).toISOString();
+
+            // Prepare term items with all required fields
+            const termItems = formData.termItemList.map(item => ({
+                grade: item.grade,
+                expectedClasses: Number(item.expectedClasses),
+                studentsPerClass: Number(item.studentsPerClass),
+                maxNumberRegistration: Number(item.maxNumberRegistration),
+                feeList: {
+                    facilityFee: Number(item.facilityFee),
+                    uniformFee: Number(item.uniformFee),
+                    learningMaterialFee: Number(item.learningMaterialFee),
+                    reservationFee: Number(item.reservationFee),
+                    serviceFee: Number(item.serviceFee)
+                }
+            }));
+
+            console.log('Creating term with data:', {
+                startDate: startDateISO,
+                endDate: endDateISO,
+                termItemList: termItems
+            });
+
             const response = await createTerm(
-                formData.grade,
-                formData.startDate,
-                formData.endDate,
-                formData.expectedClasses,
-                formData.studentsPerClass,
-                formData.reservationFee,
-                formData.serviceFee,
-                formData.uniformFee,
-                formData.learningMaterialFee,
-                formData.facilityFee
+                startDateISO,
+                endDateISO,
+                termItems
             );
 
             if (response.success) {
@@ -700,447 +1458,625 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
         }
     };
 
-    const handleChange = async (e) => {
-        const {name, value} = e.target;
-
-        if (name === "expectedClasses") {
-            // Allow empty string or positive numbers
-            if (value === '' || (parseInt(value) >= 0)) {
-                setFormData(prev => ({
-                    ...prev,
-                    [name]: value,
-                    maxNumberRegistration: value ? parseInt(value) * prev.studentsPerClass : 0
-                }));
-            }
-            return;
-        }
-
-        if (name === "grade") {
-            try {
-                // First update the grade and name immediately
-                setFormData(prev => ({
-                    ...prev,
-                    grade: value,
-                    name: `${value} Term ${prev.year}-${prev.year + 1}`
-                }));
-
-                const response = await getDefaultGrade(value);
-                console.log("Default fee response:", response);
-
-                if (response?.success && response?.data) {
-                    const fees = response.data;
-                    // Update fees matching the backend enum order
-                    setFormData(prev => ({
-                        ...prev,
-                        learningMaterialFee: fees.learningMaterialFee || 0,
-                        reservationFee: fees.reservationFee || 0,
-                        serviceFee: fees.serviceFee || 0,
-                        uniformFee: fees.uniformFee || 0,
-                        facilityFee: fees.facilityFee || 0
-                    }));
-                } else {
-                    enqueueSnackbar("Failed to load fees for the selected grade. Please try again.", {variant: "error"});
-                }
-            } catch (err) {
-                console.error("Error loading default fees:", err);
-                enqueueSnackbar("Error loading fees. Please try again or contact support.", {variant: "error"});
-            }
-            return;
-        }
-
-        if (name === "startDate" || name === "endDate") {
-            const date = new Date(value);
-            if (!isNaN(date.getTime())) {
-                setFormData(prev => ({
-                    ...prev,
-                    [name]: value
-                }));
-            }
-            return;
-        }
-
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
     return (
         <Dialog
             open={isPopUpOpen}
             fullScreen
             PaperProps={{
-                sx: {
-                    bgcolor: '#f8f9fa'
-                }
+                sx: {bgcolor: '#f8f9fa'}
             }}
         >
-            <AppBar
-                position="relative"
-                sx={{
-                    bgcolor: '#07663a',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}
-            >
+            <AppBar position="relative" sx={{bgcolor: '#07663a'}}>
                 <Toolbar>
                     <IconButton
                         edge="start"
                         color="inherit"
                         onClick={handleClosePopUp}
                         aria-label="close"
-                        sx={{
-                            mr: 2,
-                            '&:hover': {
-                                backgroundColor: 'rgba(255,255,255,0.1)'
-                            }
-                        }}
                     >
                         <Close/>
                     </IconButton>
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{
-                            flex: 1,
-                            fontSize: '1.25rem',
-                            fontWeight: 600,
-                            letterSpacing: '0.5px'
-                        }}
-                    >
+                    <Typography variant="h6" sx={{flex: 1}}>
                         Create New Term
                     </Typography>
                 </Toolbar>
             </AppBar>
 
             <DialogContent>
-                <Box sx={{
-                    mt: 4,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 3,
-                    maxWidth: '1000px',
-                    mx: 'auto',
-                    px: 2
-                }}>
-                    {/* Term Name */}
-                    <TextField
-                        label="Term Name"
-                        name="name"
-                        value={formData.name}
-                        fullWidth
-                        required
-                        InputProps={{
-                            readOnly: true,
-                        }}
-                        sx={{
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: '12px',
-                                backgroundColor: '#f5f5f5'
-                            }
-                        }}
-                    />
-
-                    {/* Academic Year */}
-                    <TextField
-                        label="Academic Year"
-                        value={`${formData.year}-${formData.year + 1}`}
-                        fullWidth
-                        InputProps={{
-                            readOnly: true,
-                        }}
-                        sx={{
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: '12px',
-                                backgroundColor: '#f5f5f5'
-                            }
-                        }}
-                    />
-
-                    {/* Start Date and End Date */}
-                    <Box sx={{display: 'flex', gap: 2}}>
-                        <TextField
-                            label="Start Date *"
-                            type="datetime-local"
-                            name="startDate"
-                            value={formData.startDate}
-                            onChange={handleChange}
-                            required
-                            fullWidth
-                            InputLabelProps={{shrink: true}}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: '#07663a',
-                                    },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: '#07663a',
-                                        borderWidth: 2
-                                    }
-                                },
-                                '& .MuiInputLabel-root.Mui-focused': {
-                                    color: '#07663a'
-                                }
-                            }}
-                        />
-
-                        <TextField
-                            label="End Date *"
-                            type="datetime-local"
-                            name="endDate"
-                            value={formData.endDate}
-                            onChange={handleChange}
-                            required
-                            fullWidth
-                            InputLabelProps={{shrink: true}}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: '#07663a',
-                                    },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: '#07663a',
-                                        borderWidth: 2
-                                    }
-                                },
-                                '& .MuiInputLabel-root.Mui-focused': {
-                                    color: '#07663a'
-                                }
-                            }}
-                        />
-                    </Box>
-
-                    {/* Grade Selection */}
-                    <FormControl
-                        fullWidth
-                        sx={{
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: '12px',
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#07663a',
-                                },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: '#07663a',
-                                    borderWidth: 2
-                                }
-                            },
-                            '& .MuiInputLabel-root.Mui-focused': {
-                                color: '#07663a'
-                            }
-                        }}
-                    >
-                        <InputLabel id="grade-label">Grade *</InputLabel>
-                        <Select
-                            labelId="grade-label"
-                            name="grade"
-                            value={formData.grade}
-                            onChange={handleChange}
-                            label="Grade *"
-                            required
-                        >
-                            <MenuItem value="SEED">SEED</MenuItem>
-                            <MenuItem value="BUD">BUD</MenuItem>
-                            <MenuItem value="LEAF">LEAF</MenuItem>
-                        </Select>
-                    </FormControl>
-
-                    {/* Class Information */}
-                    <Box sx={{display: 'flex', gap: 2}}>
-                        <TextField
-                            label="Expected Classes *"
-                            type="number"
-                            required
-                            fullWidth
-                            name="expectedClasses"
-                            value={formData.expectedClasses}
-                            onChange={handleChange}
-                            placeholder="Enter number of classes"
-                            InputProps={{
-                                inputProps: {
-                                    min: 0,
-                                    style: {textAlign: 'left'}
-                                }
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: '#07663a',
-                                    },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: '#07663a',
-                                        borderWidth: 2
-                                    }
-                                },
-                                '& .MuiInputLabel-root.Mui-focused': {
-                                    color: '#07663a'
-                                }
-                            }}
-                        />
-
-                        <TextField
-                            label="Students Per Class"
-                            type="number"
-                            value={formData.studentsPerClass}
-                            InputProps={{
-                                readOnly: true,
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    backgroundColor: '#f5f5f5'
-                                }
-                            }}
-                        />
-
-                        <TextField
-                            label="Max Registration"
-                            type="number"
-                            value={formData.maxNumberRegistration}
-                            InputProps={{
-                                readOnly: true,
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    backgroundColor: '#f5f5f5'
-                                }
-                            }}
-                        />
-                    </Box>
-
-                    {/* Fee Information */}
+                <Box sx={{maxWidth: 800, mx: 'auto', mt: 4, p: 3}}>
                     <Paper
                         elevation={0}
                         sx={{
-                            p: 3,
-                            borderRadius: '16px',
-                            border: '1px solid #e0e0e0',
-                            backgroundColor: '#fff'
+                            p: 3.5,
+                            mb: 4,
+                            border: '2px solid #e0e0e0',
+                            borderRadius: 3,
+                            backgroundColor: '#ffffff',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                                borderColor: '#07663a'
+                            }
                         }}
                     >
-                        <Typography
-                            variant="h6"
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            mb: 3,
+                            pb: 2,
+                            borderBottom: '2px solid #e8f5e9'
+                        }}>
+                            <EventNoteOutlined sx={{color: '#07663a', mr: 1.5, fontSize: 28}}/>
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontWeight: 600,
+                                    color: '#07663a',
+                                }}
+                            >
+                                Term Information
+                            </Typography>
+                        </Box>
+
+                        <Stack spacing={3}>
+                            <Box sx={{
+                                backgroundColor: '#f8faf8',
+                                p: 2.5,
+                                borderRadius: 2,
+                                border: '1px solid #e0e0e0'
+                            }}>
+                                <TextField
+                                    label="Term Name"
+                                    value={"Admission Term for " + new Date().getFullYear()}
+                                    fullWidth
+                                    InputProps={{
+                                        startAdornment: (
+                                            <Box sx={{mr: 1, color: '#07663a'}}>
+                                                <EditOutlined/>
+                                            </Box>
+                                        ),
+                                        readOnly: true
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            backgroundColor: '#ffffff',
+                                            '& fieldset': {
+                                                borderColor: '#e0e0e0',
+                                                borderWidth: '2px'
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#07663a'
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#07663a'
+                                            }
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: '#07663a',
+                                            '&.Mui-focused': {
+                                                color: '#07663a'
+                                            }
+                                        }
+                                    }}
+                                />
+                            </Box>
+
+                            <Box sx={{
+                                backgroundColor: '#f8faf8',
+                                p: 2.5,
+                                borderRadius: 2,
+                                border: '1px solid #e0e0e0'
+                            }}>
+                                <TextField
+                                    label="Year"
+                                    value={formData && formData.startDate ? new Date(formData.startDate).getFullYear() : new Date().getFullYear()}
+                                    fullWidth
+                                    InputProps={{
+                                        startAdornment: (
+                                            <Box sx={{mr: 1, color: '#07663a'}}>
+                                                <CalendarTodayOutlined/>
+                                            </Box>
+                                        ),
+                                        readOnly: true
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            backgroundColor: '#ffffff',
+                                            '& fieldset': {
+                                                borderColor: '#e0e0e0',
+                                                borderWidth: '2px'
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: '#07663a'
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: '#07663a'
+                                            }
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: '#07663a',
+                                            '&.Mui-focused': {
+                                                color: '#07663a'
+                                            }
+                                        }
+                                    }}
+                                />
+                            </Box>
+
+                            <Box sx={{
+                                backgroundColor: '#f8faf8',
+                                p: 2.5,
+                                borderRadius: 2,
+                                border: '1px solid #e0e0e0'
+                            }}>
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                        color: '#07663a',
+                                        fontWeight: 600,
+                                        mb: 2
+                                    }}
+                                >
+                                    Term Duration
+                                </Typography>
+                                <Stack direction="row" spacing={2}>
+                                    <DateTimePicker
+                                        label="Start Date"
+                                        format={'HH:mm DD/MM/YYYY'}
+                                        value={dayjs(formData.startDate)}
+                                        onChange={(newDate) => setFormData({...formData, startDate: newDate})}
+                                    />
+                                    <DateTimePicker
+                                        label="End Date"
+                                        format={'HH:mm DD/MM/YYYY'}
+                                        value={dayjs(formData.endDate)}
+                                        onChange={(newDate) => setFormData({...formData, endDate: newDate})}
+                                    />
+                                </Stack>
+                            </Box>
+                        </Stack>
+                    </Paper>
+
+                    {/* Add Term Item Section */}
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 3.5,
+                            mb: 3,
+                            border: '2px solid #e0e0e0',
+                            borderRadius: 3,
+                            backgroundColor: '#ffffff',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                                borderColor: '#07663a'
+                            }
+                        }}
+                    >
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            mb: 3,
+                            pb: 2,
+                            borderBottom: '2px solid #e8f5e9'
+                        }}>
+                            <Add sx={{color: '#07663a', mr: 1.5, fontSize: 28}}/>
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontWeight: 600,
+                                    color: '#07663a',
+                                }}
+                            >
+                                Add Grade Configuration
+                            </Typography>
+                        </Box>
+
+                        <Stack spacing={3}>
+                            <FormControl fullWidth>
+                                <InputLabel sx={{
+                                    color: '#07663a',
+                                    '&.Mui-focused': {
+                                        color: '#07663a'
+                                    }
+                                }}>Grade</InputLabel>
+                                <Select
+                                    value={selectedGrade}
+                                    onChange={(e) => setSelectedGrade(e.target.value)}
+                                    label="Grade"
+                                    sx={{
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: '#e0e0e0',
+                                            borderWidth: '2px'
+                                        },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: '#07663a'
+                                        },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: '#07663a'
+                                        }
+                                    }}
+                                >
+                                    {remainingGrades.map(grade => (
+                                        <MenuItem key={grade} value={grade}>{grade}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <Box sx={{
+                                backgroundColor: '#f8faf8',
+                                p: 2.5,
+                                borderRadius: 2,
+                                border: '1px solid #e0e0e0'
+                            }}>
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                        color: '#07663a',
+                                        fontWeight: 600,
+                                        mb: 2
+                                    }}
+                                >
+                                    Class Capacity
+                                </Typography>
+                                <Stack spacing={2.5}>
+                                    <TextField
+                                        label="Expected Classes"
+                                        type="number"
+                                        value={currentTermItem.expectedClasses}
+                                        onChange={(e) => setCurrentTermItem(prev => ({
+                                            ...prev,
+                                            expectedClasses: e.target.value
+                                        }))}
+                                        fullWidth
+                                        InputProps={{
+                                            startAdornment: (
+                                                <Box sx={{mr: 1, color: '#07663a'}}>
+                                                    <SchoolOutlined/>
+                                                </Box>
+                                            )
+                                        }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                '& fieldset': {
+                                                    borderColor: '#e0e0e0',
+                                                    borderWidth: '2px'
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: '#07663a'
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: '#07663a'
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                color: '#07663a',
+                                                '&.Mui-focused': {
+                                                    color: '#07663a'
+                                                }
+                                            }
+                                        }}
+                                    />
+
+                                    <Stack
+                                        direction="row"
+                                        spacing={2}
+                                        sx={{
+                                            backgroundColor: '#ffffff',
+                                            p: 2,
+                                            borderRadius: 2,
+                                            border: '1px solid #e0e0e0'
+                                        }}
+                                    >
+                                        <TextField
+                                            label="Students Per Class"
+                                            type="number"
+                                            value={currentTermItem.studentsPerClass}
+                                            InputProps={{
+                                                readOnly: true,
+                                                startAdornment: (
+                                                    <Box sx={{mr: 1, color: '#07663a'}}>
+                                                        <PersonOutlined/>
+                                                    </Box>
+                                                )
+                                            }}
+                                            fullWidth
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    backgroundColor: '#f5f5f5'
+                                                }
+                                            }}
+                                        />
+                                        <TextField
+                                            label="Max Registration"
+                                            type="number"
+                                            value={currentTermItem.maxNumberRegistration}
+                                            InputProps={{
+                                                readOnly: true,
+                                                startAdornment: (
+                                                    <Box sx={{mr: 1, color: '#07663a'}}>
+                                                        <GroupsOutlined/>
+                                                    </Box>
+                                                )
+                                            }}
+                                            fullWidth
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    backgroundColor: '#f5f5f5'
+                                                }
+                                            }}
+                                        />
+                                    </Stack>
+                                </Stack>
+                            </Box>
+
+                            <Button
+                                variant="contained"
+                                onClick={handleAddTermItem}
+                                disabled={!selectedGrade || !currentTermItem.expectedClasses}
+                                startIcon={<Add/>}
+                                sx={{
+                                    alignSelf: 'flex-end',
+                                    bgcolor: '#07663a',
+                                    '&:hover': {
+                                        bgcolor: '#05512e'
+                                    },
+                                    '&.Mui-disabled': {
+                                        bgcolor: '#e0e0e0'
+                                    },
+                                    px: 3,
+                                    py: 1,
+                                    borderRadius: 2,
+                                    fontWeight: 600
+                                }}
+                            >
+                                Add Grade
+                            </Button>
+                        </Stack>
+                    </Paper>
+
+                    {/* Term Items List */}
+                    {formData.termItemList.length > 0 && (
+                        <Paper
+                            elevation={0}
                             sx={{
-                                mb: 3,
-                                color: '#07663a',
-                                fontWeight: 600,
-                                fontSize: '1.1rem'
+                                p: 3,
+                                border: '2px solid #e0e0e0',
+                                borderRadius: 3,
+                                backgroundColor: '#ffffff',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                                    borderColor: '#07663a'
+                                }
                             }}
                         >
-                            Fee Information
-                        </Typography>
+                            <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                mb: 3
+                            }}>
+                                <Typography
+                                    variant="h6"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: '#07663a',
+                                        position: 'relative',
+                                        '&:after': {
+                                            content: '""',
+                                            position: 'absolute',
+                                            bottom: -8,
+                                            left: 0,
+                                            width: '60px',
+                                            height: '3px',
+                                            backgroundColor: '#07663a',
+                                            borderRadius: '2px'
+                                        }
+                                    }}
+                                >
+                                    Configured Grades
+                                </Typography>
+                            </Box>
+                            <Stack spacing={2.5}>
+                                {formData.termItemList.map((item) => (
+                                    <Box
+                                        key={item.grade}
+                                        sx={{
+                                            p: 3,
+                                            border: '1px solid #e0e0e0',
+                                            borderRadius: 2,
+                                            position: 'relative',
+                                            backgroundColor: '#f8faf8',
+                                            transition: 'all 0.2s ease',
+                                            '&:hover': {
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                                                borderColor: '#07663a',
+                                                backgroundColor: '#ffffff'
+                                            }
+                                        }}
+                                    >
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => handleRemoveTermItem(item.grade)}
+                                            sx={{
+                                                position: 'absolute',
+                                                right: 8,
+                                                top: 8,
+                                                color: '#666',
+                                                '&:hover': {
+                                                    backgroundColor: '#ffebee',
+                                                    color: '#d32f2f'
+                                                }
+                                            }}
+                                        >
+                                            <Close/>
+                                        </IconButton>
 
-                        <Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
-                            <TextField
-                                label="Reservation Fee"
-                                type="number"
-                                value={formData.reservationFee}
-                                InputProps={{readOnly: true}}
-                                fullWidth
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#f5f5f5'
-                                    }
-                                }}
-                            />
+                                        <Box sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            mb: 2
+                                        }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    color: '#07663a',
+                                                    backgroundColor: '#e8f5e9',
+                                                    px: 2,
+                                                    py: 0.5,
+                                                    borderRadius: 2
+                                                }}
+                                            >
+                                                {item.grade}
+                                            </Typography>
+                                        </Box>
 
-                            <TextField
-                                label="Service Fee"
-                                type="number"
-                                value={formData.serviceFee}
-                                InputProps={{readOnly: true}}
-                                fullWidth
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#f5f5f5'
-                                    }
-                                }}
-                            />
+                                        <Stack
+                                            direction="row"
+                                            spacing={3}
+                                            sx={{
+                                                width: '100%',
+                                                alignItems: 'stretch'
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: '50%',
+                                                    backgroundColor: '#ffffff',
+                                                    p: 2.5,
+                                                    borderRadius: 2,
+                                                    border: '1px solid #e0e0e0'
+                                                }}
+                                            >
+                                                <Typography variant="subtitle2" color="primary" gutterBottom sx={{
+                                                    fontWeight: 600,
+                                                    mb: 2,
+                                                    pb: 1,
+                                                    borderBottom: '2px solid #e8f5e9'
+                                                }}>
+                                                    Class Information
+                                                </Typography>
+                                                <Stack spacing={1.5}>
+                                                    <Typography sx={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        color: '#555',
+                                                        '& span': {fontWeight: 600, color: '#07663a'}
+                                                    }}>
+                                                        Expected Classes: <span>{item.expectedClasses}</span>
+                                                    </Typography>
+                                                    <Typography sx={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        color: '#555',
+                                                        '& span': {fontWeight: 600, color: '#07663a'}
+                                                    }}>
+                                                        Students Per Class: <span>{item.studentsPerClass}</span>
+                                                    </Typography>
+                                                    <Typography sx={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        color: '#555',
+                                                        '& span': {fontWeight: 600, color: '#07663a'}
+                                                    }}>
+                                                        Max Registration: <span>{item.maxNumberRegistration}</span>
+                                                    </Typography>
+                                                </Stack>
+                                            </Box>
 
-                            <TextField
-                                label="Uniform Fee"
-                                type="number"
-                                value={formData.uniformFee}
-                                InputProps={{readOnly: true}}
-                                fullWidth
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#f5f5f5'
-                                    }
-                                }}
-                            />
-
-                            <TextField
-                                label="Learning Material Fee"
-                                type="number"
-                                value={formData.learningMaterialFee}
-                                InputProps={{readOnly: true}}
-                                fullWidth
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#f5f5f5'
-                                    }
-                                }}
-                            />
-
-                            <TextField
-                                label="Facility Fee"
-                                type="number"
-                                value={formData.facilityFee}
-                                InputProps={{readOnly: true}}
-                                fullWidth
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#f5f5f5'
-                                    }
-                                }}
-                            />
-                        </Box>
-                    </Paper>
+                                            <Box
+                                                sx={{
+                                                    width: '50%',
+                                                    backgroundColor: '#ffffff',
+                                                    p: 2.5,
+                                                    borderRadius: 2,
+                                                    border: '1px solid #e0e0e0'
+                                                }}
+                                            >
+                                                <Typography variant="subtitle2" color="primary" gutterBottom sx={{
+                                                    fontWeight: 600,
+                                                    mb: 2,
+                                                    pb: 1,
+                                                    borderBottom: '2px solid #e8f5e9'
+                                                }}>
+                                                    Fee Structure
+                                                </Typography>
+                                                <Grid container spacing={2}>
+                                                    <Grid item xs={6}>
+                                                        <Typography sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            color: '#555',
+                                                            mb: 1.5,
+                                                            '& span': {fontWeight: 600, color: '#07663a'}
+                                                        }}>
+                                                            Facility Fee: <span>{formatVND(item.facilityFee)}</span>
+                                                        </Typography>
+                                                        <Typography sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            color: '#555',
+                                                            mb: 1.5,
+                                                            '& span': {fontWeight: 600, color: '#07663a'}
+                                                        }}>
+                                                            Uniform Fee: <span>{formatVND(item.uniformFee)}</span>
+                                                        </Typography>
+                                                        <Typography sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            color: '#555',
+                                                            '& span': {fontWeight: 600, color: '#07663a'}
+                                                        }}>
+                                                            Service Fee: <span>{formatVND(item.serviceFee)}</span>
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item xs={6}>
+                                                        <Typography sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            color: '#555',
+                                                            mb: 1.5,
+                                                            '& span': {fontWeight: 600, color: '#07663a'}
+                                                        }}>
+                                                            Learning Material
+                                                            Fee: <span>{formatVND(item.learningMaterialFee)}</span>
+                                                        </Typography>
+                                                        <Typography sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            color: '#555',
+                                                            '& span': {fontWeight: 600, color: '#07663a'}
+                                                        }}>
+                                                            Reservation
+                                                            Fee: <span>{formatVND(item.reservationFee)}</span>
+                                                        </Typography>
+                                                    </Grid>
+                                                </Grid>
+                                            </Box>
+                                        </Stack>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        </Paper>
+                    )}
                 </Box>
             </DialogContent>
 
-            <Toolbar sx={{justifyContent: 'flex-end'}}>
-                <Button
-                    onClick={handleClosePopUp}
-                    variant="outlined"
-                    color="error"
-                    sx={{
-                        mr: 2,
-                        borderRadius: '10px',
-                        px: 3,
-                        py: 1,
-                        textTransform: 'none',
-                        fontWeight: 600
-                    }}
-                >
+            <DialogActions sx={{p: 3}}>
+                <Button onClick={handleClosePopUp} color="inherit">
                     Cancel
                 </Button>
                 <Button
-                    onClick={() => handleCreate(formData)}
+                    onClick={handleCreate}
                     variant="contained"
-                    sx={{
-                        backgroundColor: '#07663a',
-                        borderRadius: '10px',
-                        px: 3,
-                        py: 1,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        '&:hover': {
-                            backgroundColor: '#05512e'
-                        }
-                    }}
+                    disabled={formData.termItemList.length === 0}
+                    sx={{bgcolor: '#07663a', '&:hover': {bgcolor: '#05512e'}}}
                 >
                     Create Term
                 </Button>
-            </Toolbar>
+            </DialogActions>
         </Dialog>
     );
 }
@@ -1334,7 +2270,7 @@ export default function TermAdmission() {
     }
 
     return (
-        <>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'vi-VN'} localeText={viVN.components.MuiLocalizationProvider.defaultProps.localeText}>
             <RenderPage
                 terms={data.terms}
                 openFormPopUpFunc={() => handleOpenPopUp('form')}
@@ -1358,6 +2294,6 @@ export default function TermAdmission() {
                     GetTerm={GetTerm}
                 />
             )}
-        </>
+        </LocalizationProvider>
     );
 }

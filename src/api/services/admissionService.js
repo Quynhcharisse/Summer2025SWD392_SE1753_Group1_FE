@@ -19,39 +19,23 @@ export const getTermList = async () => {
         const response = await apiClient.get("/admission/term")
         return response.data
     } catch (error) {
-        console.error("Get term list error:", error);
         throw error;
     }
 }
 
 export const createTerm = async (
-    grade,
     startDate,
     endDate,
-    expectedClasses,
-    studentsPerClass,
-    reservationFee,
-    serviceFee,
-    uniformFee,
-    learningMaterialFee,
-    facilityFee
+    termItemList
 ) => {
     try {
         const response = await apiClient.post('/admission/term', {
-            grade,
-            startDate,
-            endDate,
-            expectedClasses,
-            studentsPerClass,
-            reservationFee,
-            serviceFee,
-            uniformFee,
-            learningMaterialFee,
-            facilityFee
+            startDate: startDate,
+            endDate: endDate,
+            termItemList: termItemList
         });
         return response.data;
     } catch (error) {
-        console.error('Error creating term:', error);
         throw error;
     }
 };
@@ -59,42 +43,27 @@ export const createTerm = async (
 export const getDefaultGrade = async (grade) => {
     try {
         const response = await apiClient.get('/admission/default/fee', {
-            params: { grade }
+            params: {grade}
         });
-        console.log("API Response for default fee:", response);
         return response.data;
     } catch (error) {
-        console.error("Error fetching default grade:", error);
         throw error;
     }
 };
 
 // Extra Term APIs
-export const createExtraTerm = async (data) => {
+export const createExtraTerm = async (formData) => {
     try {
-        console.log('🚀 Creating Extra Term - Request Data:', {
-            admissionTermId: data.termId,
-            startDate: data.startDate,
-            endDate: data.endDate,
-            maxNumberRegistration: data.maxNumberRegistration
-        });
-
         const response = await apiClient.post('/admission/extra/term', {
-            admissionTermId: data.termId,
-            startDate: data.startDate,
-            endDate: data.endDate,
-            maxNumberRegistration: data.maxNumberRegistration
+            parentTermId: formData.parentTermId,
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            maxNumberRegistration: formData.maxNumberRegistration,
+            expectedClasses: formData.expectedClasses
         });
-
-        console.log('✅ Extra Term Creation Response:', response.data);
         return response.data;
     } catch (error) {
-        console.error('❌ Extra Term Creation Error:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            headers: error.response?.headers
-        });
+        console.error('Error creating extra term:', error);
         throw error;
     }
 };
@@ -107,14 +76,12 @@ export const getTermYears = async () => {
         }
         return response.data;
     } catch (error) {
-        console.error('Error fetching term years:', error);
         throw error;
     }
 };
 
 export const updateTermStatus = async (termId) => {
     try {
-        console.log('Updating term status with:', termId);
         const response = await apiClient.put('/admission/term', {
             termId: termId,
         });
