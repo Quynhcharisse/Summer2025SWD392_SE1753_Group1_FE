@@ -49,7 +49,7 @@ const ChildList = () => {
         setLoading(true);
         setError("");
         const response = await getChildren();
-        console.log("Fetching children data:", response);
+        // console.log("Fetching children data:", response);
 
         if (response.data) {
           setChildren(response.data);
@@ -58,7 +58,7 @@ const ChildList = () => {
           setError("No child information found");
         }
       } catch (err) {
-        console.error("Failed to fetch children:", err);
+        // console.error("Failed to fetch children:", err);
         setError("Error fetching child list information");
       } finally {
         setLoading(false);

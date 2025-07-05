@@ -32,21 +32,27 @@ import {
     TablePagination,
     TableRow,
     TextField,
-    Toolbar,
+    Toolbar, Tooltip,
     Typography
 } from "@mui/material";
 import {Add, Close, CloudUpload} from '@mui/icons-material';
-import {useEffect, useState, useRef} from "react";
+import {useEffect, useRef, useState} from "react";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {parseISO} from "date-fns";
-import {enqueueSnackbar} from "notistack";
+import {enqueueSnackbar, useSnackbar} from 'notistack';
 import axios from "axios";
-import {cancelAdmission, getFormInformation, refillForm, submittedForm} from "@api/services/parentService.js";
+
+import {
+    cancelAdmission,
+    getFormInformation, getURL,
+    refillForm,
+    submittedForm
+} from "@api/services/parentService.js";
 
 // Loading Overlay Component
-function LoadingOverlay({ open, message }) {
+function LoadingOverlay({open, message}) {
     return (
         <Backdrop
             sx={{
@@ -57,13 +63,13 @@ function LoadingOverlay({ open, message }) {
             }}
             open={open}
         >
-            <CircularProgress color="inherit" size={60} />
+            <CircularProgress color="inherit" size={60}/>
             <Typography variant="h6">{message}</Typography>
         </Backdrop>
     );
 }
 
-async function uploadToCloudinary(file, onProgress, signal) {
+async function uploadToCloudinary(file, onProgress, signal, enqueueSnackbar) {
     try {
         const formData = new FormData();
         formData.append("file", file);
@@ -96,6 +102,8 @@ async function uploadToCloudinary(file, onProgress, signal) {
 function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefillPopUpFunc}) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const {enqueueSnackbar} = useSnackbar();
+    const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -115,6 +123,24 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
         HandleSelectedForm(form);
         openRefillPopUpFunc();
     }
+
+    const handlePayment = async (form) => {
+        try {
+            setIsProcessingPayment(true);
+
+            const response = await getURL(form.id);
+            if (response && response.paymentUrl) {
+                localStorage.setItem("form", form.id)
+                window.location.href = response.paymentUrl;
+            } else {
+                enqueueSnackbar("Unable to create payment transaction", {variant: "error"});
+            }
+        } catch (error) {
+            enqueueSnackbar(error.message || "Error creating transaction", {variant: "error"});
+        } finally {
+            setIsProcessingPayment(false);
+        }
+    };
 
     return (
         <Paper sx={{
@@ -166,7 +192,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                 padding: '16px 8px',
                                 borderBottom: '2px solid #e0e0e0'
                             }}>
-                                Cancel Reason
+                                Rejected Reason
                             </TableCell>
                             <TableCell align="center" sx={{
                                 fontWeight: '600',
@@ -229,16 +255,29 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                         <Typography
                                             component="span"
                                             sx={{
-                                                color: form.status === "approved" ? "#07663a" :
-                                                    form.status === "rejected" || form.status === "cancelled" ? "#dc3545" :
-                                                        form.status === "pending approval" ? "#0d6efd" : "black",
+                                                color:
+                                                    form.status === "approved" ? "#07663a" :
+                                                        form.status === "approved paid" ? "#2E7D32" : // màu xanh lá cây đậm cho approved paid
+                                                            form.status === "rejected" || form.status === "cancelled" ? "#dc3545" :
+                                                                form.status === "pending approval" ? "#0d6efd" :
+                                                                    form.status === "refilled" ? "#FF7722" :
+                                                                        form.status === "waiting payment" ? "#000080" :
+                                                                            "black",
                                                 fontWeight: "600",
-                                                padding: '6px 12px',
-                                                backgroundColor: form.status === "approved" ? "rgba(7, 102, 58, 0.1)" :
-                                                    form.status === "rejected" || form.status === "cancelled" ? "rgba(220, 53, 69, 0.1)" :
-                                                        form.status === "pending approval" ? "rgba(13, 110, 253, 0.1)" : "transparent",
+                                                padding: '6px 16px',
+                                                backgroundColor:
+                                                    form.status === "approved" ? "rgba(7, 102, 58, 0.08)" :
+                                                        form.status === "approved paid" ? "rgba(46, 125, 50, 0.08)" : // nền xanh lá cho approved paid
+                                                            form.status === "rejected" || form.status === "cancelled" ? "rgba(220, 53, 69, 0.07)" :
+                                                                form.status === "pending approval" ? "rgba(13, 110, 253, 0.08)" :
+                                                                    form.status === "refilled" ? "rgba(255, 152, 0, 0.10)" :
+                                                                        "transparent",
                                                 borderRadius: '20px',
-                                                fontSize: '0.875rem'
+                                                fontSize: '0.89rem',
+                                                letterSpacing: 1,
+                                                textTransform: "lowercase",
+                                                minWidth: 90,
+                                                textAlign: "center"
                                             }}
                                         >
                                             {form.status}
@@ -268,14 +307,38 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                                 Detail
                                             </Button>
                                             {(form.status === "cancelled" || form.status === "rejected") && (
+                                                <Tooltip title="Edit and resubmit this admission form">
+                                                    <Button
+                                                        variant="contained"
+                                                        size="small"
+                                                        onClick={() => handleRefillClick(form)}
+                                                        sx={{
+                                                            backgroundColor: '#2196f3',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(33, 150, 243, 0.85)'
+                                                            },
+                                                            minWidth: '90px',
+                                                            borderRadius: '8px',
+                                                            textTransform: 'none',
+                                                            fontWeight: '600',
+                                                            boxShadow: 'none'
+                                                        }}
+                                                    >
+                                                        Refill
+                                                    </Button>
+                                                </Tooltip>
+
+                                            )}
+                                            {form.status === "waiting payment" && (
                                                 <Button
                                                     variant="contained"
                                                     size="small"
-                                                    onClick={() => handleRefillClick(form)}
+                                                    onClick={() => handlePayment(form)}
+                                                    disabled={isProcessingPayment}
                                                     sx={{
-                                                        backgroundColor: '#2196f3',
+                                                        backgroundColor: '#005AA9',
                                                         '&:hover': {
-                                                            backgroundColor: 'rgba(33, 150, 243, 0.85)'
+                                                            backgroundColor: '#004986'
                                                         },
                                                         minWidth: '90px',
                                                         borderRadius: '8px',
@@ -284,7 +347,11 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                                         boxShadow: 'none'
                                                     }}
                                                 >
-                                                    Refill
+                                                    {isProcessingPayment ? (
+                                                        <CircularProgress size={24} color="inherit"/>
+                                                    ) : (
+                                                        'Pay'
+                                                    )}
                                                 </Button>
                                             )}
                                         </Stack>
@@ -385,13 +452,29 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
         }
     }
 
+    const calculateAge = (dateOfBirth) => {
+        if (!dateOfBirth) return '';
+        const birthDate = new Date(dateOfBirth);
+        const today = new Date();
+
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        // If birthday hasn't occurred this year, subtract 1
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        return age;
+    };
+
     return (
         <Dialog
             fullScreen
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
-            <LoadingOverlay open={isCancelling} message="Cancelling admission form..." />
+            <LoadingOverlay open={isCancelling} message="Cancelling admission form..."/>
 
             <AppBar sx={{
                 position: 'relative',
@@ -425,6 +508,15 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                 </Typography>
 
                 <Stack spacing={3}>
+                    <Typography variant="h6" sx={{
+                        mt: 2,
+                        mb: 2,
+                        color: '#07663a',
+                        fontWeight: 600,
+                    }}>
+                        Student Informations
+                    </Typography>
+
                     <Stack>
                         <TextField fullWidth label='Child name' disabled value={selectedForm.studentName || ''}/>
                     </Stack>
@@ -468,42 +560,97 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
 
                     {/* Student Documents */}
                     <Grid item xs={12}>
-                        <Typography variant="subtitle1" sx={{
-                            mt: 2,
+                        <Typography variant="h6" sx={{
                             mb: 2,
                             color: '#07663a',
-                            fontWeight: 600
+                            fontWeight: 600,
                         }}>
                             Student Documents
                         </Typography>
-
-                        <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: 2,
+                        }}>
                             {[
-                                {label: "Profile Image", src: selectedForm.profileImage, type: 'profileImage'},
-                                {label: "Birth Certificate", src: selectedForm.birthCertificateImg, type: 'birthCertificate'},
-                                {label: "Household Registration", src: selectedForm.householdRegistrationImg, type: 'householdRegistration'}
+                                {
+                                    label: "Profile Image",
+                                    src: selectedForm ? selectedForm.profileImage : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
+                                },
+                                {
+                                    label: "Birth Certificate",
+                                    src: selectedForm ? selectedForm.birthCertificateImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
+                                },
+                                {
+                                    label: "Household Registration",
+                                    src: selectedForm ? selectedForm.householdRegistrationImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
+                                }
                             ].map((item, idx) => (
-                                <Paper key={idx} elevation={2} sx={{p: 2, borderRadius: 2, width: 200}}>
-                                    <Typography variant="body2" fontWeight="bold" sx={{mb: 1}}>{item.label}</Typography>
-                                    <img
-                                        src={item.src}
-                                        alt={item.label}
-                                        style={{width: '100%', borderRadius: 8, cursor: 'pointer'}}
-                                        onClick={() => handleOpenImageDialog(item.type, item.src)}
-                                    />
-                                    <Dialog 
-                                        open={openImageDialogs[item.type]} 
-                                        onClose={() => handleCloseImageDialog(item.type)} 
-                                        maxWidth="md"
-                                    >
-                                        <img src={selectedImage} style={{width: '100%'}} alt="Zoom"/>
-                                    </Dialog>
+                                <Paper
+                                    elevation={2}
+                                    key={idx}
+                                    sx={{
+                                        p: 2,
+                                        borderRadius: 2,
+                                        minWidth: '280px',
+                                        flex: '0 0 auto',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 1,
+                                        backgroundColor: 'white',
+                                        border: '1px solid rgba(7, 102, 58, 0.1)'
+                                    }}
+                                >
+                                    <Typography variant="body2" fontWeight="bold" sx={{
+                                        color: '#07663a',
+                                        textAlign: 'center'
+                                    }}>
+                                        {item.label}
+                                    </Typography>
+                                    <Box sx={{
+                                        width: '100%',
+                                        height: 180,
+                                        position: 'relative',
+                                        overflow: 'hidden',
+                                        borderRadius: 1,
+                                        border: '1px solid rgba(7, 102, 58, 0.1)',
+                                        bgcolor: '#f8f9fa',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        {item.src ? (
+                                            <img
+                                                src={item.src}
+                                                alt={item.label}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'contain',
+                                                    cursor: 'pointer'
+                                                }}
+                                                onClick={() => {
+                                                    setSelectedImage(item.src);
+                                                    setOpenImageDialogs(prev => ({
+                                                        ...prev,
+                                                        profileImage: true,
+                                                        birthCertificate: false,
+                                                        householdRegistration: false
+                                                    }));
+                                                }}
+                                            />
+                                        ) : (
+                                            <Typography variant="body2" color="text.secondary">
+                                                No Image Available
+                                            </Typography>
+                                        )}
+                                    </Box>
                                 </Paper>
                             ))}
-                        </Stack>
+                        </Box>
                     </Grid>
 
-                    <Typography variant="subtitle1" sx={{
+                    <Typography variant="h6" sx={{
                         mt: 5,
                         mb: 2,
                         fontWeight: 'bold',
@@ -511,26 +658,41 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                     }}>
                         Uploaded Documents
                     </Typography>
-                    <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
+                    <Stack direction="row"
+                           spacing={3}
+                           flexWrap="wrap"
+                           useFlexGap>
                         {[
-                            {label: "Child Characteristics Form", src: selectedForm.childCharacteristicsFormImg, type: 'childCharacteristics'},
+                            {
+                                label: "Child Characteristics Form",
+                                src: selectedForm.childCharacteristicsFormImg,
+                                type: 'childCharacteristics'
+                            },
                             {label: "Commitment", src: selectedForm.commitmentImg, type: 'commitment'}
                         ].map((item, idx) => (
-                            <Paper key={idx} elevation={2} sx={{p: 2, borderRadius: 2, width: 200}}>
-                                <Typography variant="body2" fontWeight="bold" sx={{mb: 1}}>{item.label}</Typography>
+                            <Paper key={idx}
+                                   elevation={2}
+                                   sx={{p: 2, borderRadius: 2, width: 200}}>
+                                <Typography
+                                    variant="body2"
+                                    fontWeight="bold"
+                                    sx={{mb: 1}}
+                                >{item.label}
+                                </Typography>
                                 <img
                                     src={item.src}
                                     alt={item.label}
                                     style={{width: '100%', borderRadius: 8, cursor: 'pointer'}}
                                     onClick={() => handleOpenImageDialog(item.type, item.src)}
                                 />
-                                <Dialog 
-                                    open={openImageDialogs[item.type]} 
-                                    onClose={() => handleCloseImageDialog(item.type)} 
+                                <Dialog
+                                    open={openImageDialogs[item.type]}
+                                    onClose={() => handleCloseImageDialog(item.type)}
                                     maxWidth="md"
                                 >
                                     <img src={selectedImage} style={{width: '100%'}} alt="Zoom"/>
                                 </Dialog>
+
                             </Paper>
                         ))}
                     </Stack>
@@ -561,7 +723,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
 
                         {/*button cancel*/}
                         {/*xét điều kiện, nếu cancel rồi thì ẩn nút cancel đó, ko cho hiện lại */}
-                        {selectedForm.status === 'pending approval' &&  (
+                        {selectedForm.status === 'pending approval' && (
                             <Button
                                 sx={{
                                     width: '10%',
@@ -646,36 +808,27 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
 }
 
 function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) {
-    //Lưu id học sinh được chọn từ dropdown
+    const {enqueueSnackbar} = useSnackbar();
     const [selectedStudentId, setSelectedStudentId] = useState(null);
-
-    //Hiển thị trạng thái đang xử lý (true khi submit, upload...)
     const [isLoading, setIsLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
-
-    //Lưu trữ lỗi khi validate (ví dụ thiếu địa chỉ, file...)
     const [errors, setErrors] = useState({});
-
-    //Lưu nội dung nhập từ form: địa chỉ thường trú, ghi chú
     const [input, setInput] = useState({
         address: '',
         note: ''
     });
-
-    //Lưu các file thô (ảnh, giấy tờ) được người dùng upload
     const [uploadedFile, setUploadedFile] = useState({
         childCharacteristicsForm: '',
         commit: ''
     });
-
     const [uploadProgress, setUploadProgress] = useState({});
     const [isCancelDialogOpen, setCancelDialogOpen] = useState(false);
     const abortControllerRef = useRef(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [openDialog, setOpenDialog] = useState(false);
 
     const student = studentList.find(s => s.id === selectedStudentId) || null;
 
-    //Khi studentList thay đổi
-    // Nếu chưa chọn học sinh (selectedStudentId rỗng), thì chọn học sinh đầu tiên chưa có đơn nhập học
     useEffect(() => {
         if (Array.isArray(studentList) && studentList.length > 0 && !selectedStudentId) {
             const availableStudent = studentList.find(student => !student.hadForm);
@@ -685,23 +838,77 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         }
     }, [studentList, selectedStudentId]);
 
+    const calculateAge = (dateOfBirth) => {
+        if (!dateOfBirth) return '';
+        const birthDate = new Date(dateOfBirth);
+        const today = new Date();
+
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        // If birthday hasn't occurred this year, subtract 1
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        return age;
+    };
+
     const validateForm = () => {
         const newErrors = {};
 
-        // Required field validations
+        // 1. Validate student selection
         if (selectedStudentId === null) {
             newErrors.student = "Please select a student";
+            return false;
         }
-        if (!input.address.trim()) {
+
+        // 2. Find selected student
+        const selectedStudent = studentList.find(s => s.id === selectedStudentId);
+        if (!selectedStudent) {
+            newErrors.student = "Selected student not found";
+            return false;
+        }
+
+        // 3. Validate student age
+        const birthYear = new Date(selectedStudent.dateOfBirth).getFullYear();
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - birthYear;
+
+        if (age < 3 || age > 5) {
+            newErrors.student = "Student must be between 3 and 5 years old";
+            enqueueSnackbar("Student's age must be between 3 and 5 years old", {
+                variant: "error"
+            });
+            setErrors(newErrors);
+            return false;
+        }
+
+        // 4. Check if student has active/pending form
+        const hasActiveForm = selectedStudent.admissionForms?.some(form =>
+            form.status === 'approved' || form.status === 'pending approval'
+        );
+
+        if (hasActiveForm) {
+            newErrors.student = "This student already has an active or pending admission form";
+            enqueueSnackbar("Cannot submit: Student already has an active or pending form", {
+                variant: "warning"
+            });
+            setErrors(newErrors);
+            return false;
+        }
+
+        // 5. Validate required fields
+        if (!input.address?.trim()) {
             newErrors.address = "Household registration address is required";
         }
 
-        // File validations
         if (!uploadedFile.childCharacteristicsForm) {
-            newErrors.childCharacteristicsForm = "Child characteristics form is required";
+            newErrors.childCharacteristicsFormImg = "Child characteristics form is required";
         }
+
         if (!uploadedFile.commit) {
-            newErrors.commit = "Commitment form is required";
+            newErrors.commitmentImg = "Commitment form is required";
         }
 
         setErrors(newErrors);
@@ -771,7 +978,8 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     uploadToCloudinary(
                         uploadedFile.childCharacteristicsForm,
                         (progress) => setUploadProgress(prev => ({...prev, childCharacteristicsForm: progress})),
-                        signal
+                        signal,
+                        enqueueSnackbar
                     ).then(url => {
                         uploadResults.childCharacteristicsFormLink = url;
                     })
@@ -783,7 +991,8 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     uploadToCloudinary(
                         uploadedFile.commit,
                         (progress) => setUploadProgress(prev => ({...prev, commit: progress})),
-                        signal
+                        signal,
+                        enqueueSnackbar
                     ).then(url => {
                         uploadResults.commitLink = url;
                     })
@@ -827,13 +1036,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         return true;
     };
 
-    function CheckAge(dateOfBirth) {
-        const birthYear = new Date(dateOfBirth).getFullYear()
-        const currentYear = new Date().getFullYear()
-        const age = currentYear - birthYear
-        return age >= 3 && age <= 5
-    }
-
     async function HandleSubmit() {
         try {
             if (!validateForm()) {
@@ -850,39 +1052,73 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             setLoadingMessage('Submitting form...');
             const formData = {
                 studentId: selectedStudentId,
-                householdRegistrationAddress: input.address,
+                householdRegistrationAddress: input.address.trim(),
                 childCharacteristicsFormImg: uploadResult.childCharacteristicsFormLink,
                 commitmentImg: uploadResult.commitLink,
-                note: input.note || ""
+                note: input.note?.trim() || ""
             };
 
             const response = await submittedForm(formData);
 
             if (response && response.success) {
-                enqueueSnackbar(response.message, {variant: 'success'});
+                enqueueSnackbar(response.message || "Form submitted successfully", {
+                    variant: 'success',
+                });
                 await GetForm();
                 handleClosePopUp();
+            } else {
+                const errorMessage = response?.message || "Failed to submit form";
+
+                // Case 1: No active admission term
+                if (errorMessage.includes("No active admission term")) {
+                    enqueueSnackbar("There is currently no active admission term", {
+                        variant: "error",
+                        anchorOrigin: {
+                            vertical: 'top',
+                            horizontal: 'center'
+                        }
+                    });
+                    handleClosePopUp();
+                    return;
+                }
+
+                // Case 2: Student already has active/pending form
+                if (errorMessage.includes("already been submit") || errorMessage.includes("pending form")) {
+                    setErrors(prev => ({
+                        ...prev,
+                        student: "This student already has an active or pending admission form"
+                    }));
+                    enqueueSnackbar("Cannot submit: Student already has an active or pending form", {
+                        variant: "warning",
+                    });
+                    return;
+                }
+
+                // Case 3: Age not suitable
+                if (errorMessage.includes("birth year") || errorMessage.includes("required age")) {
+                    setErrors(prev => ({
+                        ...prev,
+                        student: "Student's age must be between 3 and 5 years old"
+                    }));
+                    enqueueSnackbar("Student's age does not meet the requirements (3-5 years old)", {
+                        variant: "error",
+                    });
+                    return;
+                }
+
+                // Default error handling
+                enqueueSnackbar(`${errorMessage}`, {
+                    variant: "error",
+                });
             }
         } catch (error) {
-            console.error('Error submitting form:', error);
-            if (error.response?.status === 403) {
-                enqueueSnackbar("Your session has expired. Please login again.", {
-                    variant: "error",
-                    action: (
-                        <Button color="inherit" size="small" onClick={() => {
-                            window.location.href = '/auth/login';
-                        }}>
-                            Login
-                        </Button>
-                    )
-                });
-            } else {
-                enqueueSnackbar(error.message || "Failed to submit form", {variant: "error"});
-            }
+            const errorMessage = error.response?.data?.message || "Failed to submit form";
+            enqueueSnackbar(`${errorMessage}`, {
+                variant: "error",
+            });
         } finally {
             setIsLoading(false);
             setLoadingMessage('');
-            setUploadProgress({});
         }
     }
 
@@ -920,14 +1156,24 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         }
     }
 
+    const handleOpenImage = (imageSrc) => {
+        setSelectedImage(imageSrc);
+        setOpenDialog(true);
+    };
+
+    const handleCloseImage = () => {
+        setOpenDialog(false);
+        setSelectedImage(null);
+    };
+
     return (
         <Dialog
             fullScreen
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
-            <LoadingOverlay open={isLoading} message={loadingMessage} />
-            
+            <LoadingOverlay open={isLoading} message={loadingMessage}/>
+
             <AppBar sx={{
                 position: 'relative',
                 backgroundColor: '#07663a'
@@ -985,7 +1231,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         >
                             {studentList && studentList.length > 0 ? (
                                 studentList
-                                    .filter(student => CheckAge(student.dateOfBirth))
+                                    .filter(student => calculateAge(student.dateOfBirth) >= 3 && calculateAge(student.dateOfBirth) <= 5)
                                     .map((student) => {
                                         // Kiểm tra xem học sinh có form đang pending approval hoặc approved không
                                         const hasActiveForm = student.hadForm &&
@@ -1066,6 +1312,14 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                 <Grid item xs={12} md={6}>
                                     <TextField
                                         fullWidth
+                                        label="Age"
+                                        value={`${calculateAge(student.dateOfBirth)} years old`}
+                                        InputProps={{readOnly: true}}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
                                         label="Place of Birth"
                                         value={student.placeOfBirth || ''}
                                         InputProps={{readOnly: true}}
@@ -1074,15 +1328,18 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
 
                                 {/* Student Documents */}
                                 <Grid item xs={12}>
-                                    <Typography variant="subtitle1" sx={{
-                                        mt: 2,
+                                    <Typography variant="h6" sx={{
                                         mb: 2,
                                         color: '#07663a',
                                         fontWeight: 600
                                     }}>
                                         Student Documents
                                     </Typography>
-                                    <Grid container spacing={3}>
+                                    <Box sx={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        gap: 2,
+                                    }}>
                                         {[
                                             {
                                                 label: "Profile Image",
@@ -1097,71 +1354,53 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                                 src: student ? student.householdRegistrationImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
                                             }
                                         ].map((item, idx) => (
-                                            <Grid item xs={12} sm={6} md={4} key={idx}>
-                                                <Paper elevation={2} sx={{
+                                            <Paper
+                                                elevation={2}
+                                                key={idx}
+                                                sx={{
                                                     p: 2,
                                                     borderRadius: 2,
-                                                    height: '100%',
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    gap: 1
+                                                    minWidth: '240px',
+                                                    border: '1px solid rgba(7, 102, 58, 0.1)'
+                                                }}
+                                            >
+                                                <Typography variant="body2" fontWeight="bold" sx={{
+                                                    color: '#07663a',
+                                                    textAlign: 'center'
                                                 }}>
-                                                    <Typography variant="body2" fontWeight="bold" sx={{
-                                                        color: '#07663a'
-                                                    }}>
-                                                        {item.label}
-                                                    </Typography>
-                                                    <Box sx={{
-                                                        width: '100%',
-                                                        height: 200,
-                                                        position: 'relative',
-                                                        overflow: 'hidden',
-                                                        borderRadius: 1,
-                                                        border: '1px solid rgba(7, 102, 58, 0.2)',
-                                                        bgcolor: '#f5f5f5',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center'
-                                                    }}>
-                                                        {item.src ? (
-                                                            <img
-                                                                src={item.src}
-                                                                alt={item.label}
-                                                                style={{
-                                                                    width: '100%',
-                                                                    height: '100%',
-                                                                    objectFit: 'contain',
-                                                                    cursor: 'pointer'
-                                                                }}
-                                                                onClick={() => {
-                                                                    setSelectedImage(item.src);
-                                                                    setOpenImageDialogs(prev => ({
-                                                                        ...prev,
-                                                                        profileImage: true,
-                                                                        birthCertificate: false,
-                                                                        householdRegistration: false
-                                                                    }));
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                No Image Available
-                                                            </Typography>
-                                                        )}
-                                                    </Box>
-                                                </Paper>
-                                            </Grid>
+                                                    {item.label}
+                                                </Typography>
+                                                <Box sx={{
+                                                    width: '100%',
+                                                    height: 200,
+                                                    position: 'relative',
+                                                    overflow: 'hidden',
+                                                    borderRadius: 1,
+                                                    border: '1px solid rgba(7, 102, 58, 0.1)',
+                                                    bgcolor: '#f8f9fa',
+                                                    // backgroundColor: 'red'
+                                                }}>
+                                                    {item.src ? (
+                                                        <img
+                                                            src={item.src}
+                                                            alt={item.label}
+                                                            style={{
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: 'contain',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                            onClick={() => handleOpenImage(item.src)}
+                                                        />
+                                                    ) : (
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            No Image Available
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                            </Paper>
                                         ))}
-                                    </Grid>
-                                </Grid>
-
-                                <Grid item xs={12}>
-                                    <Alert severity="info" sx={{mt: 1}}>
-                                        Please verify that all student information is correct before submitting the
-                                        form.
-                                        If any information needs to be updated, please contact the school
-                                        administration.
-                                    </Alert>
+                                    </Box>
                                 </Grid>
                             </Grid>
                         </Box>
@@ -1198,19 +1437,19 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
 
                     {/* Upload Progress */}
                     {isLoading && Object.keys(uploadProgress).length > 0 && (
-                        <Box sx={{ mt: 2 }}>
+                        <Box sx={{mt: 2}}>
                             <Typography variant="subtitle1" gutterBottom>
                                 Upload Progress
                             </Typography>
                             {Object.entries(uploadProgress).map(([key, progress]) => (
-                                <Box key={key} sx={{ mb: 2 }}>
+                                <Box key={key} sx={{mb: 2}}>
                                     <Typography variant="body2" color="text.secondary">
                                         {key === 'childCharacteristicsForm' ? 'Child Characteristics Form' : 'Commitment Form'}: {progress}%
                                     </Typography>
-                                    <LinearProgress 
-                                        variant="determinate" 
-                                        value={progress} 
-                                        sx={{ 
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={progress}
+                                        sx={{
                                             mt: 1,
                                             height: 8,
                                             borderRadius: 5
@@ -1222,7 +1461,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                 variant="outlined"
                                 color="error"
                                 onClick={handleCancelUpload}
-                                sx={{ mt: 1 }}
+                                sx={{mt: 1}}
                             >
                                 Cancel Upload
                             </Button>
@@ -1258,7 +1497,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         Upload Documents
                     </Typography>
 
-                    <Stack container spacing={3} sx={{mt: 2}}>
+                    <Stack spacing={3} sx={{mt: 2}}>
                         {[
                             {
                                 label: 'Child Characteristics Form',
@@ -1314,7 +1553,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                                     size="small"
                                                     onClick={() => setUploadedFile(prev => ({...prev, [item.key]: ''}))}
                                                 >
-                                                    <Close fontSize="small" />
+                                                    <Close fontSize="small"/>
                                                 </IconButton>
                                             </Box>
                                         )}
@@ -1358,6 +1597,39 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     </Stack>
                 </Stack>
             </Box>
+
+            {/* Image Preview Dialog */}
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseImage}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogContent sx={{
+                    p: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'black'
+                }}>
+                    {selectedImage && (
+                        <img
+                            src={selectedImage}
+                            alt="Preview"
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '80vh',
+                                objectFit: 'contain'
+                            }}
+                        />
+                    )}
+                </DialogContent>
+                <DialogActions sx={{bgcolor: 'black'}}>
+                    <Button onClick={handleCloseImage} sx={{color: 'white'}}>
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Dialog>
     );
 }
@@ -1540,61 +1812,46 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
     };
 
     async function HandleRefillSubmit() {
-        try {
-            if (!validateForm()) {
-                return;
-            }
 
-            setIsLoading(true);
-            setLoadingMessage('Uploading files...');
-            const uploadResult = await handleUploadImage();
-            if (!uploadResult) {
-                return;
-            }
-
-            setLoadingMessage('Resubmitting form...');
-            const formData = {
-                studentId: selectedForm.studentId,
-                householdRegistrationAddress: input.address.trim(),
-                childCharacteristicsFormImg: uploadResult.childCharacteristicsFormLink,
-                commitmentImg: uploadResult.commitLink,
-                note: input.note?.trim() || ""
-            };
-
-            const response = await refillForm(formData);
-
-            if (response && response.success) {
-                enqueueSnackbar(response.message || "Form resubmitted successfully", {variant: 'success'});
-                await GetForm();
-                handleClosePopUp();
-            } else {
-                enqueueSnackbar(response?.message || "Failed to resubmit form", {variant: "error"});
-            }
-        } catch (error) {
-            if (error.response?.status === 403) {
-                enqueueSnackbar("Your session has expired. Please login again.", {
-                    variant: "error",
-                    action: (
-                        <Button color="inherit" size="small" onClick={() => {
-                            window.location.href = '/auth/login';
-                        }}>
-                            Login
-                        </Button>
-                    )
-                });
-            } else {
-                enqueueSnackbar(error.response?.data?.message || "Failed to resubmit form", {variant: "error"});
-            }
-        } finally {
-            setIsLoading(false);
-            setLoadingMessage('');
+        if (!validateForm()) {
+            return;
         }
+
+        setIsLoading(true);
+        setLoadingMessage('Uploading files...');
+        const uploadResult = await handleUploadImage();
+        if (!uploadResult) {
+            return;
+        }
+
+        setLoadingMessage('Resubmitting form...');
+        const formData = {
+            formId: selectedForm.id,
+            studentId: selectedForm.studentId,
+            householdRegistrationAddress: input.address.trim(),
+            childCharacteristicsFormImg: uploadResult.childCharacteristicsFormLink,
+            commitmentImg: uploadResult.commitLink,
+            note: input.note?.trim() || ""
+        };
+
+        const response = await refillForm(formData);
+
+        if (response && response.success) {
+            enqueueSnackbar(response.message || "Form resubmitted successfully", {variant: 'success'});
+            await GetForm();
+            handleClosePopUp();
+        } else {
+            enqueueSnackbar(response?.message || "Failed to resubmit form", {variant: "error"});
+        }
+        setIsLoading(false);
+        setLoadingMessage('');
+
     }
 
     return (
         <Dialog fullScreen open={isPopUpOpen} onClose={handleClosePopUp}>
-            <LoadingOverlay open={isLoading} message={loadingMessage} />
-            
+            <LoadingOverlay open={isLoading} message={loadingMessage}/>
+
             <AppBar sx={{position: 'relative', backgroundColor: '#07663a'}}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={handleClosePopUp}>
@@ -1655,15 +1912,34 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
 
                     {/* Student Documents */}
                     <Grid item xs={12}>
-                        <Typography variant="subtitle1" sx={{
+                        <Typography variant="h6" sx={{
                             mt: 2,
                             mb: 2,
                             color: '#07663a',
-                            fontWeight: 600
+                            fontWeight: 600,
                         }}>
                             Student Documents
                         </Typography>
-                        <Grid container spacing={3}>
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: 2,
+                            pb: 1,
+                            '&::-webkit-scrollbar': {
+                                height: '8px'
+                            },
+                            '&::-webkit-scrollbar-track': {
+                                background: '#f1f1f1',
+                                borderRadius: '4px'
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                background: 'rgba(7, 102, 58, 0.2)',
+                                borderRadius: '4px',
+                                '&:hover': {
+                                    background: 'rgba(7, 102, 58, 0.3)'
+                                }
+                            }
+                        }}>
                             {[
                                 {
                                     label: "Profile Image",
@@ -1678,62 +1954,68 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                     src: selectedForm ? selectedForm.householdRegistrationImg : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'
                                 }
                             ].map((item, idx) => (
-                                <Grid item xs={12} sm={6} md={4} key={idx}>
-                                    <Paper elevation={2} sx={{
+                                <Paper
+                                    elevation={2}
+                                    key={idx}
+                                    sx={{
                                         p: 2,
                                         borderRadius: 2,
-                                        height: '100%',
+                                        minWidth: '280px',
+                                        flex: '0 0 auto',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        gap: 1
+                                        gap: 1,
+                                        backgroundColor: 'white',
+                                        border: '1px solid rgba(7, 102, 58, 0.1)'
+                                    }}
+                                >
+                                    <Typography variant="body2" fontWeight="bold" sx={{
+                                        color: '#07663a',
+                                        textAlign: 'center'
                                     }}>
-                                        <Typography variant="body2" fontWeight="bold" sx={{
-                                            color: '#07663a'
-                                        }}>
-                                            {item.label}
-                                        </Typography>
-                                        <Box sx={{
-                                            width: '100%',
-                                            height: 200,
-                                            position: 'relative',
-                                            overflow: 'hidden',
-                                            borderRadius: 1,
-                                            border: '1px solid rgba(7, 102, 58, 0.2)',
-                                            bgcolor: '#f5f5f5',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}>
-                                            {item.src ? (
-                                                <img
-                                                    src={item.src}
-                                                    alt={item.label}
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: 'contain',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                    onClick={() => {
-                                                        setSelectedImage(item.src);
-                                                        setOpenImageDialogs(prev => ({
-                                                            ...prev,
-                                                            profileImage: true,
-                                                            birthCertificate: false,
-                                                            householdRegistration: false
-                                                        }));
-                                                    }}
-                                                />
-                                            ) : (
-                                                <Typography variant="body2" color="text.secondary">
-                                                    No Image Available
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                    </Paper>
-                                </Grid>
+                                        {item.label}
+                                    </Typography>
+                                    <Box sx={{
+                                        width: '100%',
+                                        height: 180,
+                                        position: 'relative',
+                                        overflow: 'hidden',
+                                        borderRadius: 1,
+                                        border: '1px solid rgba(7, 102, 58, 0.1)',
+                                        bgcolor: '#f8f9fa',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        {item.src ? (
+                                            <img
+                                                src={item.src}
+                                                alt={item.label}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'contain',
+                                                    cursor: 'pointer'
+                                                }}
+                                                onClick={() => {
+                                                    setSelectedImage(item.src);
+                                                    setOpenImageDialogs(prev => ({
+                                                        ...prev,
+                                                        profileImage: true,
+                                                        birthCertificate: false,
+                                                        householdRegistration: false
+                                                    }));
+                                                }}
+                                            />
+                                        ) : (
+                                            <Typography variant="body2" color="text.secondary">
+                                                No Image Available
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                </Paper>
                             ))}
-                        </Grid>
+                        </Box>
                     </Grid>
 
                     <Grid item xs={12}>
@@ -1790,15 +2072,18 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                         />
                                     </Button>
                                     {uploadedFile.childCharacteristicsForm && (
-                                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between'}}>
+                                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                                             <Typography variant="body2" color="success.main">
                                                 Selected: {uploadedFile.childCharacteristicsForm.name}
                                             </Typography>
                                             <IconButton
                                                 size="small"
-                                                onClick={() => setUploadedFile(prev => ({...prev, childCharacteristicsForm: ''}))}
+                                                onClick={() => setUploadedFile(prev => ({
+                                                    ...prev,
+                                                    childCharacteristicsForm: ''
+                                                }))}
                                             >
-                                                <Close fontSize="small" />
+                                                <Close fontSize="small"/>
                                             </IconButton>
                                         </Box>
                                     )}
@@ -1830,7 +2115,12 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                         />
                                     </Button>
                                     {uploadedFile.commit && (
-                                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'flex-end'}}>
+                                        <Box sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1,
+                                            justifyContent: 'flex-end'
+                                        }}>
                                             <Typography variant="body2" color="success.main">
                                                 Selected: {uploadedFile.commit.name}
                                             </Typography>
@@ -1838,7 +2128,7 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                                 size="small"
                                                 onClick={() => setUploadedFile(prev => ({...prev, commit: ''}))}
                                             >
-                                                <Close fontSize="small" />
+                                                <Close fontSize="small"/>
                                             </IconButton>
                                         </Box>
                                     )}

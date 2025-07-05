@@ -1,8 +1,8 @@
 import ChildList from "@/components/shared/pages/ChildList";
-import { AUTH_ROUTES, ROUTES } from "@/constants/routes.js";
+import {AUTH_ROUTES, ROUTES} from "@/constants/routes.js";
 import UserLayout from "@/layouts/UserLayout";
-import { ProtectedRoute } from "@auth/ProtectedRoute.jsx";
-import { MainTemplate } from "@templates";
+import {ProtectedRoute} from "@auth/ProtectedRoute.jsx";
+import {MainTemplate} from "@templates";
 import PropTypes from "prop-types";
 import { lazy, Suspense, useEffect } from "react";
 import { createBrowserRouter, RouterProvider, useLocation } from "react-router-dom";
@@ -11,12 +11,14 @@ import { routeToTranslationKey } from "@/utils/i18nRoutes.js";
 import EditChildForm from "@pages/EditChildForm";
 import AddChildForm from "@pages/AddChildForm";
 import EnrollmentApplicationList from "@pages/EnrollmentApplicationList";
+import 'bootstrap/dist/css/bootstrap.min.css'
 import Login from "@pages/Login";
 import SignUp from "@pages/SignUp";
 import Unauthorized from "@pages/Unauthorized";
 
 // Lazy import pages
 const Home = lazy(() => import("@pages/Home"));
+// const Login = lazy(() => import("@pages/Login"));
 // const SignUp = lazy(() => import("@pages/SignUp"));
 const ForgotPassword = lazy(() => import("@pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("@pages/ResetPassword"));
@@ -28,7 +30,7 @@ const NotFound = lazy(() => import("@pages/NotFound"));
 const BookStoryDemo = lazy(() => import("@pages/BookStoryDemo"));
 const ThemeTest = lazy(() => import("@pages/ThemeTest"));
 const EnrollmentApplication = lazy(() =>
-  import("@pages/EnrollmentApplication")
+    import("@pages/EnrollmentApplication")
 );
 const MyApplications = lazy(() => import("@pages/MyApplications"));
 const ParentDashboard = lazy(() => import("@pages/ParentDashboard"));
@@ -49,9 +51,10 @@ const SyllabusAssign = lazy(() => import("@pages/SyllabusAssign"));
 
 const UserDashboard = lazy(() => import("@pages/UserDashboard"));
 
-const TermAdmission = lazy(() => import("@/components/none-shared/admissionComponent/TermAdmission.jsx"));
+const TermAdmission = lazy(() => import("@/components/none-shared/admissionComponent/TermAdmission"));
 const ProcessForm = lazy(() => import("@/components/none-shared/admissionComponent/ProcessForm.jsx"));
 const AdmissionForm = lazy(() => import("@/components/none-shared/parentComponent/AdmissionForm.jsx"));
+const Payment = lazy(() => import("@/components/none-shared/parentComponent/Payment.jsx"));
 
 
 const PageWrapper = ({ children, isPublic = false, requiredRoles = [] }) => {
@@ -107,13 +110,13 @@ const PublicPageWrapper = ({ children, withLayout = true, isLoginPage = false, p
   return withLayout ? <MainTemplate>{content}</MainTemplate> : content;
 };
 PageWrapper.propTypes = {
-  children: PropTypes.node.isRequired,
-  isPublic: PropTypes.bool,
-  requiredRoles: PropTypes.arrayOf(PropTypes.string),
+    children: PropTypes.node.isRequired,
+    isPublic: PropTypes.bool,
+    requiredRoles: PropTypes.arrayOf(PropTypes.string),
 };
 UserPageWrapper.propTypes = {
-  children: PropTypes.node.isRequired,
-  requiredRoles: PropTypes.arrayOf(PropTypes.string),
+    children: PropTypes.node.isRequired,
+    requiredRoles: PropTypes.arrayOf(PropTypes.string),
 };
 PublicPageWrapper.propTypes = {
   children: PropTypes.node.isRequired,
@@ -372,6 +375,14 @@ const router = createBrowserRouter([
         </UserPageWrapper>
       ),
     },
+      {
+          path: "payment/result",
+          element: (
+              <UserPageWrapper requiredRoles={["PARENT"]}>
+                  <Payment/>
+              </UserPageWrapper>
+          )
+      },
     // Add other routes if needed, e.g.: feedback, messages, notifications...
   ],
 },
@@ -433,109 +444,109 @@ const router = createBrowserRouter([
               description="View all system notifications and announcements."
             />
 
-          </UserPageWrapper>
-        ),
-      },
-    ],
-  },
+                    </UserPageWrapper>
+                ),
+            },
+        ],
+    },
 
-  // === USER DASHBOARD entrypoint ===
-  {
-    path: "/user/dashboard",
-    element: (
-      <UserPageWrapper>
-        <Suspense fallback={<div>Loading...</div>}>
-          <UserDashboard />
-        </Suspense>
-      </UserPageWrapper>
-    ),
-  },
+    // === USER DASHBOARD entrypoint ===
+    {
+        path: "/user/dashboard",
+        element: (
+            <UserPageWrapper>
+                <Suspense fallback={<div>Loading...</div>}>
+                    <UserDashboard/>
+                </Suspense>
+            </UserPageWrapper>
+        ),
+    },
 
-  // ==== ADMIN ROUTES (all features grouped) ====
-  {
-    path: "/user/admin",
-    children: [
-      {
-        path: "dashboard",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <AdminDashboard />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "users",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <ComingSoon
-              title="User Management"
-              description="Manage system users and their permissions."
-            />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "classes",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <Classes />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "statistics",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <ComingSoon
-              title="Statistics"
-              description="View system statistics."
-            />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "settings",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <ComingSoon
-              title="Admin Settings"
-              description="Configure settings."
-            />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "admissions",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <Admission />
-          </UserPageWrapper>
-        ),
-      },
-    ],
-  },
-  // === LEGACY ADMIN (for compatibility) ===
-  {
-    path: "/admin",
-    children: [
-      {
-        path: "admission",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMISSION", "ADMIN"]}>
-            <Admission />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "classes",
-        element: (
-          <UserPageWrapper requiredRoles={["ADMIN"]}>
-            <Classes />
-          </UserPageWrapper>
-        ),
-      },
-    ],
-  },
+    // ==== ADMIN ROUTES (all features grouped) ====
+    {
+        path: "/user/admin",
+        children: [
+            {
+                path: "dashboard",
+                element: (
+                    <UserPageWrapper requiredRoles={["ADMIN"]}>
+                        <AdminDashboard/>
+                    </UserPageWrapper>
+                ),
+            },
+            {
+                path: "users",
+                element: (
+                    <UserPageWrapper requiredRoles={["ADMIN"]}>
+                        <ComingSoon
+                            title="User Management"
+                            description="Manage system users and their permissions."
+                        />
+                    </UserPageWrapper>
+                ),
+            },
+            {
+                path: "classes",
+                element: (
+                    <UserPageWrapper requiredRoles={["ADMIN"]}>
+                        <Classes/>
+                    </UserPageWrapper>
+                ),
+            },
+            {
+                path: "statistics",
+                element: (
+                    <UserPageWrapper requiredRoles={["ADMIN"]}>
+                        <ComingSoon
+                            title="Statistics"
+                            description="View system statistics."
+                        />
+                    </UserPageWrapper>
+                ),
+            },
+            {
+                path: "settings",
+                element: (
+                    <UserPageWrapper requiredRoles={["ADMIN"]}>
+                        <ComingSoon
+                            title="Admin Settings"
+                            description="Configure settings."
+                        />
+                    </UserPageWrapper>
+                ),
+            },
+            {
+                path: "admissions",
+                element: (
+                    <UserPageWrapper requiredRoles={["ADMIN"]}>
+                        <Admission/>
+                    </UserPageWrapper>
+                ),
+            },
+        ],
+    },
+    // === LEGACY ADMIN (for compatibility) ===
+    {
+        path: "/admin",
+        children: [
+            {
+                path: "admission",
+                element: (
+                    <UserPageWrapper requiredRoles={["ADMISSION", "ADMIN"]}>
+                        <Admission/>
+                    </UserPageWrapper>
+                ),
+            },
+            {
+                path: "classes",
+                element: (
+                    <UserPageWrapper requiredRoles={["ADMIN"]}>
+                        <Classes/>
+                    </UserPageWrapper>
+                ),
+            },
+        ],
+    },
 
   // ==== EDUCATION ROUTES ====
   {
@@ -926,5 +937,5 @@ const router = createBrowserRouter([
 ]);
 
 export function AppRouter() {
-  return <RouterProvider router={router} />;
+    return <RouterProvider router={router}/>;
 }
