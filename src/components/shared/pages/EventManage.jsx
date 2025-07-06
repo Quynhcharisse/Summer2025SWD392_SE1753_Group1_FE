@@ -3,7 +3,7 @@ import {
   useEventList,
   useCancelEvent,
   useEventDetail,
-  useEventTeachers
+  useEventTeachers,
 } from "@hooks/useEvent";
 import {
   Alert,
@@ -27,90 +27,147 @@ import {
   Typography,
   Grid,
   Stack,
-  Stepper,
-  Step,
-  StepLabel,
   Checkbox,
   IconButton,
-  Autocomplete,
-  Tooltip
 } from "@mui/material";
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import dayjs from 'dayjs';
-import CloseIcon from '@mui/icons-material/Close';
-import { uploadImageToCloudinary, deleteImageFromCloudinary, getPublicIdFromUrl, validateImage } from '@utils/cloudinary';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import dayjs from "dayjs";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+  uploadImageToCloudinary,
+  deleteImageFromCloudinary,
+  getPublicIdFromUrl,
+  validateImage,
+} from "@utils/cloudinary";
 import { useTeacherList } from "@hooks/useTeacher";
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import StepConnector, { stepConnectorClasses } from '@mui/material/StepConnector';
-import { styled } from '@mui/material/styles';
+import EventNoteIcon from "@mui/icons-material/EventNote";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { styled } from "@mui/material/styles";
 
-// Custom Step Icon hiện đại, đối xứng
-const ModernStepIconRoot = styled('div')(({ ownerState }) => ({
-  backgroundColor: ownerState.active
-    ? '#1976d2'
-    : ownerState.completed
-    ? '#009688'
-    : '#e3f2fd',
-  zIndex: 1,
-  color: ownerState.active || ownerState.completed ? '#fff' : '#90caf9',
-  width: 40,
-  height: 40,
-  display: 'flex',
-  borderRadius: '50%',
-  justifyContent: 'center',
-  alignItems: 'center',
+// Custom Timeline Step Component
+const TimelineStep = styled("div")(({ theme, active, completed }) => ({
+  display: "flex",
+  alignItems: "flex-start",
+  marginBottom: theme.spacing(4),
+  position: "relative",
+  "&:last-child": {
+    marginBottom: 0,
+  },
+}));
+
+const TimelineCircleContainer = styled("div")(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  marginRight: theme.spacing(3),
+  position: "relative",
+  zIndex: 2,
+}));
+
+const TimelineCircle = styled("div")(({ theme, active, completed }) => ({
+  width: 48,
+  height: 48,
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: active ? "#1976d2" : completed ? "#009688" : "#e3f2fd",
+  border: active ? "3px solid #1976d2" : completed ? "3px solid #009688" : "3px solid #e3f2fd",
+  boxShadow: active 
+    ? "0 4px 16px rgba(25,118,210,0.18)" 
+    : completed 
+    ? "0 4px 16px rgba(0,150,136,0.18)" 
+    : "0 2px 8px rgba(25,118,210,0.08)",
+  transition: "all 0.3s ease",
+  color: active || completed ? "#fff" : "#90caf9",
   fontWeight: 900,
-  fontSize: '1.25rem',
-  boxShadow: ownerState.active
-    ? '0 4px 16px rgba(25,118,210,0.18)'
-    : ownerState.completed
-    ? '0 4px 16px rgba(0,150,136,0.18)'
-    : '0 2px 8px rgba(158,158,158,0.08)',
-  border: ownerState.active
-    ? '2.5px solid #1976d2'
-    : ownerState.completed
-    ? '2.5px solid #009688'
-    : '2.5px solid #e3f2fd',
-  transition: 'all 0.2s',
+  fontSize: "1.25rem",
+  "&:hover": {
+    transform: "scale(1.1)",
+  },
 }));
 
-function ModernStepIcon(props) {
-  const { active, completed, className, icon } = props;
+const TimelineLine = styled("div")(({ theme, active, completed }) => ({
+  width: 4,
+  height: 60,
+  backgroundColor: active ? "#1976d2" : completed ? "#009688" : "#e3f2fd",
+  borderRadius: 2,
+  marginTop: theme.spacing(1),
+  transition: "background-color 0.3s ease",
+}));
+
+const TimelineContent = styled("div")(({ theme, active, completed }) => ({
+  flex: 1,
+  padding: theme.spacing(2),
+  backgroundColor: active ? "#e3f2fd" : completed ? "#e8f5e8" : "#f8f9fa",
+  borderRadius: theme.spacing(2),
+  border: active ? "2px solid #1976d2" : completed ? "2px solid #009688" : "2px solid #e0e0e0",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+  },
+}));
+
+const StepNumber = styled("div")(({ theme, active, completed }) => ({
+  fontSize: "0.875rem",
+  fontWeight: 700,
+  color: active ? "#1976d2" : completed ? "#009688" : "#666",
+  marginBottom: theme.spacing(0.5),
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+}));
+
+const StepTitle = styled("div")(({ theme, active, completed }) => ({
+  fontSize: "1.125rem",
+  fontWeight: 700,
+  color: active ? "#1976d2" : completed ? "#009688" : "#333",
+  marginBottom: theme.spacing(0.5),
+}));
+
+const StepDescription = styled("div")(({ theme, active, completed }) => ({
+  fontSize: "0.875rem",
+  color: active ? "#1976d2" : completed ? "#009688" : "#666",
+  fontWeight: 500,
+}));
+
+// Custom Timeline Step Component
+const CustomTimelineStep = ({ step, index, active, completed, icon }) => {
   return (
-    <ModernStepIconRoot ownerState={{ active, completed }} className={className}>
-      {completed ? <span style={{ fontSize: 22, fontWeight: 900 }}>✓</span> : icon}
-    </ModernStepIconRoot>
+    <TimelineStep active={active} completed={completed}>
+      <TimelineCircleContainer>
+        <TimelineCircle active={active} completed={completed}>
+          {completed ? (
+            <span style={{ fontSize: 24, fontWeight: 900 }}>✓</span>
+          ) : (
+            icon
+          )}
+        </TimelineCircle>
+        {index < 1 && (
+          <TimelineLine active={active} completed={completed} />
+        )}
+      </TimelineCircleContainer>
+      
+      <TimelineContent active={active} completed={completed}>
+        <StepNumber active={active} completed={completed}>
+          Step {index + 1}
+        </StepNumber>
+        <StepTitle active={active} completed={completed}>
+          {step.title}
+        </StepTitle>
+        <StepDescription active={active} completed={completed}>
+          {step.description}
+        </StepDescription>
+      </TimelineContent>
+    </TimelineStep>
   );
-}
-
-const ModernConnector = styled(StepConnector)(({ theme }) => ({
-  [`&.${stepConnectorClasses.alternativeLabel}`]: {
-    top: '50%',
-    transform: 'translateY(-50%)',
-    left: 'calc(-50% + 20px)',
-    right: 'calc(50% + 20px)',
-    width: 'auto',
-  },
-  [`& .${stepConnectorClasses.line}`]: {
-    borderColor: '#e3f2fd',
-    borderTopWidth: 4,
-    borderRadius: 2,
-    transition: 'border-color 0.2s',
-  },
-  [`&.${stepConnectorClasses.active} .${stepConnectorClasses.line}`]: {
-    borderColor: '#1976d2',
-  },
-  [`&.${stepConnectorClasses.completed} .${stepConnectorClasses.line}`]: {
-    borderColor: '#009688',
-  },
-}));
+};
 
 const EventManage = () => {
   const navigate = useNavigate();
@@ -120,39 +177,43 @@ const EventManage = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
-    name: '',
+    name: "",
     startTime: null,
     endTime: null,
-    location: '',
-    description: '',
+    location: "",
+    description: "",
     registrationDeadline: null,
-    attachmentImg: '',
-    hostName: '',
-    emails: []
+    attachmentImg: "",
+    hostName: "",
+    emails: [],
   });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success'
+    message: "",
+    severity: "success",
   });
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [hoveredEventId, setHoveredEventId] = useState(null);
-  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReason, setCancelReason] = useState("");
 
   // TanStack Query hooks
   const { data: eventResponse, isLoading, isError, error } = useEventList();
   const createEventMutation = useCreateEvent();
   const cancelEventMutation = useCancelEvent();
-  const { data: detailData, isLoading: isLoadingDetail } = useEventDetail(viewDetailId);
-  const { data: hoveredDetailData, isLoading: isLoadingHoveredDetail } = useEventDetail(hoveredEventId);
-  const { data: eventTeachers, isLoading: isLoadingEventTeachers } = useEventTeachers(viewDetailId);
+  const { data: detailData, isLoading: isLoadingDetail } =
+    useEventDetail(viewDetailId);
+  const { data: hoveredDetailData, isLoading: isLoadingHoveredDetail } =
+    useEventDetail(hoveredEventId);
+  const { data: eventTeachers, isLoading: isLoadingEventTeachers } =
+    useEventTeachers(viewDetailId);
 
   // Get teacher list for email selection
-  const { data: teacherResponse, isLoading: isLoadingTeachers } = useTeacherList();
+  const { data: teacherResponse, isLoading: isLoadingTeachers } =
+    useTeacherList();
   const teacherList = teacherResponse?.data?.data || [];
-  const teacherEmails = teacherList.map(teacher => teacher.email);
+  const teacherEmails = teacherList.map((teacher) => teacher.email);
 
   const eventList = eventResponse?.data?.data || [];
   const totalItems = eventList.length || 0;
@@ -160,29 +221,33 @@ const EventManage = () => {
   const showModal = (record = null) => {
     if (record) {
       setFormData({
-        name: record.name ?? '',
-        startTime: record.startTime ? dayjs(record.startTime, 'DD/MM/YYYY HH:mm') : null,
-        endTime: record.endTime ? dayjs(record.endTime, 'DD/MM/YYYY HH:mm') : null,
-        location: record.location ?? '',
-        description: record.description ?? '',
-        registrationDeadline: record.registrationDeadline ? dayjs(record.registrationDeadline, 'DD/MM/YYYY HH:mm') : null,
-        attachmentImg: record.attachmentImg ?? '',
-        hostName: record.hostName ?? '',
-        emails: record.emails ?? []
+        name: record.name ?? "",
+        startTime: record.startTime
+          ? dayjs(record.startTime).toISOString
+          : null,
+        endTime: record.endTime ? dayjs(record.endTime).toISOString : null,
+        location: record.location ?? "",
+        description: record.description ?? "",
+        registrationDeadline: record.registrationDeadline
+          ? dayjs(record.registrationDeadline).toISOString
+          : null,
+        attachmentImg: record.attachmentImg ?? "",
+        hostName: record.hostName ?? "",
+        emails: record.emails ?? [],
       });
       setEditingId(record.id);
       setSelectedTeacher(record.teacherEmail);
     } else {
       setFormData({
-        name: '',
+        name: "",
         startTime: null,
         endTime: null,
-        location: '',
-        description: '',
+        location: "",
+        description: "",
         registrationDeadline: null,
-        attachmentImg: '',
-        hostName: '',
-        emails: []
+        attachmentImg: "",
+        hostName: "",
+        emails: [],
       });
       setEditingId(null);
       setSelectedTeacher(null);
@@ -196,31 +261,31 @@ const EventManage = () => {
     setSelectedTeacher(null);
     setActiveStep(0);
     setFormData({
-      name: '',
+      name: "",
       startTime: null,
       endTime: null,
-      location: '',
-      description: '',
+      location: "",
+      description: "",
       registrationDeadline: null,
-      attachmentImg: '',
-      hostName: '',
-      emails: []
+      attachmentImg: "",
+      hostName: "",
+      emails: [],
     });
-    setCancelReason('');
+    setCancelReason("");
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleDateChange = (name, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -309,11 +374,13 @@ const EventManage = () => {
     try {
       const processedData = {
         name: formData.name.trim(),
-        startTime: formData.startTime ? formData.startTime.format('YYYY-MM-DDTHH:mm:ss') : '',
-        endTime: formData.endTime ? formData.endTime.format('YYYY-MM-DDTHH:mm:ss') : '',
+        startTime: formData.startTime ? formData.startTime.toISOString() : "",
+        endTime: formData.endTime ? formData.endTime.toISOString() : "",
         location: formData.location.trim(),
         description: formData.description.trim(),
-        registrationDeadline: formData.registrationDeadline ? formData.registrationDeadline.format('YYYY-MM-DDTHH:mm:ss') : '',
+        registrationDeadline: formData.registrationDeadline
+          ? formData.registrationDeadline.toISOString()
+          : "",
         attachmentImg: formData.attachmentImg.trim(),
         hostName: formData.hostName.trim(),
         emails: Array.from(new Set(formData.emails)),
@@ -323,32 +390,38 @@ const EventManage = () => {
         if (!cancelReason.trim()) {
           setSnackbar({
             open: true,
-            message: 'Please provide a reason for cancellation.',
-            severity: 'error'
+            message: "Please provide a reason for cancellation.",
+            severity: "error",
           });
           return;
         }
-        await cancelEventMutation.mutateAsync({ id: editingId, reason: cancelReason });
+        await cancelEventMutation.mutateAsync({
+          id: editingId,
+          reason: cancelReason,
+        });
         setSnackbar({
           open: true,
-          message: 'Event cancelled successfully',
-          severity: 'success'
+          message: "Event cancelled successfully",
+          severity: "success",
         });
       } else {
         await createEventMutation.mutateAsync(processedData);
         setSnackbar({
           open: true,
-          message: 'Event created successfully!',
-          severity: 'success'
+          message: "Event created successfully!",
+          severity: "success",
         });
       }
       handleClose();
     } catch (error) {
-      console.error('Operation error:', error);
+      console.error("Operation error:", error);
       setSnackbar({
         open: true,
-        message: error?.response?.data?.message || error.message || 'An error occurred',
-        severity: 'error'
+        message:
+          error?.response?.data?.message ||
+          error.message ||
+          "An error occurred",
+        severity: "error",
       });
     }
   };
@@ -363,7 +436,7 @@ const EventManage = () => {
   };
 
   const handleCloseSnackbar = (event, reason) => {
-    if (reason === 'clickaway') return;
+    if (reason === "clickaway") return;
     setSnackbar({ ...snackbar, open: false });
   };
 
@@ -385,81 +458,81 @@ const EventManage = () => {
       // Show loading state
       setSnackbar({
         open: true,
-        message: 'Uploading image...',
-        severity: 'info'
+        message: "Uploading image...",
+        severity: "info",
       });
 
       // Upload the new image
       const imageUrl = await uploadImageToCloudinary(file);
-      
+
       // Update form data with the new image URL
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        attachmentImg: imageUrl
+        attachmentImg: imageUrl,
       }));
 
       // Show success message
       setSnackbar({
         open: true,
-        message: 'Image uploaded successfully',
-        severity: 'success'
+        message: "Image uploaded successfully",
+        severity: "success",
       });
     } catch (error) {
-      console.error('Error handling image upload:', error);
+      console.error("Error handling image upload:", error);
       setSnackbar({
         open: true,
-        message: error.message || 'Failed to upload image. Please try again.',
-        severity: 'error'
+        message: error.message || "Failed to upload image. Please try again.",
+        severity: "error",
       });
     }
   };
 
   const handleImageDelete = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      attachmentImg: ''
+      attachmentImg: "",
     }));
-    
+
     setSnackbar({
       open: true,
-      message: 'Image removed',
-      severity: 'success'
+      message: "Image removed",
+      severity: "success",
     });
   };
 
   // Hàm helper để render badge status
   const renderStatusBadge = (status) => {
-    let label = '-';
-    let color = '#bdbdbd';
-    let borderColor = '#e0e0e0';
-    if (status === 'EVENT_REGISTRATION_ACTIVE') {
-      label = 'Open';
-      color = '#2e7d32';
-      borderColor = '#2e7d32';
-    } else if (status === 'EVENT_CANCELLED') {
-      label = 'Cancel';
-      color = '#d32f2f';
-      borderColor = '#d32f2f';
-    } else if (status === 'EVENT_REGISTRATION_CLOSED') {
-      label = 'Close';
-      color = '#1976d2';
-      borderColor = '#1976d2';
+    let label = "-";
+    let color = "#bdbdbd";
+    let borderColor = "#e0e0e0";
+    if (status === "EVENT_REGISTRATION_ACTIVE") {
+      label = "Open";
+      color = "#2e7d32";
+      borderColor = "#2e7d32";
+    } else if (status === "EVENT_CANCELLED") {
+      label = "Cancel";
+      color = "#d32f2f";
+      borderColor = "#d32f2f";
+    } else if (status === "EVENT_REGISTRATION_CLOSED") {
+      label = "Close";
+      color = "#1976d2";
+      borderColor = "#1976d2";
     }
     return (
       <Box
         component="span"
         sx={{
-          display: 'inline-block',
+          display: "inline-block",
           px: 2,
           py: 0.5,
           borderRadius: 2,
           border: `1.5px solid ${borderColor}`,
           color,
           fontWeight: 600,
-          fontSize: '0.95rem',
-          background: '#fff',
+          fontSize: "0.95rem",
+          background: "#fff",
           minWidth: 70,
-          textAlign: 'center',
+          textAlign: "center",
         }}
       >
         {label}
@@ -471,19 +544,19 @@ const EventManage = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          {error?.response?.status === 403 
-            ? 'You do not have permission to access this resource. Please log in with appropriate permissions.'
-            : `Error loading event data: ${error?.message || 'Please try again later.'}`
-          }
+          {error?.response?.status === 403
+            ? "You do not have permission to access this resource. Please log in with appropriate permissions."
+            : `Error loading event data: ${
+                error?.message || "Please try again later."
+              }`}
         </Alert>
       </Box>
     );
   }
 
-  const displayedData = eventList?.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  ) || [];
+  const displayedData =
+    eventList?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) ||
+    [];
 
   return (
     <Box sx={{ p: 3 }}>
@@ -497,8 +570,8 @@ const EventManage = () => {
           pb: 2,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <EventNoteIcon sx={{ color: '#1976d2', fontSize: 38 }} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <EventNoteIcon sx={{ color: "#1976d2", fontSize: 38 }} />
           <Box>
             <Typography
               variant="h4"
@@ -526,18 +599,18 @@ const EventManage = () => {
           variant="contained"
           sx={{
             background: "linear-gradient(90deg, #1976d2 60%, #42a5f5 100%)",
-            color: '#fff',
+            color: "#fff",
             fontWeight: 700,
             borderRadius: 2,
-            boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+            boxShadow: "0 2px 8px rgba(25,118,210,0.12)",
             px: 3,
             py: 1.2,
-            fontSize: '1.08rem',
-            '&:hover': {
+            fontSize: "1.08rem",
+            "&:hover": {
               background: "linear-gradient(90deg, #1565c0 60%, #42a5f5 100%)",
-              boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+              boxShadow: "0 4px 16px rgba(25,118,210,0.18)",
             },
-            gap: 1.2
+            gap: 1.2,
           }}
           color="primary"
           onClick={() => showModal()}
@@ -548,70 +621,155 @@ const EventManage = () => {
       </Box>
 
       {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer 
+        <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ 
+          sx={{
             borderRadius: 3,
-            overflow: 'hidden',
-            border: '1.5px solid #e3f2fd',
-            boxShadow: '0 4px 24px rgba(25,118,210,0.08)',
-            '& .MuiTableCell-root': {
-              borderColor: '#e0e0e0',
+            overflow: "hidden",
+            border: "1.5px solid #e3f2fd",
+            boxShadow: "0 4px 24px rgba(25,118,210,0.08)",
+            "& .MuiTableCell-root": {
+              borderColor: "#e0e0e0",
               py: 2.5,
               px: 3,
             },
-            '& .MuiTableRow-root': {
-              '&:last-child td, &:last-child th': {
-                borderBottom: 0
-              }
-            }
+            "& .MuiTableRow-root": {
+              "&:last-child td, &:last-child th": {
+                borderBottom: 0,
+              },
+            },
           }}
         >
           <Table>
             <TableHead>
-              <TableRow sx={{ background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)' }}>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Name</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Start Time</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>End Time</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Location</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Host Name</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Status</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Actions</TableCell>
+              <TableRow
+                sx={{
+                  background: "linear-gradient(90deg, #e3f2fd 60%, #fff 100%)",
+                }}
+              >
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Name
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Start Time
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  End Time
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Location
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Host Name
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Status
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {displayedData.map((row) => (
-                <TableRow key={row.id}
+                <TableRow
+                  key={row.id}
                   sx={{
-                    transition: 'background 0.2s',
-                    '&:hover': { backgroundColor: '#f1f8fd' },
-                    '&:last-child td, &:last-child th': { borderBottom: 0 }
+                    transition: "background 0.2s",
+                    "&:hover": { backgroundColor: "#f1f8fd" },
+                    "&:last-child td, &:last-child th": { borderBottom: 0 },
                   }}
                 >
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>{row.name || '-'}</TableCell>
-                  <TableCell align="center">{row.startTime || '-'}</TableCell>
-                  <TableCell align="center">{row.endTime || '-'}</TableCell>
-                  <TableCell align="center">{row.location || '-'}</TableCell>
-                  <TableCell align="center">{row.hostName || '-'}</TableCell>
-                  <TableCell align="center">{renderStatusBadge(row.status)}</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    {row.name || "-"}
+                  </TableCell>
+                  <TableCell align="center">{row.startTime || "-"}</TableCell>
+                  <TableCell align="center">{row.endTime || "-"}</TableCell>
+                  <TableCell align="center">{row.location || "-"}</TableCell>
+                  <TableCell align="center">{row.hostName || "-"}</TableCell>
                   <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
+                    {renderStatusBadge(row.status)}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1.5,
+                        justifyContent: "center",
+                      }}
+                    >
                       <Button
                         variant="contained"
                         sx={{
-                          backgroundColor: '#42a5f5',
-                          color: '#fff',
+                          backgroundColor: "#42a5f5",
+                          color: "#fff",
                           minWidth: 44,
                           borderRadius: 2,
-                          boxShadow: '0 2px 8px rgba(66,165,245,0.10)',
-                          '&:hover': { backgroundColor: '#1976d2' },
+                          boxShadow: "0 2px 8px rgba(66,165,245,0.10)",
+                          "&:hover": { backgroundColor: "#1976d2" },
                           fontWeight: 600,
-                          p: 1.2
+                          p: 1.2,
                         }}
                         onClick={() => handleViewDetail(row.id)}
                         size="small"
@@ -622,14 +780,14 @@ const EventManage = () => {
                       <Button
                         variant="contained"
                         sx={{
-                          backgroundColor: '#ef5350',
-                          color: '#fff',
+                          backgroundColor: "#ef5350",
+                          color: "#fff",
                           minWidth: 44,
                           borderRadius: 2,
-                          boxShadow: '0 2px 8px rgba(239,83,80,0.10)',
-                          '&:hover': { backgroundColor: '#b71c1c' },
+                          boxShadow: "0 2px 8px rgba(239,83,80,0.10)",
+                          "&:hover": { backgroundColor: "#b71c1c" },
                           fontWeight: 600,
-                          p: 1.2
+                          p: 1.2,
                         }}
                         onClick={() => showModal(row)}
                         size="small"
@@ -652,10 +810,11 @@ const EventManage = () => {
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             sx={{
-              borderTop: '1.5px solid #e3f2fd',
-              background: '#f8fafc',
-              '.MuiTablePagination-toolbar': { fontWeight: 600 },
-              '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { color: '#1976d2' }
+              borderTop: "1.5px solid #e3f2fd",
+              background: "#f8fafc",
+              ".MuiTablePagination-toolbar": { fontWeight: 600 },
+              ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows":
+                { color: "#1976d2" },
             }}
           />
         </TableContainer>
@@ -673,37 +832,47 @@ const EventManage = () => {
               display: "flex",
               flexDirection: "column",
               borderRadius: 4,
-              boxShadow: '0 8px 32px rgba(25,118,210,0.18)',
-              border: '2px solid #e3f2fd',
-              background: 'linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)',
+              boxShadow: "0 8px 32px rgba(25,118,210,0.18)",
+              border: "2px solid #e3f2fd",
+              background: "linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)",
             },
           }}
         >
           {editingId ? (
             // Cancel Event Confirmation
             <form onSubmit={handleSubmit}>
-              <DialogTitle sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                fontWeight: 800,
-                color: '#d32f2f',
-                fontSize: '1.5rem',
-                background: 'linear-gradient(90deg, #ffebee 60%, #fff 100%)',
-                borderBottom: '2px solid #ffcdd2',
-                py: 2.5,
-                px: 3
-              }}>
-                <EditIcon sx={{ color: '#d32f2f', fontSize: 28 }} />
+              <DialogTitle
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  fontWeight: 800,
+                  color: "#d32f2f",
+                  fontSize: "1.5rem",
+                  background: "linear-gradient(90deg, #ffebee 60%, #fff 100%)",
+                  borderBottom: "2px solid #ffcdd2",
+                  py: 2.5,
+                  px: 3,
+                }}
+              >
+                <EditIcon sx={{ color: "#d32f2f", fontSize: 28 }} />
                 Cancel Event
               </DialogTitle>
               <DialogContent sx={{ px: 4, py: 3 }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2.5,
+                    pt: 2,
+                  }}
+                >
                   <Typography variant="h6" color="error" sx={{ mb: 2 }}>
                     Are you sure you want to cancel this event?
                   </Typography>
                   <Typography variant="body1">
-                    This action cannot be undone. The event will be marked as cancelled and participants will be notified.
+                    This action cannot be undone. The event will be marked as
+                    cancelled and participants will be notified.
                   </Typography>
                   <TextField
                     label="Reason for cancellation"
@@ -717,109 +886,113 @@ const EventManage = () => {
                   />
                 </Box>
               </DialogContent>
-              <DialogActions sx={{ 
-                borderTop: '2px solid #e3f2fd',
-                backgroundColor: '#f8f9fa',
-                p: 2,
-                justifyContent: 'center'
-              }}>
+              <DialogActions
+                sx={{
+                  borderTop: "2px solid #e3f2fd",
+                  backgroundColor: "#f8f9fa",
+                  p: 2,
+                  justifyContent: "center",
+                }}
+              >
                 <Button onClick={handleClose}>Close</Button>
                 <Button
                   type="submit"
                   variant="contained"
                   sx={{
                     minWidth: 120,
-                    backgroundColor: '#d32f2f',
-                    '&:hover': {
-                      backgroundColor: '#b71c1c'
-                    }
+                    backgroundColor: "#d32f2f",
+                    "&:hover": {
+                      backgroundColor: "#b71c1c",
+                    },
                   }}
                   disabled={cancelEventMutation.isPending}
                 >
                   {cancelEventMutation.isPending ? (
                     <CircularProgress size={24} />
                   ) : (
-                    'Cancel Event'
+                    "Cancel Event"
                   )}
                 </Button>
               </DialogActions>
             </form>
           ) : (
-            // Create Form with Stepper
+            // Create Form with Timeline
             <Box sx={{ width: "100%" }}>
-              <DialogTitle sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                fontWeight: 800,
-                color: '#1976d2',
-                fontSize: '1.5rem',
-                background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)',
-                borderBottom: '2px solid #e3f2fd',
-                py: 2.5,
-                px: 3
-              }}>
-                <AddCircleOutlineIcon sx={{ color: '#1976d2', fontSize: 28 }} />
+              <DialogTitle
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  fontWeight: 800,
+                  color: "#1976d2",
+                  fontSize: "1.5rem",
+                  background: "linear-gradient(90deg, #e3f2fd 60%, #fff 100%)",
+                  borderBottom: "2px solid #e3f2fd",
+                  py: 2.5,
+                  px: 3,
+                }}
+              >
+                <AddCircleOutlineIcon sx={{ color: "#1976d2", fontSize: 28 }} />
                 Create New Event
               </DialogTitle>
               <DialogContent sx={{ px: 4, py: 3 }}>
                 <Box sx={{ width: "100%", mt: 2 }}>
-                  <Box sx={{ 
-                    width: "60%", 
-                    minWidth: 320,
-                    maxWidth: 500,
-                    margin: "0 auto",
-                    display: "flex",
-                    justifyContent: "center"
-                  }}>
-                    <Stepper
-                      activeStep={activeStep}
-                      orientation="horizontal"
+                  {/* Timeline Header */}
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      mb: 4,
+                      p: 3,
+                      background: "linear-gradient(90deg, #e3f2fd 60%, #fff 100%)",
+                      borderRadius: 3,
+                      border: "2px solid #e3f2fd",
+                    }}
+                  >
+                    <Typography
+                      variant="h5"
                       sx={{
-                        width: '100%',
-                        px: 2,
-                        mb: 2,
-                        gap: 4,
-                        justifyContent: 'center',
-                        '& .MuiStep-root': {
-                          flex: 1,
-                          maxWidth: 'none',
-                          minWidth: 180,
-                        },
-                        '& .MuiStepLabel-root': {
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 1.5,
-                          minWidth: 140,
-                          px: 1,
-                        },
-                        '& .MuiStepLabel-label': {
-                          fontSize: '1.08rem',
-                          fontWeight: 700,
-                          color: '#bdbdbd',
-                          textAlign: 'left',
-                          ml: 1,
-                          transition: 'color 0.2s',
-                          '&.Mui-active': {
-                            color: '#1976d2',
-                            fontWeight: 900,
-                          },
-                          '&.Mui-completed': {
-                            color: '#009688',
-                            fontWeight: 900,
-                          },
-                        },
+                        color: "#1976d2",
+                        fontWeight: 700,
+                        mb: 1,
+                        fontFamily: "inherit",
                       }}
-                      connector={<ModernConnector />}
-                      alternativeLabel
                     >
-                      <Step>
-                        <StepLabel StepIconComponent={ModernStepIcon}>Basic Information</StepLabel>
-                      </Step>
-                      <Step>
-                        <StepLabel StepIconComponent={ModernStepIcon}>Teacher Emails</StepLabel>
-                      </Step>
-                    </Stepper>
+                      Event Creation Process
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#666",
+                        fontWeight: 500,
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      Follow the steps below to create a new event
+                    </Typography>
+                  </Box>
+
+                  {/* Timeline Steps */}
+                  <Box sx={{ mb: 4 }}>
+                    <CustomTimelineStep
+                      step={{
+                        title: "Basic Information",
+                        description: "Enter event name, time, location, and description"
+                      }}
+                      index={0}
+                      active={activeStep === 0}
+                      completed={activeStep > 0}
+                      icon={<EventNoteIcon sx={{ fontSize: 24 }} />}
+                    />
+                    <CustomTimelineStep
+                      step={{
+                        title: "Teacher Assignment",
+                        description: "Select teachers to participate in the event"
+                      }}
+                      index={1}
+                      active={activeStep === 1}
+                      completed={activeStep > 1}
+                      icon={<AddCircleOutlineIcon sx={{ fontSize: 24 }} />}
+                    />
                   </Box>
 
                   <Box sx={{ mt: 4 }}>
@@ -837,25 +1010,35 @@ const EventManage = () => {
 
                         <DateTimePicker
                           label="Start Time"
-                          value={formData.startTime ? dayjs(formData.startTime) : null}
-                          onChange={(newValue) => handleDateChange('startTime', newValue)}
+                          value={
+                            formData.startTime
+                              ? dayjs(formData.startTime)
+                              : null
+                          }
+                          onChange={(newValue) =>
+                            handleDateChange("startTime", newValue)
+                          }
                           slotProps={{
                             textField: {
                               required: true,
-                              fullWidth: true
-                            }
+                              fullWidth: true,
+                            },
                           }}
                         />
 
                         <DateTimePicker
                           label="End Time"
-                          value={formData.endTime ? dayjs(formData.endTime) : null}
-                          onChange={(newValue) => handleDateChange('endTime', newValue)}
+                          value={
+                            formData.endTime ? dayjs(formData.endTime) : null
+                          }
+                          onChange={(newValue) =>
+                            handleDateChange("endTime", newValue)
+                          }
                           slotProps={{
                             textField: {
                               required: true,
-                              fullWidth: true
-                            }
+                              fullWidth: true,
+                            },
                           }}
                         />
 
@@ -881,13 +1064,19 @@ const EventManage = () => {
 
                         <DateTimePicker
                           label="Registration Deadline"
-                          value={formData.registrationDeadline ? dayjs(formData.registrationDeadline) : null}
-                          onChange={(newValue) => handleDateChange('registrationDeadline', newValue)}
+                          value={
+                            formData.registrationDeadline
+                              ? dayjs(formData.registrationDeadline)
+                              : null
+                          }
+                          onChange={(newValue) =>
+                            handleDateChange("registrationDeadline", newValue)
+                          }
                           slotProps={{
                             textField: {
                               required: true,
-                              fullWidth: true
-                            }
+                              fullWidth: true,
+                            },
                           }}
                         />
 
@@ -905,28 +1094,30 @@ const EventManage = () => {
                           <Typography
                             variant="subtitle1"
                             sx={{
-                              color: '#1976d2',
+                              color: "#1976d2",
                               fontWeight: 600,
-                              mb: 2
+                              mb: 2,
                             }}
                           >
                             Event Image
                           </Typography>
-                          <Box sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center',
-                            gap: 2
-                          }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
+                            }}
+                          >
                             <Button
                               variant="outlined"
                               component="label"
                               sx={{
-                                borderColor: '#1976d2',
-                                color: '#1976d2',
-                                '&:hover': {
-                                  borderColor: '#1565c0',
-                                  backgroundColor: '#f8f9fa'
-                                }
+                                borderColor: "#1976d2",
+                                color: "#1976d2",
+                                "&:hover": {
+                                  borderColor: "#1565c0",
+                                  backgroundColor: "#f8f9fa",
+                                },
                               }}
                             >
                               Upload Image
@@ -943,33 +1134,35 @@ const EventManage = () => {
                               />
                             </Button>
                             {formData.attachmentImg && (
-                              <Box sx={{ 
-                                position: 'relative',
-                                width: 100,
-                                height: 100,
-                                borderRadius: 1,
-                                overflow: 'hidden',
-                                border: '1px solid #e0e0e0'
-                              }}>
+                              <Box
+                                sx={{
+                                  position: "relative",
+                                  width: 100,
+                                  height: 100,
+                                  borderRadius: 1,
+                                  overflow: "hidden",
+                                  border: "1px solid #e0e0e0",
+                                }}
+                              >
                                 <img
                                   src={formData.attachmentImg}
                                   alt="Event preview"
                                   style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover'
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
                                   }}
                                 />
                                 <IconButton
                                   size="small"
                                   sx={{
-                                    position: 'absolute',
+                                    position: "absolute",
                                     top: 4,
                                     right: 4,
-                                    backgroundColor: 'rgba(255,255,255,0.8)',
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(255,255,255,0.9)'
-                                    }
+                                    backgroundColor: "rgba(255,255,255,0.8)",
+                                    "&:hover": {
+                                      backgroundColor: "rgba(255,255,255,0.9)",
+                                    },
                                   }}
                                   onClick={handleImageDelete}
                                 >
@@ -986,9 +1179,9 @@ const EventManage = () => {
                         <Typography
                           variant="h6"
                           sx={{
-                            color: '#1976d2',
+                            color: "#1976d2",
                             fontWeight: 600,
-                            mb: 3
+                            mb: 3,
                           }}
                         >
                           Select Teachers
@@ -996,29 +1189,35 @@ const EventManage = () => {
                         <Paper
                           elevation={0}
                           sx={{
-                            border: '1px solid #e0e0e0',
+                            border: "1px solid #e0e0e0",
                             borderRadius: 2,
-                            overflow: 'hidden'
+                            overflow: "hidden",
                           }}
                         >
                           <TableContainer>
                             <Table>
                               <TableHead>
-                                <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                                <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
                                   <TableCell padding="checkbox">
                                     <Checkbox
                                       checked={formData.emails.length > 0}
-                                      indeterminate={formData.emails.length > 0 && formData.emails.length < teacherEmails.length}
+                                      indeterminate={
+                                        formData.emails.length > 0 &&
+                                        formData.emails.length <
+                                          teacherEmails.length
+                                      }
                                       onChange={(e) => {
                                         if (e.target.checked) {
-                                          setFormData(prev => ({
+                                          setFormData((prev) => ({
                                             ...prev,
-                                            emails: Array.from(new Set(teacherEmails))
+                                            emails: Array.from(
+                                              new Set(teacherEmails)
+                                            ),
                                           }));
                                         } else {
-                                          setFormData(prev => ({
+                                          setFormData((prev) => ({
                                             ...prev,
-                                            emails: []
+                                            emails: [],
                                           }));
                                         }
                                       }}
@@ -1035,35 +1234,54 @@ const EventManage = () => {
                                     key={index}
                                     hover
                                     sx={{
-                                      '&:last-child td, &:last-child th': { border: 0 },
-                                      cursor: 'pointer',
-                                      '&:hover': {
-                                        backgroundColor: '#f5f5f5'
-                                      }
+                                      "&:last-child td, &:last-child th": {
+                                        border: 0,
+                                      },
+                                      cursor: "pointer",
+                                      "&:hover": {
+                                        backgroundColor: "#f5f5f5",
+                                      },
                                     }}
                                     onClick={() => {
-                                      const isSelected = formData.emails.includes(teacher.email);
-                                      setFormData(prev => ({
+                                      const isSelected =
+                                        formData.emails.includes(teacher.email);
+                                      setFormData((prev) => ({
                                         ...prev,
                                         emails: isSelected
-                                          ? prev.emails.filter(e => e !== teacher.email)
-                                          : Array.from(new Set([...prev.emails, teacher.email]))
+                                          ? prev.emails.filter(
+                                              (e) => e !== teacher.email
+                                            )
+                                          : Array.from(
+                                              new Set([
+                                                ...prev.emails,
+                                                teacher.email,
+                                              ])
+                                            ),
                                       }));
                                     }}
                                   >
                                     <TableCell padding="checkbox">
                                       <Checkbox
-                                        checked={formData.emails.includes(teacher.email)}
+                                        checked={formData.emails.includes(
+                                          teacher.email
+                                        )}
                                         onChange={(e) => {
                                           if (e.target.checked) {
-                                            setFormData(prev => ({
+                                            setFormData((prev) => ({
                                               ...prev,
-                                              emails: Array.from(new Set([...prev.emails, teacher.email]))
+                                              emails: Array.from(
+                                                new Set([
+                                                  ...prev.emails,
+                                                  teacher.email,
+                                                ])
+                                              ),
                                             }));
                                           } else {
-                                            setFormData(prev => ({
+                                            setFormData((prev) => ({
                                               ...prev,
-                                              emails: prev.emails.filter(e => e !== teacher.email)
+                                              emails: prev.emails.filter(
+                                                (e) => e !== teacher.email
+                                              ),
                                             }));
                                           }
                                         }}
@@ -1083,26 +1301,26 @@ const EventManage = () => {
                   </Box>
                 </Box>
               </DialogContent>
-              <DialogActions sx={{ 
-                borderTop: '2px solid #e3f2fd',
-                backgroundColor: '#f8f9fa',
-                p: 2,
-                justifyContent: 'center'
-              }}>
+              <DialogActions
+                sx={{
+                  borderTop: "2px solid #e3f2fd",
+                  backgroundColor: "#f8f9fa",
+                  p: 2,
+                  justifyContent: "center",
+                }}
+              >
                 <Button onClick={handleClose}>Cancel</Button>
-                {activeStep > 0 && (
-                  <Button onClick={handleBack}>Back</Button>
-                )}
+                {activeStep > 0 && <Button onClick={handleBack}>Back</Button>}
                 {activeStep === 0 ? (
-                  <Button 
+                  <Button
                     onClick={handleNext}
                     variant="contained"
                     sx={{
                       minWidth: 120,
-                      backgroundColor: '#1976d2',
-                      '&:hover': {
-                        backgroundColor: '#1565c0'
-                      }
+                      backgroundColor: "#1976d2",
+                      "&:hover": {
+                        backgroundColor: "#1565c0",
+                      },
                     }}
                   >
                     Next
@@ -1113,17 +1331,17 @@ const EventManage = () => {
                     variant="contained"
                     sx={{
                       minWidth: 120,
-                      backgroundColor: '#1976d2',
-                      '&:hover': {
-                        backgroundColor: '#1565c0'
-                      }
+                      backgroundColor: "#1976d2",
+                      "&:hover": {
+                        backgroundColor: "#1565c0",
+                      },
                     }}
                     disabled={createEventMutation.isPending}
                   >
                     {createEventMutation.isPending ? (
                       <CircularProgress size={24} />
                     ) : (
-                      'Create'
+                      "Create"
                     )}
                   </Button>
                 )}
@@ -1159,35 +1377,42 @@ const EventManage = () => {
         </DialogTitle>
         <DialogContent>
           {isLoadingDetail ? (
-            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "300px" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "300px",
+              }}
+            >
               <CircularProgress size={40} />
             </Box>
           ) : detailData?.data?.data ? (
             <Box sx={{ p: 3 }}>
-              <TableContainer 
-                component={Paper} 
+              <TableContainer
+                component={Paper}
                 elevation={0}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
-                  overflow: 'hidden',
+                  overflow: "hidden",
                   mb: 3,
-                  border: '1px solid #e0e0e0',
-                  '& .MuiTableCell-root': {
-                    borderColor: '#e0e0e0',
+                  border: "1px solid #e0e0e0",
+                  "& .MuiTableCell-root": {
+                    borderColor: "#e0e0e0",
                     py: 2.5,
                     px: 3,
-                  }
+                  },
                 }}
               >
                 <Table>
                   <TableBody>
                     <TableRow>
-                      <TableCell 
-                        sx={{ 
-                          width: '30%',
-                          bgcolor: '#f8f9fa',
+                      <TableCell
+                        sx={{
+                          width: "30%",
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Event Name
@@ -1195,11 +1420,11 @@ const EventManage = () => {
                       <TableCell>{detailData.data.data.name}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell 
-                        sx={{ 
-                          bgcolor: '#f8f9fa',
+                      <TableCell
+                        sx={{
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Start Time
@@ -1207,11 +1432,11 @@ const EventManage = () => {
                       <TableCell>{detailData.data.data.startTime}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell 
-                        sx={{ 
-                          bgcolor: '#f8f9fa',
+                      <TableCell
+                        sx={{
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         End Time
@@ -1219,11 +1444,11 @@ const EventManage = () => {
                       <TableCell>{detailData.data.data.endTime}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell 
-                        sx={{ 
-                          bgcolor: '#f8f9fa',
+                      <TableCell
+                        sx={{
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Location
@@ -1231,25 +1456,25 @@ const EventManage = () => {
                       <TableCell>{detailData.data.data.location}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell 
-                        sx={{ 
-                          bgcolor: '#f8f9fa',
+                      <TableCell
+                        sx={{
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Description
                       </TableCell>
-                      <TableCell sx={{ whiteSpace: 'pre-wrap' }}>
+                      <TableCell sx={{ whiteSpace: "pre-wrap" }}>
                         {detailData.data.data.description}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell 
-                        sx={{ 
-                          bgcolor: '#f8f9fa',
+                      <TableCell
+                        sx={{
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Registration Deadline
@@ -1259,11 +1484,11 @@ const EventManage = () => {
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell 
-                        sx={{ 
-                          bgcolor: '#f8f9fa',
+                      <TableCell
+                        sx={{
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Host Name
@@ -1271,16 +1496,18 @@ const EventManage = () => {
                       <TableCell>{detailData.data.data.hostName}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell 
-                        sx={{ 
-                          bgcolor: '#f8f9fa',
+                      <TableCell
+                        sx={{
+                          bgcolor: "#f8f9fa",
                           fontWeight: 600,
-                          color: '#1976d2'
+                          color: "#1976d2",
                         }}
                       >
                         Status
                       </TableCell>
-                      <TableCell>{renderStatusBadge(detailData.data.data.status)}</TableCell>
+                      <TableCell>
+                        {renderStatusBadge(detailData.data.data.status)}
+                      </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -1291,11 +1518,11 @@ const EventManage = () => {
                   <Typography
                     variant="h6"
                     sx={{
-                      color: '#1976d2',
+                      color: "#1976d2",
                       fontWeight: 600,
                       mb: 2,
                       pb: 2,
-                      borderBottom: '2px solid #e3f2fd'
+                      borderBottom: "2px solid #e3f2fd",
                     }}
                   >
                     Event Image
@@ -1304,35 +1531,37 @@ const EventManage = () => {
                     elevation={0}
                     sx={{
                       p: 2,
-                      border: '1px solid #e0e0e0',
+                      border: "1px solid #e0e0e0",
                       borderRadius: 2,
-                      textAlign: 'center'
+                      textAlign: "center",
                     }}
                   >
-                    <img 
+                    <img
                       src={detailData.data.data.attachmentImg}
                       alt="Event"
-                      style={{ 
-                        maxWidth: '100%', 
-                        maxHeight: '300px', 
-                        borderRadius: '8px',
-                        objectFit: 'contain'
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "300px",
+                        borderRadius: "8px",
+                        objectFit: "contain",
                       }}
                     />
                   </Paper>
                 </Box>
               )}
 
-              {((Array.isArray(eventTeachers?.data) && eventTeachers.data.length > 0) || (Array.isArray(eventTeachers) && eventTeachers.length > 0)) && (
+              {((Array.isArray(eventTeachers?.data) &&
+                eventTeachers.data.length > 0) ||
+                (Array.isArray(eventTeachers) && eventTeachers.length > 0)) && (
                 <Box sx={{ mt: 4 }}>
                   <Typography
                     variant="h6"
                     sx={{
-                      color: '#1976d2',
+                      color: "#1976d2",
                       fontWeight: 600,
                       mb: 2,
                       pb: 2,
-                      borderBottom: '2px solid #e3f2fd'
+                      borderBottom: "2px solid #e3f2fd",
                     }}
                   >
                     Assigned Teachers
@@ -1343,26 +1572,33 @@ const EventManage = () => {
                     <Paper
                       elevation={0}
                       sx={{
-                        border: '1px solid #e0e0e0',
+                        border: "1px solid #e0e0e0",
                         borderRadius: 2,
-                        overflow: 'hidden'
+                        overflow: "hidden",
                       }}
                     >
                       <TableContainer>
                         <Table>
                           <TableHead>
-                            <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                            <TableRow sx={{ backgroundColor: "#f8f9fa" }}>
                               <TableCell>Name</TableCell>
                               <TableCell>Email</TableCell>
                               <TableCell>Department</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {(Array.isArray(eventTeachers?.data) ? eventTeachers.data : Array.isArray(eventTeachers) ? eventTeachers : []).map((teacher) => (
+                            {(Array.isArray(eventTeachers?.data)
+                              ? eventTeachers.data
+                              : Array.isArray(eventTeachers)
+                              ? eventTeachers
+                              : []
+                            ).map((teacher) => (
                               <TableRow key={teacher.id}>
                                 <TableCell>{teacher.name}</TableCell>
                                 <TableCell>{teacher.email}</TableCell>
-                                <TableCell>{teacher.department || 'N/A'}</TableCell>
+                                <TableCell>
+                                  {teacher.department || "N/A"}
+                                </TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -1375,7 +1611,10 @@ const EventManage = () => {
             </Box>
           ) : (
             <Box sx={{ p: 4, textAlign: "center" }}>
-              <Typography color="error" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
+              <Typography
+                color="error"
+                sx={{ fontSize: "1.1rem", fontWeight: 500 }}
+              >
                 Failed to load event details.
               </Typography>
             </Box>

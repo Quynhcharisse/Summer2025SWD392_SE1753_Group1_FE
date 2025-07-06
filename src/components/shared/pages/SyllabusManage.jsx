@@ -31,9 +31,6 @@ import {
   Radio,
   Grid,
   Stack,
-  Stepper,
-  Step,
-  StepLabel,
   Checkbox,
   InputLabel,
   Select,
@@ -44,136 +41,135 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAssignedLessons } from "@hooks/useSyllabusLesson";
 import { useLessonList } from "@hooks/useLesson";
-import LayersIcon from '@mui/icons-material/Layers';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import InfoIcon from '@mui/icons-material/Info';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import StepConnector, { stepConnectorClasses } from '@mui/material/StepConnector';
-import { styled } from '@mui/material/styles';
+import LayersIcon from "@mui/icons-material/Layers";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import InfoIcon from "@mui/icons-material/Info";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { styled } from "@mui/material/styles";
 
 const HOURS_PER_WEEK = 30;
 
-// Custom Step Icon
-const CustomStepIconRoot = styled('div')(({ theme, ownerState }) => ({
-  backgroundColor: ownerState.active
-    ? '#1976d2'
-    : ownerState.completed
-    ? '#2e7d32'
-    : '#e3f2fd',
-  zIndex: 1,
-  color: '#fff',
-  width: 38,
-  height: 38,
-  display: 'flex',
-  borderRadius: '50%',
-  justifyContent: 'center',
-  alignItems: 'center',
-  fontWeight: 700,
-  fontSize: '1.25rem',
-  boxShadow: ownerState.active
-    ? '0 4px 16px rgba(25,118,210,0.18)'
-    : ownerState.completed
-    ? '0 4px 16px rgba(46,125,50,0.18)'
-    : '0 2px 8px rgba(25,118,210,0.08)',
-  border: ownerState.active
-    ? '2.5px solid #1976d2'
-    : ownerState.completed
-    ? '2.5px solid #2e7d32'
-    : '2.5px solid #e3f2fd',
-  transition: 'all 0.2s',
-}));
-
-function CustomStepIcon(props) {
-  const { active, completed, className, icon } = props;
-  return (
-    <CustomStepIconRoot ownerState={{ active, completed }} className={className}>
-      {icon}
-    </CustomStepIconRoot>
-  );
-}
-
-// Custom Connector
-const CustomConnector = styled(StepConnector)(({ theme }) => ({
-  [`&.${stepConnectorClasses.alternativeLabel}`]: {
-    top: '50%',
-    transform: 'translateY(-50%)',
-  },
-  [`& .${stepConnectorClasses.line}`]: {
-    borderColor: '#e3f2fd',
-    borderTopWidth: 4,
-    borderRadius: 2,
-    transition: 'border-color 0.2s',
-  },
-  [`&.${stepConnectorClasses.active} .${stepConnectorClasses.line}`]: {
-    borderColor: '#1976d2',
-  },
-  [`&.${stepConnectorClasses.completed} .${stepConnectorClasses.line}`]: {
-    borderColor: '#2e7d32',
+// Custom Timeline Step Component
+const TimelineStep = styled("div")(({ theme, active, completed }) => ({
+  display: "flex",
+  alignItems: "flex-start",
+  marginBottom: theme.spacing(4),
+  position: "relative",
+  "&:last-child": {
+    marginBottom: 0,
   },
 }));
 
-const ModernStepIconRoot = styled('div')(({ ownerState }) => ({
-  backgroundColor: ownerState.active
-    ? '#1976d2'
-    : ownerState.completed
-    ? '#009688'
-    : '#e3f2fd',
-  zIndex: 1,
-  color: ownerState.active || ownerState.completed ? '#fff' : '#90caf9',
-  width: 40,
-  height: 40,
-  display: 'flex',
-  borderRadius: '50%',
-  justifyContent: 'center',
-  alignItems: 'center',
+const TimelineCircleContainer = styled("div")(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  marginRight: theme.spacing(3),
+  position: "relative",
+  zIndex: 2,
+}));
+
+const TimelineCircle = styled("div")(({ theme, active, completed }) => ({
+  width: 48,
+  height: 48,
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: active ? "#1976d2" : completed ? "#009688" : "#e3f2fd",
+  border: active ? "3px solid #1976d2" : completed ? "3px solid #009688" : "3px solid #e3f2fd",
+  boxShadow: active 
+    ? "0 4px 16px rgba(25,118,210,0.18)" 
+    : completed 
+    ? "0 4px 16px rgba(0,150,136,0.18)" 
+    : "0 2px 8px rgba(25,118,210,0.08)",
+  transition: "all 0.3s ease",
+  color: active || completed ? "#fff" : "#90caf9",
   fontWeight: 900,
-  fontSize: '1.25rem',
-  boxShadow: ownerState.active
-    ? '0 4px 16px rgba(25,118,210,0.18)'
-    : ownerState.completed
-    ? '0 4px 16px rgba(0,150,136,0.18)'
-    : '0 2px 8px rgba(158,158,158,0.08)',
-  border: ownerState.active
-    ? '2.5px solid #1976d2'
-    : ownerState.completed
-    ? '2.5px solid #009688'
-    : '2.5px solid #e3f2fd',
-  transition: 'all 0.2s',
+  fontSize: "1.25rem",
+  "&:hover": {
+    transform: "scale(1.1)",
+  },
 }));
 
-function ModernStepIcon(props) {
-  const { active, completed, className, icon } = props;
+const TimelineLine = styled("div")(({ theme, active, completed }) => ({
+  width: 4,
+  height: 60,
+  backgroundColor: active ? "#1976d2" : completed ? "#009688" : "#e3f2fd",
+  borderRadius: 2,
+  marginTop: theme.spacing(1),
+  transition: "background-color 0.3s ease",
+}));
+
+const TimelineContent = styled("div")(({ theme, active, completed }) => ({
+  flex: 1,
+  padding: theme.spacing(2),
+  backgroundColor: active ? "#e3f2fd" : completed ? "#e8f5e8" : "#f8f9fa",
+  borderRadius: theme.spacing(2),
+  border: active ? "2px solid #1976d2" : completed ? "2px solid #009688" : "2px solid #e0e0e0",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+  },
+}));
+
+const StepNumber = styled("div")(({ theme, active, completed }) => ({
+  fontSize: "0.875rem",
+  fontWeight: 700,
+  color: active ? "#1976d2" : completed ? "#009688" : "#666",
+  marginBottom: theme.spacing(0.5),
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+}));
+
+const StepTitle = styled("div")(({ theme, active, completed }) => ({
+  fontSize: "1.125rem",
+  fontWeight: 700,
+  color: active ? "#1976d2" : completed ? "#009688" : "#333",
+  marginBottom: theme.spacing(0.5),
+}));
+
+const StepDescription = styled("div")(({ theme, active, completed }) => ({
+  fontSize: "0.875rem",
+  color: active ? "#1976d2" : completed ? "#009688" : "#666",
+  fontWeight: 500,
+}));
+
+// Custom Timeline Step Component
+const CustomTimelineStep = ({ step, index, active, completed, icon }) => {
   return (
-    <ModernStepIconRoot ownerState={{ active, completed }} className={className}>
-      {completed ? <span style={{ fontSize: 22, fontWeight: 900 }}>✓</span> : icon}
-    </ModernStepIconRoot>
+    <TimelineStep active={active} completed={completed}>
+      <TimelineCircleContainer>
+        <TimelineCircle active={active} completed={completed}>
+          {completed ? (
+            <span style={{ fontSize: 24, fontWeight: 900 }}>✓</span>
+          ) : (
+            icon
+          )}
+        </TimelineCircle>
+        {index < 1 && (
+          <TimelineLine active={active} completed={completed} />
+        )}
+      </TimelineCircleContainer>
+      
+      <TimelineContent active={active} completed={completed}>
+        <StepNumber active={active} completed={completed}>
+          Step {index + 1}
+        </StepNumber>
+        <StepTitle active={active} completed={completed}>
+          {step.title}
+        </StepTitle>
+        <StepDescription active={active} completed={completed}>
+          {step.description}
+        </StepDescription>
+      </TimelineContent>
+    </TimelineStep>
   );
-}
-
-const ModernConnector = styled(StepConnector)(({ theme }) => ({
-  [`&.${stepConnectorClasses.alternativeLabel}`]: {
-    top: '50%',
-    transform: 'translateY(-50%)',
-    left: 'calc(-50% + 20px)',
-    right: 'calc(50% + 20px)',
-    width: 'auto',
-  },
-  [`& .${stepConnectorClasses.line}`]: {
-    borderColor: '#e3f2fd',
-    borderTopWidth: 4,
-    borderRadius: 2,
-    transition: 'border-color 0.2s',
-  },
-  [`&.${stepConnectorClasses.active} .${stepConnectorClasses.line}`]: {
-    borderColor: '#1976d2',
-  },
-  [`&.${stepConnectorClasses.completed} .${stepConnectorClasses.line}`]: {
-    borderColor: '#009688',
-  },
-}));
+};
 
 const SyllabusManage = () => {
   const [grade, setGrade] = useState("LEAF");
@@ -351,7 +347,7 @@ const SyllabusManage = () => {
     if (!subject) {
       setSnackbar({
         open: true,
-        message: "Subject is required",
+        message: "Syllabus Name is required",
         severity: "error",
       });
       return;
@@ -505,8 +501,8 @@ const SyllabusManage = () => {
           pb: 2,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <LibraryBooksIcon sx={{ color: '#1976d2', fontSize: 38 }} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <LibraryBooksIcon sx={{ color: "#1976d2", fontSize: 38 }} />
           <Box>
             <Typography
               variant="h4"
@@ -534,18 +530,18 @@ const SyllabusManage = () => {
           variant="contained"
           sx={{
             background: "linear-gradient(90deg, #1976d2 60%, #42a5f5 100%)",
-            color: '#fff',
+            color: "#fff",
             fontWeight: 700,
             borderRadius: 2,
-            boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+            boxShadow: "0 2px 8px rgba(25,118,210,0.12)",
             px: 3,
             py: 1.2,
-            fontSize: '1.08rem',
-            '&:hover': {
+            fontSize: "1.08rem",
+            "&:hover": {
               background: "linear-gradient(90deg, #1565c0 60%, #42a5f5 100%)",
-              boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+              boxShadow: "0 4px 16px rgba(25,118,210,0.18)",
             },
-            gap: 1.2
+            gap: 1.2,
           }}
           color="primary"
           onClick={() => showModal()}
@@ -607,21 +603,88 @@ const SyllabusManage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer component={Paper} sx={{
-          borderRadius: 3,
-          boxShadow: '0 4px 24px rgba(25,118,210,0.08)',
-          overflow: 'hidden',
-          border: '1.5px solid #e3f2fd',
-        }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 3,
+            boxShadow: "0 4px 24px rgba(25,118,210,0.08)",
+            overflow: "hidden",
+            border: "1.5px solid #e3f2fd",
+          }}
+        >
           <Table>
             <TableHead>
-              <TableRow sx={{ background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)' }}>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Subject</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Description</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Number of Week</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Hours of Syllabuses</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Grade</TableCell>
-                <TableCell align="center" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '1.08rem', py: 2.5 }}>Actions</TableCell>
+              <TableRow
+                sx={{
+                  background: "linear-gradient(90deg, #e3f2fd 60%, #fff 100%)",
+                }}
+              >
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Syllabus Name
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Description
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Number of Week
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Hours of Syllabuses
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Grade
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                    fontSize: "1.08rem",
+                    py: 2.5,
+                  }}
+                >
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -629,44 +692,60 @@ const SyllabusManage = () => {
                 <TableRow
                   key={row.id}
                   sx={{
-                    transition: 'background 0.2s',
-                    '&:hover': { backgroundColor: '#f1f8fd' },
-                    '&:last-child td, &:last-child th': { borderBottom: 0 }
+                    transition: "background 0.2s",
+                    "&:hover": { backgroundColor: "#f1f8fd" },
+                    "&:last-child td, &:last-child th": { borderBottom: 0 },
                   }}
                 >
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>{row.subject || "-"}</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    {row.subject || "-"}
+                  </TableCell>
                   <TableCell align="center">{row.description || "-"}</TableCell>
-                  <TableCell align="center">{row.numberOfWeek || "-"}</TableCell>
-                  <TableCell align="center">{row.maxHoursOfSyllabus || "-"}</TableCell>
                   <TableCell align="center">
-                    <Box sx={{
-                      display: 'inline-block',
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: 2,
-                      border: '1.5px solid #1976d2',
-                      color: '#1976d2',
-                      fontWeight: 700,
-                      fontSize: '0.98rem',
-                      background: '#e3f2fd',
-                      minWidth: 70,
-                      textAlign: 'center',
-                    }}>{row.grade || "-"}</Box>
+                    {row.numberOfWeek || "-"}
                   </TableCell>
                   <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
+                    {row.maxHoursOfSyllabus || "-"}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box
+                      sx={{
+                        display: "inline-block",
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: 2,
+                        border: "1.5px solid #1976d2",
+                        color: "#1976d2",
+                        fontWeight: 700,
+                        fontSize: "0.98rem",
+                        background: "#e3f2fd",
+                        minWidth: 70,
+                        textAlign: "center",
+                      }}
+                    >
+                      {row.grade || "-"}
+                    </Box>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1.5,
+                        justifyContent: "center",
+                      }}
+                    >
                       <Tooltip title="View Details">
                         <Button
                           variant="contained"
                           sx={{
-                            backgroundColor: '#42a5f5',
-                            color: '#fff',
+                            backgroundColor: "#42a5f5",
+                            color: "#fff",
                             minWidth: 44,
                             borderRadius: 2,
-                            boxShadow: '0 2px 8px rgba(66,165,245,0.10)',
-                            '&:hover': { backgroundColor: '#1976d2' },
+                            boxShadow: "0 2px 8px rgba(66,165,245,0.10)",
+                            "&:hover": { backgroundColor: "#1976d2" },
                             fontWeight: 600,
-                            p: 1.2
+                            p: 1.2,
                           }}
                           onClick={() => handleViewDetail(row.id)}
                           size="small"
@@ -680,14 +759,14 @@ const SyllabusManage = () => {
                           <Button
                             variant="contained"
                             sx={{
-                              backgroundColor: '#1976d2',
-                              color: '#fff',
+                              backgroundColor: "#1976d2",
+                              color: "#fff",
                               minWidth: 44,
                               borderRadius: 2,
-                              boxShadow: '0 2px 8px rgba(25,118,210,0.10)',
-                              '&:hover': { backgroundColor: '#1565c0' },
+                              boxShadow: "0 2px 8px rgba(25,118,210,0.10)",
+                              "&:hover": { backgroundColor: "#1565c0" },
                               fontWeight: 600,
-                              p: 1.2
+                              p: 1.2,
                             }}
                             onClick={() => showModal(row)}
                             size="small"
@@ -702,14 +781,14 @@ const SyllabusManage = () => {
                         <Button
                           variant="contained"
                           sx={{
-                            backgroundColor: '#8e24aa',
-                            color: '#fff',
+                            backgroundColor: "#8e24aa",
+                            color: "#fff",
                             minWidth: 44,
                             borderRadius: 2,
-                            boxShadow: '0 2px 8px rgba(142,36,170,0.10)',
-                            '&:hover': { backgroundColor: '#6a1b9a' },
+                            boxShadow: "0 2px 8px rgba(142,36,170,0.10)",
+                            "&:hover": { backgroundColor: "#6a1b9a" },
                             fontWeight: 600,
-                            p: 1.2
+                            p: 1.2,
                           }}
                           onClick={() =>
                             navigate(
@@ -738,10 +817,11 @@ const SyllabusManage = () => {
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             sx={{
-              borderTop: '1.5px solid #e3f2fd',
-              background: '#f8fafc',
-              '.MuiTablePagination-toolbar': { fontWeight: 600 },
-              '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': { color: '#1976d2' }
+              borderTop: "1.5px solid #e3f2fd",
+              background: "#f8fafc",
+              ".MuiTablePagination-toolbar": { fontWeight: 600 },
+              ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows":
+                { color: "#1976d2" },
             }}
           />
         </TableContainer>
@@ -758,25 +838,31 @@ const SyllabusManage = () => {
             display: "flex",
             flexDirection: "column",
             borderRadius: 4,
-            boxShadow: '0 8px 32px rgba(25,118,210,0.18)',
-            border: '2px solid #e3f2fd',
-            background: 'linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)',
+            boxShadow: "0 8px 32px rgba(25,118,210,0.18)",
+            border: "2px solid #e3f2fd",
+            background: "linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)",
           },
         }}
       >
-        <DialogTitle sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          fontWeight: 800,
-          color: '#1976d2',
-          fontSize: '1.5rem',
-          background: 'linear-gradient(90deg, #e3f2fd 60%, #fff 100%)',
-          borderBottom: '2px solid #e3f2fd',
-          py: 2.5,
-          px: 3
-        }}>
-          {editingId ? <EditIcon sx={{ color: '#1976d2', fontSize: 28 }} /> : <AddCircleOutlineIcon sx={{ color: '#1976d2', fontSize: 28 }} />}
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            fontWeight: 800,
+            color: "#1976d2",
+            fontSize: "1.5rem",
+            background: "linear-gradient(90deg, #e3f2fd 60%, #fff 100%)",
+            borderBottom: "2px solid #e3f2fd",
+            py: 2.5,
+            px: 3,
+          }}
+        >
+          {editingId ? (
+            <EditIcon sx={{ color: "#1976d2", fontSize: 28 }} />
+          ) : (
+            <AddCircleOutlineIcon sx={{ color: "#1976d2", fontSize: 28 }} />
+          )}
           {editingId ? "Edit Syllabus" : "Create New Syllabus"}
         </DialogTitle>
         <DialogContent sx={{ px: 4, py: 3 }}>
@@ -785,7 +871,7 @@ const SyllabusManage = () => {
             <form onSubmit={handleSubmit}>
               <Stack spacing={3} sx={{ pt: 2 }}>
                 <TextField
-                  label="Subject"
+                  label="Syllabus Name"
                   inputRef={subjectRef}
                   fullWidth
                   required
@@ -940,66 +1026,64 @@ const SyllabusManage = () => {
               </DialogActions>
             </form>
           ) : (
-            // Create Form with Stepper
+            // Create Form with Timeline Stepper
             <Box sx={{ width: "100%", mt: 2 }}>
+              {/* Timeline Header */}
               <Box
                 sx={{
-                  width: "60%",
-                  minWidth: 320,
-                  maxWidth: 500,
-                  margin: "0 auto",
-                  display: "flex",
-                  justifyContent: "center",
+                  textAlign: "center",
+                  mb: 4,
+                  p: 3,
+                  background: "linear-gradient(90deg, #e3f2fd 60%, #fff 100%)",
+                  borderRadius: 3,
+                  border: "2px solid #e3f2fd",
                 }}
               >
-                <Stepper
-                  activeStep={activeStep}
-                  orientation="horizontal"
+                <Typography
+                  variant="h5"
                   sx={{
-                    width: '100%',
-                    px: 2,
-                    mb: 2,
-                    gap: 4,
-                    justifyContent: 'center',
-                    '& .MuiStep-root': {
-                      flex: 1,
-                      maxWidth: 'none',
-                      minWidth: 180,
-                    },
-                    '& .MuiStepLabel-root': {
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 1.5,
-                      minWidth: 140,
-                      px: 1,
-                    },
-                    '& .MuiStepLabel-label': {
-                      fontSize: '1.08rem',
-                      fontWeight: 700,
-                      color: '#bdbdbd',
-                      textAlign: 'left',
-                      ml: 1,
-                      transition: 'color 0.2s',
-                      '&.Mui-active': {
-                        color: '#1976d2',
-                        fontWeight: 900,
-                      },
-                      '&.Mui-completed': {
-                        color: '#009688',
-                        fontWeight: 900,
-                      },
-                    },
+                    color: "#1976d2",
+                    fontWeight: 700,
+                    mb: 1,
+                    fontFamily: "inherit",
                   }}
-                  connector={<ModernConnector />}
-                  alternativeLabel
                 >
-                  <Step>
-                    <StepLabel StepIconComponent={ModernStepIcon}>Basic Information</StepLabel>
-                  </Step>
-                  <Step>
-                    <StepLabel StepIconComponent={ModernStepIcon}>Teacher Emails</StepLabel>
-                  </Step>
-                </Stepper>
+                  Syllabus Creation Process
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#666",
+                    fontWeight: 500,
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Follow the steps below to create a new syllabus
+                </Typography>
+              </Box>
+
+              {/* Timeline Steps */}
+              <Box sx={{ mb: 4 }}>
+                <CustomTimelineStep
+                  step={{
+                    title: "Basic Information",
+                    description: "Enter syllabus name, description, duration, and grade level"
+                  }}
+                  index={0}
+                  active={activeStep === 0}
+                  completed={activeStep > 0}
+                  icon={<LibraryBooksIcon sx={{ fontSize: 24 }} />}
+                />
+                <CustomTimelineStep
+                  step={{
+                    title: "Lesson Assignment",
+                    description: "Select and assign lessons to the syllabus"
+                  }}
+                  index={1}
+                  active={activeStep === 1}
+                  completed={activeStep > 1}
+                  icon={<AddCircleOutlineIcon sx={{ fontSize: 24 }} />}
+                />
               </Box>
 
               <Box sx={{ mt: 4 }}>
@@ -1261,25 +1345,25 @@ const SyllabusManage = () => {
         {!editingId && (
           <DialogActions
             sx={{
-              borderTop: '2px solid #e3f2fd',
-              backgroundColor: '#f8f9fa',
+              borderTop: "2px solid #e3f2fd",
+              backgroundColor: "#f8f9fa",
               p: 2,
-              justifyContent: 'center',
-              gap: 2
+              justifyContent: "center",
+              gap: 2,
             }}
           >
             <Button
               onClick={handleClose}
               sx={{
                 minWidth: 120,
-                color: '#1976d2',
+                color: "#1976d2",
                 fontWeight: 700,
                 borderRadius: 2,
-                backgroundColor: 'transparent',
-                boxShadow: 'none',
-                fontSize: '1.08rem',
-                '&:hover': {
-                  backgroundColor: '#e3f2fd',
+                backgroundColor: "transparent",
+                boxShadow: "none",
+                fontSize: "1.08rem",
+                "&:hover": {
+                  backgroundColor: "#e3f2fd",
                 },
               }}
             >
@@ -1290,14 +1374,14 @@ const SyllabusManage = () => {
                 onClick={handleBack}
                 sx={{
                   minWidth: 120,
-                  color: '#1976d2',
+                  color: "#1976d2",
                   fontWeight: 700,
                   borderRadius: 2,
-                  backgroundColor: 'transparent',
-                  boxShadow: 'none',
-                  fontSize: '1.08rem',
-                  '&:hover': {
-                    backgroundColor: '#e3f2fd',
+                  backgroundColor: "transparent",
+                  boxShadow: "none",
+                  fontSize: "1.08rem",
+                  "&:hover": {
+                    backgroundColor: "#e3f2fd",
                   },
                 }}
               >
@@ -1310,15 +1394,15 @@ const SyllabusManage = () => {
                 variant="contained"
                 sx={{
                   minWidth: 120,
-                  backgroundColor: '#1976d2',
-                  color: '#fff',
+                  backgroundColor: "#1976d2",
+                  color: "#fff",
                   fontWeight: 700,
                   borderRadius: 2,
-                  boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
-                  fontSize: '1.08rem',
-                  '&:hover': {
-                    backgroundColor: '#1565c0',
-                    boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+                  boxShadow: "0 2px 8px rgba(25,118,210,0.12)",
+                  fontSize: "1.08rem",
+                  "&:hover": {
+                    backgroundColor: "#1565c0",
+                    boxShadow: "0 4px 16px rgba(25,118,210,0.18)",
                   },
                 }}
               >
@@ -1333,15 +1417,15 @@ const SyllabusManage = () => {
                   disabled={createSyllabusMutation.isPending}
                   sx={{
                     minWidth: 120,
-                    backgroundColor: '#1976d2',
-                    color: '#fff',
+                    backgroundColor: "#1976d2",
+                    color: "#fff",
                     fontWeight: 700,
                     borderRadius: 2,
-                    boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
-                    fontSize: '1.08rem',
-                    '&:hover': {
-                      backgroundColor: '#1565c0',
-                      boxShadow: '0 4px 16px rgba(25,118,210,0.18)',
+                    boxShadow: "0 2px 8px rgba(25,118,210,0.12)",
+                    fontSize: "1.08rem",
+                    "&:hover": {
+                      backgroundColor: "#1565c0",
+                      boxShadow: "0 4px 16px rgba(25,118,210,0.18)",
                     },
                   }}
                 >
@@ -1383,9 +1467,9 @@ const SyllabusManage = () => {
           "& .MuiDialog-paper": {
             borderRadius: 4,
             background: "linear-gradient(120deg, #f8fafc 60%, #e3f2fd 100%)",
-            boxShadow: '0 8px 32px rgba(25,118,210,0.18)',
+            boxShadow: "0 8px 32px rgba(25,118,210,0.18)",
             p: 0,
-            fontFamily: 'Inter, Roboto, Arial, sans-serif',
+            fontFamily: "Inter, Roboto, Arial, sans-serif",
           },
         }}
       >
@@ -1396,10 +1480,10 @@ const SyllabusManage = () => {
             background: "linear-gradient(90deg, #e3f2fd 60%, #fff 100%)",
             color: "#1976d2",
             fontWeight: 900,
-            fontSize: '2rem',
+            fontSize: "2rem",
             py: 3,
             letterSpacing: 1,
-            fontFamily: 'Inter, Roboto, Arial, sans-serif',
+            fontFamily: "Inter, Roboto, Arial, sans-serif",
           }}
         >
           Syllabus Details
@@ -1417,98 +1501,270 @@ const SyllabusManage = () => {
               <CircularProgress size={40} />
             </Box>
           ) : detailData?.data?.data ? (
-            <Box sx={{ p: { xs: 2, sm: 4 }, fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
+            <Box
+              sx={{
+                p: { xs: 2, sm: 4 },
+                fontFamily: "Inter, Roboto, Arial, sans-serif",
+              }}
+            >
               {/* Block 1: Syllabus Information */}
-              <Box sx={{
-                borderRadius: 4,
-                boxShadow: '0 4px 24px rgba(56,189,248,0.10)',
-                borderLeft: '6px solid #1976d2',
-                mb: 4,
-                background: 'linear-gradient(90deg, #e3f0fd 60%, #fff 100%)',
-                overflow: 'hidden',
-              }}>
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  px: 3,
-                  py: 2.5,
-                  background: 'linear-gradient(90deg, #e3f2fd 60%, #bbdefb 100%)',
-                  borderTopLeftRadius: 18,
-                  borderTopRightRadius: 18,
-                }}>
-                  <LayersIcon sx={{ color: '#1976d2', fontSize: 32 }} />
-                  <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#1976d2', fontFamily: 'inherit' }}>
+              <Box
+                sx={{
+                  borderRadius: 4,
+                  boxShadow: "0 4px 24px rgba(56,189,248,0.10)",
+                  borderLeft: "6px solid #1976d2",
+                  mb: 4,
+                  background: "linear-gradient(90deg, #e3f0fd 60%, #fff 100%)",
+                  overflow: "hidden",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    px: 3,
+                    py: 2.5,
+                    background:
+                      "linear-gradient(90deg, #e3f2fd 60%, #bbdefb 100%)",
+                    borderTopLeftRadius: 18,
+                    borderTopRightRadius: 18,
+                  }}
+                >
+                  <LayersIcon sx={{ color: "#1976d2", fontSize: 32 }} />
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "1.25rem",
+                      color: "#1976d2",
+                      fontFamily: "inherit",
+                    }}
+                  >
                     Syllabus Information
                   </Typography>
                 </Box>
                 <Grid container spacing={3} sx={{ p: 3 }}>
                   {/* Hàng 1: Subject, Number of Week, Hours of Syllabus */}
                   <Grid item xs={12} sm={4}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <LibraryBooksIcon sx={{ color: '#90caf9', fontSize: 22 }} />
-                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 90 }}>Subject:</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 0.5,
+                      }}
+                    >
+                      <LibraryBooksIcon
+                        sx={{ color: "#90caf9", fontSize: 22 }}
+                      />
+                      <Typography
+                        sx={{
+                          color: "#888",
+                          fontWeight: 600,
+                          fontFamily: "inherit",
+                          whiteSpace: "nowrap",
+                          minWidth: 90,
+                        }}
+                      >
+                        Syllabus Name:
+                      </Typography>
                     </Box>
-                    <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.08rem', fontFamily: 'inherit', ml: 4 }}>{detailData.data.data.subject}</Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: "#1976d2",
+                        fontSize: "1.08rem",
+                        fontFamily: "inherit",
+                        ml: 4,
+                      }}
+                    >
+                      {detailData.data.data.subject}
+                    </Typography>
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <AccessTimeIcon sx={{ color: '#90caf9', fontSize: 22 }} />
-                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 140 }}>Number of Week:</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 0.5,
+                      }}
+                    >
+                      <AccessTimeIcon sx={{ color: "#90caf9", fontSize: 22 }} />
+                      <Typography
+                        sx={{
+                          color: "#888",
+                          fontWeight: 600,
+                          fontFamily: "inherit",
+                          whiteSpace: "nowrap",
+                          minWidth: 140,
+                        }}
+                      >
+                        Number of Week:
+                      </Typography>
                     </Box>
-                    <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.08rem', fontFamily: 'inherit', ml: 4 }}>{detailData.data.data.numberOfWeek} weeks</Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: "#1976d2",
+                        fontSize: "1.08rem",
+                        fontFamily: "inherit",
+                        ml: 4,
+                      }}
+                    >
+                      {detailData.data.data.numberOfWeek} weeks
+                    </Typography>
                   </Grid>
                   <Grid item xs={12} sm={4}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <AccessTimeIcon sx={{ color: '#90caf9', fontSize: 22 }} />
-                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 120 }}>Hours of Syllabus:</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 0.5,
+                      }}
+                    >
+                      <AccessTimeIcon sx={{ color: "#90caf9", fontSize: 22 }} />
+                      <Typography
+                        sx={{
+                          color: "#888",
+                          fontWeight: 600,
+                          fontFamily: "inherit",
+                          whiteSpace: "nowrap",
+                          minWidth: 120,
+                        }}
+                      >
+                        Hours of Syllabus:
+                      </Typography>
                     </Box>
-                    <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.08rem', fontFamily: 'inherit', ml: 4 }}>{(detailData.data.data.numberOfWeek * 30) || 'N/A'} hours</Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: "#1976d2",
+                        fontSize: "1.08rem",
+                        fontFamily: "inherit",
+                        ml: 4,
+                      }}
+                    >
+                      {detailData.data.data.numberOfWeek * 30 || "N/A"} hours
+                    </Typography>
                   </Grid>
                   {/* Hàng 2: Grade, Description */}
                   <Grid item xs={12} sm={4}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <LayersIcon sx={{ color: '#90caf9', fontSize: 22 }} />
-                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 110 }}>Grade:</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 0.5,
+                      }}
+                    >
+                      <LayersIcon sx={{ color: "#90caf9", fontSize: 22 }} />
+                      <Typography
+                        sx={{
+                          color: "#888",
+                          fontWeight: 600,
+                          fontFamily: "inherit",
+                          whiteSpace: "nowrap",
+                          minWidth: 110,
+                        }}
+                      >
+                        Grade:
+                      </Typography>
                     </Box>
-                    <Typography sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.08rem', fontFamily: 'inherit', ml: 4 }}>{detailData.data.data.grade}</Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: "#1976d2",
+                        fontSize: "1.08rem",
+                        fontFamily: "inherit",
+                        ml: 4,
+                      }}
+                    >
+                      {detailData.data.data.grade}
+                    </Typography>
                   </Grid>
                   <Grid item xs={12} sm={8}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <InfoIcon sx={{ color: '#90caf9', fontSize: 22 }} />
-                      <Typography sx={{ color: '#888', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 120 }}>Description:</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 0.5,
+                      }}
+                    >
+                      <InfoIcon sx={{ color: "#90caf9", fontSize: 22 }} />
+                      <Typography
+                        sx={{
+                          color: "#888",
+                          fontWeight: 600,
+                          fontFamily: "inherit",
+                          whiteSpace: "nowrap",
+                          minWidth: 120,
+                        }}
+                      >
+                        Description:
+                      </Typography>
                     </Box>
-                    <Typography sx={{ fontWeight: 500, color: '#222', fontSize: '1.08rem', fontFamily: 'inherit', background: '#f5faff', borderRadius: 2, px: 2, py: 1, ml: 4 }}>{detailData.data.data.description}</Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 500,
+                        color: "#222",
+                        fontSize: "1.08rem",
+                        fontFamily: "inherit",
+                        background: "#f5faff",
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1,
+                        ml: 4,
+                      }}
+                    >
+                      {detailData.data.data.description}
+                    </Typography>
                   </Grid>
                 </Grid>
               </Box>
 
               {/* Block 2: Lessons */}
-              <Box sx={{
-                borderRadius: 4,
-                boxShadow: '0 4px 24px rgba(34,197,94,0.10)',
-                borderLeft: '6px solid #16a34a',
-                background: 'linear-gradient(90deg, #e8fbe9 60%, #fff 100%)',
-                overflow: 'hidden',
-              }}>
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  px: 3,
-                  py: 2.5,
-                  background: 'linear-gradient(90deg, #e8fbe9 60%, #bbf7d0 100%)',
-                  borderTopLeftRadius: 18,
-                  borderTopRightRadius: 18,
-                }}>
-                  <LibraryBooksIcon sx={{ color: '#16a34a', fontSize: 32 }} />
-                  <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#16a34a', fontFamily: 'inherit' }}>
+              <Box
+                sx={{
+                  borderRadius: 4,
+                  boxShadow: "0 4px 24px rgba(34,197,94,0.10)",
+                  borderLeft: "6px solid #16a34a",
+                  background: "linear-gradient(90deg, #e8fbe9 60%, #fff 100%)",
+                  overflow: "hidden",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    px: 3,
+                    py: 2.5,
+                    background:
+                      "linear-gradient(90deg, #e8fbe9 60%, #bbf7d0 100%)",
+                    borderTopLeftRadius: 18,
+                    borderTopRightRadius: 18,
+                  }}
+                >
+                  <LibraryBooksIcon sx={{ color: "#16a34a", fontSize: 32 }} />
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "1.25rem",
+                      color: "#16a34a",
+                      fontFamily: "inherit",
+                    }}
+                  >
                     Lessons
                   </Typography>
                 </Box>
                 <Box sx={{ p: 3 }}>
                   {isLoadingAssignedLessons ? (
-                    <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", p: 3 }}
+                    >
                       <CircularProgress size={24} />
                     </Box>
                   ) : assignedLessonsData?.data?.data?.length > 0 ? (
@@ -1519,22 +1775,33 @@ const SyllabusManage = () => {
                             sx={{
                               p: 2.5,
                               borderRadius: 3,
-                              bgcolor: '#fff',
-                              boxShadow: '0 2px 8px rgba(34,197,94,0.10)',
-                              display: 'flex',
-                              alignItems: 'center',
+                              bgcolor: "#fff",
+                              boxShadow: "0 2px 8px rgba(34,197,94,0.10)",
+                              display: "flex",
+                              alignItems: "center",
                               gap: 2,
-                              transition: 'all 0.2s',
-                              cursor: 'pointer',
-                              '&:hover': {
-                                bgcolor: '#f0fdfa',
-                                boxShadow: '0 6px 16px rgba(34,197,94,0.18)',
-                                transform: 'translateY(-2px) scale(1.03)',
+                              transition: "all 0.2s",
+                              cursor: "pointer",
+                              "&:hover": {
+                                bgcolor: "#f0fdfa",
+                                boxShadow: "0 6px 16px rgba(34,197,94,0.18)",
+                                transform: "translateY(-2px) scale(1.03)",
                               },
                             }}
                           >
-                            <LibraryBooksIcon sx={{ color: '#16a34a', fontSize: 28 }} />
-                            <Typography sx={{ fontWeight: 700, color: '#222', fontSize: '1.08rem', fontFamily: 'inherit' }}>{lesson.topic}</Typography>
+                            <LibraryBooksIcon
+                              sx={{ color: "#16a34a", fontSize: 28 }}
+                            />
+                            <Typography
+                              sx={{
+                                fontWeight: 700,
+                                color: "#222",
+                                fontSize: "1.08rem",
+                                fontFamily: "inherit",
+                              }}
+                            >
+                              {lesson.topic}
+                            </Typography>
                           </Box>
                         </Grid>
                       ))}
@@ -1547,14 +1814,20 @@ const SyllabusManage = () => {
                         bgcolor: "#f8f9fa",
                         border: "1px solid #e0e0e0",
                         borderRadius: 3,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 2
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 2,
                       }}
                     >
-                      <LibraryBooksIcon sx={{ color: '#bdbdbd', fontSize: 40, mb: 1 }} />
-                      <Typography color="text.secondary" fontWeight={600} fontSize="1.1rem">
+                      <LibraryBooksIcon
+                        sx={{ color: "#bdbdbd", fontSize: 40, mb: 1 }}
+                      />
+                      <Typography
+                        color="text.secondary"
+                        fontWeight={600}
+                        fontSize="1.1rem"
+                      >
                         No lessons assigned.
                       </Typography>
                     </Box>
@@ -1592,9 +1865,9 @@ const SyllabusManage = () => {
               },
               fontWeight: 700,
               borderRadius: 2,
-              fontSize: '1.08rem',
-              boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
-              fontFamily: 'inherit',
+              fontSize: "1.08rem",
+              boxShadow: "0 2px 8px rgba(25,118,210,0.12)",
+              fontFamily: "inherit",
             }}
           >
             Close
