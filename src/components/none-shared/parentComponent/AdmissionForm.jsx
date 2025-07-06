@@ -44,12 +44,7 @@ import {parseISO} from "date-fns";
 import {enqueueSnackbar, useSnackbar} from 'notistack';
 import axios from "axios";
 
-import {
-    cancelAdmission,
-    getFormInformation, getURL,
-    refillForm,
-    submittedForm
-} from "@api/services/parentService.js";
+import {cancelAdmission, getFormInformation, getURL, refillForm, submittedForm} from "@api/services/parentService.js";
 
 // Loading Overlay Component
 function LoadingOverlay({open, message}) {
@@ -452,22 +447,6 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
         }
     }
 
-    const calculateAge = (dateOfBirth) => {
-        if (!dateOfBirth) return '';
-        const birthDate = new Date(dateOfBirth);
-        const today = new Date();
-
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-
-        // If birthday hasn't occurred this year, subtract 1
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-
-        return age;
-    };
-
     return (
         <Dialog
             fullScreen
@@ -514,7 +493,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                         color: '#07663a',
                         fontWeight: 600,
                     }}>
-                        Student Informations
+                        Student Information
                     </Typography>
 
                     <Stack>
@@ -614,7 +593,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                                         overflow: 'hidden',
                                         borderRadius: 1,
                                         border: '1px solid rgba(7, 102, 58, 0.1)',
-                                        bgcolor: '#f8f9fa',
+                                        backgroundColor: '#f8f9fa',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center'
@@ -737,14 +716,13 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                             </Button>
                         )}
 
-                        {/* Dialog xác nhận cancel */}
                         <Dialog open={isConfirmOpen} onClose={handleCloseConfirm}>
                             <DialogTitle sx={{color: 'red', fontWeight: 'bold'}}>
                                 Cancel Admission Form
                             </DialogTitle>
                             <DialogContent>
                                 <DialogContentText>
-                                    ⚠️ Are you sure you want to cancel this admission form?
+                                    Are you sure you want to cancel this admission form?
                                     <br/>
                                     This action <strong>cannot be undone</strong> and the child may lose their
                                     enrollment opportunity for this term.
@@ -1069,7 +1047,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
             } else {
                 const errorMessage = response?.message || "Failed to submit form";
 
-                // Case 1: No active admission term
                 if (errorMessage.includes("No active admission term")) {
                     enqueueSnackbar("There is currently no active admission term", {
                         variant: "error",
@@ -1082,7 +1059,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     return;
                 }
 
-                // Case 2: Student already has active/pending form
                 if (errorMessage.includes("already been submit") || errorMessage.includes("pending form")) {
                     setErrors(prev => ({
                         ...prev,
@@ -1094,7 +1070,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     return;
                 }
 
-                // Case 3: Age not suitable
                 if (errorMessage.includes("birth year") || errorMessage.includes("required age")) {
                     setErrors(prev => ({
                         ...prev,
@@ -1106,7 +1081,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                     return;
                 }
 
-                // Default error handling
                 enqueueSnackbar(`${errorMessage}`, {
                     variant: "error",
                 });
@@ -1119,40 +1093,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         } finally {
             setIsLoading(false);
             setLoadingMessage('');
-        }
-    }
-
-    function HandleUploadFile(file, id) {
-        try {
-            // Check if file exists
-            if (!file) {
-                enqueueSnackbar("Please select a file to upload", {variant: "error"});
-                return;
-            }
-
-            // Basic file validation
-            if (!file.name || !file.type) {
-                enqueueSnackbar("Invalid file format", {variant: "error"});
-                return;
-            }
-
-            // Validate file type
-            if (!validateFileType(file)) {
-                return;
-            }
-
-            // Update state based on file type
-            if (id === 1) {
-                setUploadedFile(prev => ({...prev, childCharacteristicsForm: file}));
-                enqueueSnackbar("Child characteristics form uploaded successfully", {variant: "success"});
-            } else {
-                setUploadedFile(prev => ({...prev, commit: file}));
-                enqueueSnackbar("Commitment form uploaded successfully", {variant: "success"});
-            }
-
-        } catch (error) {
-            console.error("Error handling file upload:", error);
-            enqueueSnackbar("Error processing file", {variant: "error"});
         }
     }
 
@@ -1216,7 +1156,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         borderRadius: '8px'
                     }
                 }}>
-                     {/*Student Selection*/}
+                    {/*Student Selection*/}
                     <FormControl fullWidth error={!!errors.student}>
                         <InputLabel>Child Name</InputLabel>
                         <Select
@@ -1257,19 +1197,15 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                 <MenuItem disabled>No available students</MenuItem>
                             )}
                         </Select>
-                        <Typography
-                            variant={"subtitle2"}
-                            color={"error"}
-                        >
+                        <Typography variant={"subtitle2"} color={"error"}>
                             * Only children with the age from 3 to 5 can be submitted to sunshine preschool
                         </Typography>
 
-                        {errors.student && (
-                            <FormHelperText>{errors.student}</FormHelperText>
-                        )}
+                        {
+                            errors.student && (<FormHelperText>{errors.student}</FormHelperText>)
+                        }
                     </FormControl>
 
-                    {/* Student Information Display */}
                     {student && (
                         <Box sx={{
                             p: 3,
@@ -1290,7 +1226,9 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                         fullWidth
                                         label="Full Name"
                                         value={student.name || ''}
-                                        InputProps={{readOnly: true}}
+                                        slotProps={{
+                                            input: {readOnly: true}
+                                        }}
                                     />
                                 </Grid>
                                 <Grid item xs={12} md={6}>
@@ -1298,7 +1236,9 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                         fullWidth
                                         label="Gender"
                                         value={student.gender || ''}
-                                        InputProps={{readOnly: true}}
+                                        slotProps={{
+                                            input: {readOnly: true}
+                                        }}
                                     />
                                 </Grid>
                                 <Grid item xs={12} md={6}>
@@ -1306,7 +1246,9 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                         fullWidth
                                         label="Date of Birth"
                                         value={student.dateOfBirth || ''}
-                                        InputProps={{readOnly: true}}
+                                        slotProps={{
+                                            input: {readOnly: true}
+                                        }}
                                     />
                                 </Grid>
                                 <Grid item xs={12} md={6}>
@@ -1314,7 +1256,9 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                         fullWidth
                                         label="Age"
                                         value={`${calculateAge(student.dateOfBirth)} years old`}
-                                        InputProps={{readOnly: true}}
+                                        slotProps={{
+                                            input: {readOnly: true}
+                                        }}
                                     />
                                 </Grid>
                                 <Grid item xs={12} md={6}>
@@ -1322,11 +1266,12 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                         fullWidth
                                         label="Place of Birth"
                                         value={student.placeOfBirth || ''}
-                                        InputProps={{readOnly: true}}
+                                        slotProps={{
+                                            input: {readOnly: true}
+                                        }}
                                     />
                                 </Grid>
 
-                                {/* Student Documents */}
                                 <Grid item xs={12}>
                                     <Typography variant="h6" sx={{
                                         mb: 2,
@@ -1377,8 +1322,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                                     overflow: 'hidden',
                                                     borderRadius: 1,
                                                     border: '1px solid rgba(7, 102, 58, 0.1)',
-                                                    bgcolor: '#f8f9fa',
-                                                    // backgroundColor: 'red'
+                                                    backgroundColor: '#f8f9fa',
                                                 }}>
                                                     {item.src ? (
                                                         <img
@@ -1406,7 +1350,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         </Box>
                     )}
 
-                    {/* Form Fields */}
                     <TextField
                         fullWidth
                         label="Household Registration Address *"
@@ -1435,7 +1378,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         }}
                     />
 
-                    {/* Upload Progress */}
                     {isLoading && Object.keys(uploadProgress).length > 0 && (
                         <Box sx={{mt: 2}}>
                             <Typography variant="subtitle1" gutterBottom>
@@ -1468,7 +1410,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         </Box>
                     )}
 
-                    {/* Cancel Confirmation Dialog */}
                     <Dialog
                         open={isCancelDialogOpen}
                         onClose={() => setCancelDialogOpen(false)}
@@ -1487,13 +1428,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         </DialogActions>
                     </Dialog>
 
-                    {/* Document Upload Section */}
-                    <Typography variant="h6" sx={{
-                        mt: 4,
-                        mb: 2,
-                        color: '#07663a',
-                        fontWeight: 600
-                    }}>
+                    <Typography variant="h6" sx={{mt: 4, mb: 2, color: '#07663a', fontWeight: 600}}>
                         Upload Documents
                     </Typography>
 
@@ -1566,7 +1501,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                         ))}
                     </Stack>
 
-                    {/* Action Buttons */}
                     <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{mt: 4}}>
                         <Button
                             variant="contained"
@@ -1598,7 +1532,6 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                 </Stack>
             </Box>
 
-            {/* Image Preview Dialog */}
             <Dialog
                 open={openDialog}
                 onClose={handleCloseImage}
