@@ -29,7 +29,7 @@ export default function Payment() {
     let status, statusColor, StatusIcon, note;
     if (responseCode === "00") {
         status = "Thanh toán thành công";
-        statusColor = "#005AA9"; // VNPay official blue
+        statusColor = "#005AA9";
         StatusIcon = CheckCircleIcon;
         note = "Cảm ơn bạn đã thanh toán!";
     } else if (responseCode) {
@@ -47,7 +47,7 @@ export default function Payment() {
     const called = useRef(false);
 
     useEffect(() => {
-        if (called.current) return; // Đã gọi thì không gọi lại nữa
+        if (called.current) return;
         called.current = true;
 
         async function CreateTransaction() {
@@ -146,7 +146,7 @@ export default function Payment() {
                         <Box sx={{background: "#f8f9fa", p: 2, borderRadius: 2}}>
                             <Typography variant="body2" color="text.secondary">Số tiền</Typography>
                             <Typography variant="h6" sx={{color: "#005AA9", fontWeight: 700}}>
-                                {formatMoney(amountInt )}
+                                {formatMoney(amountInt)}
                             </Typography>
                         </Box>
 
