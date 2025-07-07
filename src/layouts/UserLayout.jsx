@@ -15,7 +15,9 @@ import {
   User,
   UserCheck,
   Users,
-  X
+  X,
+  ListOrdered,
+  LineChart
 } from "lucide-react";
 import PropTypes from "prop-types";
 import { useState } from "react";
@@ -123,9 +125,16 @@ const UserLayout = ({ children }) => {
             path: '/user/admission/forms'
           },
           {
-            key: '/user/shared/profile',
-            icon: User,
-            label: 'Thông tin cá nhân',
+            key: '/user/admission/transactions',
+            icon: ListOrdered,
+            label: 'Transaction List',
+            path: '/user/admission/transactions'
+          },
+          {
+            key: '/user/admission/chart',
+            icon: LineChart,
+            label: 'Transaction Chart',
+            path: '/user/admission/chart'
           },
           {
             key: '/user/shared/profile',

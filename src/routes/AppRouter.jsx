@@ -16,6 +16,7 @@ import Login from "@pages/Login";
 import SignUp from "@pages/SignUp";
 import Unauthorized from "@pages/Unauthorized";
 
+
 // Lazy import pages
 const Home = lazy(() => import("@pages/Home"));
 // const Login = lazy(() => import("@pages/Login"));
@@ -29,9 +30,7 @@ const Events = lazy(() => import("@pages/Events"));
 const NotFound = lazy(() => import("@pages/NotFound"));
 const BookStoryDemo = lazy(() => import("@pages/BookStoryDemo"));
 const ThemeTest = lazy(() => import("@pages/ThemeTest"));
-const EnrollmentApplication = lazy(() =>
-    import("@pages/EnrollmentApplication")
-);
+const EnrollmentApplication = lazy(() => import("@pages/EnrollmentApplication"));
 const MyApplications = lazy(() => import("@pages/MyApplications"));
 const ParentDashboard = lazy(() => import("@pages/ParentDashboard"));
 const TeacherDashboard = lazy(() => import("@pages/TeacherDashboard"));
@@ -55,7 +54,8 @@ const TermAdmission = lazy(() => import("@/components/none-shared/admissionCompo
 const ProcessForm = lazy(() => import("@/components/none-shared/admissionComponent/ProcessForm.jsx"));
 const AdmissionForm = lazy(() => import("@/components/none-shared/parentComponent/AdmissionForm.jsx"));
 const Payment = lazy(() => import("@/components/none-shared/parentComponent/Payment.jsx"));
-
+const AdmissionChart = lazy(() => import("@/components/none-shared/admissionComponent/AdmissionChart.jsx"));
+const TransactionList = lazy(() => import("@/components/none-shared/admissionComponent/TransactionList.jsx"));
 
 const PageWrapper = ({ children, isPublic = false, requiredRoles = [] }) => {
   const content = (
@@ -689,6 +689,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "chart",
+        element: (
+          <UserPageWrapper requiredRoles={["ADMISSION"]}>
+            <AdmissionChart />
+          </UserPageWrapper>
+        ),
+      },
+      {
         path: "forms",
         element: (
           <UserPageWrapper requiredRoles={["ADMISSION"]}>
@@ -718,6 +726,14 @@ const router = createBrowserRouter([
           </UserPageWrapper>
         ),
       },
+        {
+            path: "transactions",
+            element: (
+                <UserPageWrapper requiredRoles={["ADMISSION"]}>
+                    <TransactionList/>
+                </UserPageWrapper>
+            ),
+        },
     ],
   },
 

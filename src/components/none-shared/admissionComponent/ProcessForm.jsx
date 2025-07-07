@@ -149,20 +149,25 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                                     <TableCell align="center">{form.cancelReason || "N/A"}</TableCell>
                                     <TableCell align="center">
                                         <Chip
-                                            label={form.status}
+                                            label={form.status === "approved paid" ? "Approved & Paid" : form.status}
                                             sx={{
                                                 backgroundColor: 
                                                     form.status === "approved" ? "rgba(7, 102, 58, 0.1)" :
+                                                    form.status === "approved paid" ? "rgba(46, 125, 50, 0.1)" :
                                                     form.status === "rejected" || form.status === "cancelled" ? "rgba(220, 53, 69, 0.1)" :
                                                     form.status === "pending approval" || form.status === "pending" ? "rgba(13, 110, 253, 0.1)" :
+                                                    form.status === "waiting payment" ? "rgba(0, 0, 128, 0.1)" :
                                                     "transparent",
                                                 color:
                                                     form.status === "approved" ? "#07663a" :
+                                                    form.status === "approved paid" ? "#2E7D32" :
                                                     form.status === "rejected" || form.status === "cancelled" ? "#dc3545" :
                                                     form.status === "pending approval" || form.status === "pending" ? "#0d6efd" :
+                                                    form.status === "waiting payment" ? "#000080" :
                                                     "black",
                                                 fontWeight: "600",
-                                                borderRadius: '20px'
+                                                borderRadius: '20px',
+                                                textTransform: "capitalize"
                                             }}
                                         />
                                     </TableCell>

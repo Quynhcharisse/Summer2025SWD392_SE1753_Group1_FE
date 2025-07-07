@@ -53,7 +53,7 @@ export default function Payment() {
         async function CreateTransaction() {
             const formId = localStorage.getItem("form")
             if (formId) {
-                return await createTransaction(parseInt(formId), description, transactionNo)
+                return await createTransaction(parseInt(formId), description, transactionNo, responseCode)
             }
         }
 
