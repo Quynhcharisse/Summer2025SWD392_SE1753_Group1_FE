@@ -179,7 +179,7 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                     <TableCell align="center">
                                         <Stack spacing={0.5}>
                                             <Typography variant="body2">
-                                                {term.startDate}
+                                                {dayjs(term.startDate).format('HH:mm DD/MM/YYYY')}
                                             </Typography>
                                         </Stack>
                                     </TableCell>
@@ -187,7 +187,7 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                     <TableCell align="center">
                                         <Stack spacing={0.5}>
                                             <Typography variant="body2">
-                                                {term.endDate}
+                                                {dayjs(term.endDate).format('HH:mm DD/MM/YYYY')}
                                             </Typography>
                                         </Stack>
                                     </TableCell>
@@ -221,9 +221,6 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                                     {term.status}
                                                 </Typography>
                                             </TableCell>
-                                            {/*<Typography variant="body2">*/}
-                                            {/*    {term.status}*/}
-                                            {/*</Typography>*/}
                                         </Stack>
                                     </TableCell>
 
