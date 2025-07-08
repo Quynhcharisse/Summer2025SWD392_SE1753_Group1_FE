@@ -170,13 +170,15 @@ export const getURL = async (formId) => {
 export const createTransaction = async (
     formId,
     description,
-    transactionInfo
+    transactionInfo,
+    responseCode
 ) => {
     try {
         const response = await apiClient.post("/parent/payment/initiate", {
             formId: formId,
             description: description,
-            transactionInfo: transactionInfo
+            transactionInfo: transactionInfo,
+            responseCode: responseCode
         }, {
             // If you need to send cookies/JWT for auth:
             withCredentials: true
