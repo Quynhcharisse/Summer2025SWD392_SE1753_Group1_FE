@@ -1,7 +1,9 @@
 import {
     AppBar,
     Box,
-    Button, Chip,
+    Button,
+    Chip,
+    CircularProgress,
     Dialog,
     FormControl,
     FormControlLabel,
@@ -20,7 +22,6 @@ import {
     TableRow,
     TextField,
     Toolbar,
-    Tooltip,
     Typography
 } from "@mui/material";
 import {Close, Info} from '@mui/icons-material';
@@ -29,9 +30,8 @@ import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {getFormTracking, processAdmissionForm} from "@/api/services/admissionService.js";
-import { parseISO } from "date-fns";
+import {parseISO} from "date-fns";
 import {enqueueSnackbar} from "notistack";
-import {CircularProgress} from "@mui/material";
 import LoadingOverlay from "@/components/none-shared/LoadingOverlay.jsx";
 
 
@@ -68,60 +68,60 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
             display: 'flex',
             flexDirection: 'column'
         }}>
-            <TableContainer sx={{ flex: 1, maxHeight: 'calc(100vh - 300px)', overflow: 'auto' }}>
+            <TableContainer sx={{flex: 1, maxHeight: 'calc(100vh - 300px)', overflow: 'auto'}}>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell align="center" sx={{ 
-                                fontWeight: 'bold', 
+                            <TableCell align="center" sx={{
+                                fontWeight: 'bold',
                                 minWidth: 80,
                                 backgroundColor: '#f8faf8',
                                 color: '#07663a',
                                 fontSize: '0.95rem',
                                 borderBottom: '2px solid #e0e0e0'
                             }}>No</TableCell>
-                            <TableCell align="center" sx={{ 
-                                fontWeight: 'bold', 
+                            <TableCell align="center" sx={{
+                                fontWeight: 'bold',
                                 minWidth: 160,
                                 backgroundColor: '#f8faf8',
                                 color: '#07663a',
                                 fontSize: '0.95rem',
                                 borderBottom: '2px solid #e0e0e0'
                             }}>Child Name</TableCell>
-                            <TableCell align="center" sx={{ 
-                                fontWeight: 'bold', 
+                            <TableCell align="center" sx={{
+                                fontWeight: 'bold',
                                 minWidth: 140,
                                 backgroundColor: '#f8faf8',
                                 color: '#07663a',
                                 fontSize: '0.95rem',
                                 borderBottom: '2px solid #e0e0e0'
                             }}>Submit Date</TableCell>
-                            <TableCell align="center" sx={{ 
-                                fontWeight: 'bold', 
+                            <TableCell align="center" sx={{
+                                fontWeight: 'bold',
                                 minWidth: 160,
                                 backgroundColor: '#f8faf8',
                                 color: '#07663a',
                                 fontSize: '0.95rem',
                                 borderBottom: '2px solid #e0e0e0'
                             }}>Cancel Reason</TableCell>
-                            <TableCell align="center" sx={{ 
-                                fontWeight: 'bold', 
+                            <TableCell align="center" sx={{
+                                fontWeight: 'bold',
                                 minWidth: 120,
                                 backgroundColor: '#f8faf8',
                                 color: '#07663a',
                                 fontSize: '0.95rem',
                                 borderBottom: '2px solid #e0e0e0'
                             }}>Status</TableCell>
-                            <TableCell align="center" sx={{ 
-                                fontWeight: 'bold', 
+                            <TableCell align="center" sx={{
+                                fontWeight: 'bold',
                                 minWidth: 120,
                                 backgroundColor: '#f8faf8',
                                 color: '#07663a',
                                 fontSize: '0.95rem',
                                 borderBottom: '2px solid #e0e0e0'
                             }}>Note</TableCell>
-                            <TableCell align="center" sx={{ 
-                                fontWeight: 'bold', 
+                            <TableCell align="center" sx={{
+                                fontWeight: 'bold',
                                 minWidth: 120,
                                 backgroundColor: '#f8faf8',
                                 color: '#07663a',
@@ -134,7 +134,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                         {filteredForms
                             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((form, index) => (
-                                <TableRow 
+                                <TableRow
                                     key={index}
                                     sx={{
                                         '&:hover': {
@@ -151,20 +151,20 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                                         <Chip
                                             label={form.status === "approved paid" ? "Approved & Paid" : form.status}
                                             sx={{
-                                                backgroundColor: 
+                                                backgroundColor:
                                                     form.status === "approved" ? "rgba(7, 102, 58, 0.1)" :
-                                                    form.status === "approved paid" ? "rgba(46, 125, 50, 0.1)" :
-                                                    form.status === "rejected" || form.status === "cancelled" ? "rgba(220, 53, 69, 0.1)" :
-                                                    form.status === "pending approval" || form.status === "pending" ? "rgba(13, 110, 253, 0.1)" :
-                                                    form.status === "waiting payment" ? "rgba(0, 0, 128, 0.1)" :
-                                                    "transparent",
+                                                        form.status === "approved paid" ? "rgba(46, 125, 50, 0.1)" :
+                                                            form.status === "rejected" || form.status === "cancelled" ? "rgba(220, 53, 69, 0.1)" :
+                                                                form.status === "pending approval" || form.status === "pending" ? "rgba(13, 110, 253, 0.1)" :
+                                                                    form.status === "waiting payment" ? "rgba(0, 0, 128, 0.1)" :
+                                                                        "transparent",
                                                 color:
                                                     form.status === "approved" ? "#07663a" :
-                                                    form.status === "approved paid" ? "#2E7D32" :
-                                                    form.status === "rejected" || form.status === "cancelled" ? "#dc3545" :
-                                                    form.status === "pending approval" || form.status === "pending" ? "#0d6efd" :
-                                                    form.status === "waiting payment" ? "#000080" :
-                                                    "black",
+                                                        form.status === "approved paid" ? "#2E7D32" :
+                                                            form.status === "rejected" || form.status === "cancelled" ? "#dc3545" :
+                                                                form.status === "pending approval" || form.status === "pending" ? "#0d6efd" :
+                                                                    form.status === "waiting payment" ? "#000080" :
+                                                                        "black",
                                                 fontWeight: "600",
                                                 borderRadius: '20px',
                                                 textTransform: "capitalize"
@@ -175,7 +175,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                                     <TableCell align="center">
                                         <Button
                                             variant="contained"
-                                            startIcon={<Info />}
+                                            startIcon={<Info/>}
                                             onClick={() => handleDetailClick(form)}
                                             sx={{
                                                 backgroundColor: '#07663a',
@@ -264,8 +264,9 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
             open={isPopUpOpen}
             onClose={handleClosePopUp}
         >
-            <LoadingOverlay open={isProcessing} message={confirmDialog.type === 'approve' ? 'Approving form...' : 'Rejecting form...'} />
-            
+            <LoadingOverlay open={isProcessing}
+                            message={confirmDialog.type === 'approve' ? 'Approving form...' : 'Rejecting form...'}/>
+
             <AppBar sx={{position: 'relative', bgcolor: '#07663a'}}>
                 <Toolbar>
                     <IconButton edge="start"
@@ -401,7 +402,8 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                             onClose={() => setConfirmDialog({open: false, type: '', reason: ''})}>
                         <Box p={3} width={500}>
                             <Stack spacing={3}>
-                                <Typography variant="h6" fontWeight="bold" color={confirmDialog.type === 'approve' ? '#07663a' : '#dc3545'}>
+                                <Typography variant="h6" fontWeight="bold"
+                                            color={confirmDialog.type === 'approve' ? '#07663a' : '#dc3545'}>
                                     {confirmDialog.type === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
                                 </Typography>
 
@@ -426,7 +428,7 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                                 )}
 
                                 <Stack direction="row" spacing={2} justifyContent="flex-end">
-                                    <Button 
+                                    <Button
                                         onClick={() => setConfirmDialog({open: false, type: '', reason: ''})}
                                         disabled={isProcessing}
                                     >
@@ -446,7 +448,7 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                                             HandleProcessForm(isApproved, reason);
                                         }}
                                         disabled={isProcessing}
-                                        startIcon={isProcessing ? <CircularProgress size={20} /> : null}
+                                        startIcon={isProcessing ? <CircularProgress size={20}/> : null}
                                     >
                                         {isProcessing ? (confirmDialog.type === 'approve' ? 'Approving...' : 'Rejecting...') : 'Confirm'}
                                     </Button>
@@ -467,7 +469,7 @@ function RenderPage({openDetailPopUpFunc, forms, HandleSelectedForm}) {
             minHeight: '100vh',
             background: '#f7f7f9',
             py: 4,
-            px: { xs: 1, sm: 4, md: 8 },
+            px: {xs: 1, sm: 4, md: 8},
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -480,14 +482,21 @@ function RenderPage({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                 flexDirection: 'column',
                 alignItems: 'center',
             }}>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#07663a', mb: 1, textAlign: 'center', fontSize: '2.5rem', letterSpacing: 1 }}>
+                <Typography variant="h4" sx={{
+                    fontWeight: 'bold',
+                    color: '#07663a',
+                    mb: 1,
+                    textAlign: 'center',
+                    fontSize: '2.5rem',
+                    letterSpacing: 1
+                }}>
                     Process Admission
                 </Typography>
-                <Typography variant="subtitle1" sx={{ color: '#6b7280', mb: 2, textAlign: 'center' }}>
+                <Typography variant="subtitle1" sx={{color: '#6b7280', mb: 2, textAlign: 'center'}}>
                     Manage and review admission forms submitted by parents
                 </Typography>
             </Box>
-            <Box sx={{ width: '100%', maxWidth: 1200 }}>
+            <Box sx={{width: '100%', maxWidth: 1200}}>
                 <RenderTable
                     forms={forms}
                     openDetailPopUpFunc={openDetailPopUpFunc}

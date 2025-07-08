@@ -32,21 +32,29 @@ import {
     TablePagination,
     TableRow,
     TextField,
-    Toolbar, Tooltip,
+    Toolbar,
+    Tooltip,
     Typography
 } from "@mui/material";
 import {Add, Close, CloudUpload} from '@mui/icons-material';
 import {useEffect, useRef, useState} from "react";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
-import {parseISO} from "date-fns";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {enqueueSnackbar, useSnackbar} from 'notistack';
 import axios from "axios";
-
 import {cancelAdmission, getFormInformation, getURL, refillForm, submittedForm} from "@api/services/parentService.js";
+import dayjs from "dayjs";
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import {viVN} from "@mui/x-date-pickers/locales";
 
-// Loading Overlay Component
+// Configure dayjs plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(localizedFormat);
+
 function LoadingOverlay({open, message}) {
     return (
         <Backdrop
@@ -241,7 +249,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                         {form.studentName}
                                     </TableCell>
                                     <TableCell align="center" sx={{padding: '12px 8px'}}>
-                                        {form.submittedDate}
+                                        {dayjs(form.submittedDate).format("DD/MM/YYYY HH:mm")}
                                     </TableCell>
                                     <TableCell align="center" sx={{padding: '12px 8px'}}>
                                         {form.cancelReason || "N/A"}
@@ -511,14 +519,13 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                         </FormControl>
                     </Stack>
                     <Stack>
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DatePicker
-                                label="Date of Birth"
-                                value={selectedForm.studentDateOfBirth ? parseISO(selectedForm.studentDateOfBirth.toString()) : null}
-                                disabled
-                                renderInput={(params) => <TextField {...params} fullWidth/>}
-                            />
-                        </LocalizationProvider>
+                        <DatePicker
+                            label="Date of Birth"
+                            format={'DD/MM/YYYY'}
+                            value={selectedForm.studentDateOfBirth ? dayjs(selectedForm.studentDateOfBirth.toString()) : null}
+                            disabled
+                            renderInput={(params) => <TextField {...params} fullWidth/>}
+                        />
                     </Stack>
                     <Stack>
                         <TextField fullWidth label={'Place of birth'} disabled
@@ -687,7 +694,6 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                             marginTop: '2vh'
                         }}
                     >
-                        {/*button submit*/}
                         <Button
                             sx={{
                                 width: '10%',
@@ -700,8 +706,6 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                             Close
                         </Button>
 
-                        {/*button cancel*/}
-                        {/*xét điều kiện, nếu cancel rồi thì ẩn nút cancel đó, ko cho hiện lại */}
                         {selectedForm.status === 'pending approval' && (
                             <Button
                                 sx={{
@@ -1813,7 +1817,11 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                     fullWidth
                                     label="Full Name"
                                     value={selectedForm?.studentName || ''}
-                                    InputProps={{readOnly: true}}
+                                    slotProps={{
+                                        input: {
+                                            readOnly: true
+                                        }
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} md={6}>
@@ -1821,7 +1829,11 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                     fullWidth
                                     label="Gender"
                                     value={selectedForm?.studentGender || ''}
-                                    InputProps={{readOnly: true}}
+                                    slotProps={{
+                                        input: {
+                                            readOnly: true
+                                        }
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} md={6}>
@@ -1829,7 +1841,11 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                     fullWidth
                                     label="Date of Birth"
                                     value={selectedForm?.studentDateOfBirth || ''}
-                                    InputProps={{readOnly: true}}
+                                    slotProps={{
+                                        input: {
+                                            readOnly: true
+                                        }
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} md={6}>
@@ -1837,7 +1853,11 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                     fullWidth
                                     label="Place of Birth"
                                     value={selectedForm?.studentPlaceOfBirth || ''}
-                                    InputProps={{readOnly: true}}
+                                    slotProps={{
+                                        input: {
+                                            readOnly: true
+                                        }
+                                    }}
                                 />
                             </Grid>
                         </Grid>
@@ -1915,7 +1935,7 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                         overflow: 'hidden',
                                         borderRadius: 1,
                                         border: '1px solid rgba(7, 102, 58, 0.1)',
-                                        bgcolor: '#f8f9fa',
+                                        backgroundColor: '#f8f9fa',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center'
@@ -2221,7 +2241,8 @@ export default function AdmissionForm() {
     }, []);
 
     return (
-        <>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'vi-VN'}
+                              localeText={viVN.components.MuiLocalizationProvider.defaultProps.localeText}>
             <RenderPage
                 forms={data.admissionFormList}
                 openFormPopUpFunc={() => handleOpenPopUp('form')}
@@ -2254,6 +2275,6 @@ export default function AdmissionForm() {
                     GetForm={GetForm}
                 />
             )}
-        </>
+        </LocalizationProvider>
     );
 }

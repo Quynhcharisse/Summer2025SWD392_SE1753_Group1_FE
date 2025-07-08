@@ -193,7 +193,7 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                     </TableCell>
                                     <TableCell align="center">
                                         <Stack spacing={0.5}>
-                                            <TableCell align="center" sx={{ padding: '12px 8px' }}>
+                                            <TableCell align="center" sx={{padding: '12px 8px'}}>
                                                 <Typography
                                                     component="span"
                                                     sx={{
@@ -1093,7 +1093,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
 
 
                                             {/* Registration Info */}
-                                            <Box sx={{mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1}}>
+                                            <Box sx={{mt: 2, p: 2, backgroundColor: 'background.paper', borderRadius: 1}}>
                                                 <Typography variant="subtitle1" gutterBottom color="primary">
                                                     Missing Registrations Summary
                                                 </Typography>
@@ -1499,8 +1499,12 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
         <Dialog
             open={isPopUpOpen}
             fullScreen
-            PaperProps={{
-                sx: {bgcolor: '#f8f9fa'}
+            slotProps={{
+                paper: {
+                    sx: {
+                        backgroundColor: '#f8f9fa',
+                    }
+                }
             }}
         >
             <AppBar position="relative" sx={{bgcolor: '#07663a'}}>
