@@ -1090,7 +1090,12 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
 
 
                                             {/* Registration Info */}
-                                            <Box sx={{mt: 2, p: 2, backgroundColor: 'background.paper', borderRadius: 1}}>
+                                            <Box sx={{
+                                                mt: 2,
+                                                p: 2,
+                                                backgroundColor: 'background.paper',
+                                                borderRadius: 1
+                                            }}>
                                                 <Typography variant="subtitle1" gutterBottom color="primary">
                                                     Missing Registrations Summary
                                                 </Typography>
@@ -1326,8 +1331,8 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
 
     const {enqueueSnackbar} = useSnackbar();
     const [formData, setFormData] = useState({
-        startDate: dayjs(today),
-        endDate: dayjs(tomorrow),
+        startDate: null,
+        endDate: null,
         termItemList: []
     });
 
@@ -1565,7 +1570,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                             }}>
                                 <TextField
                                     label="Term Name"
-                                    value={"Admission Term for " + new Date().getFullYear()}
+                                    value={"Admission Term for " + new Date(formData.startDate).getFullYear()}
                                     fullWidth
                                     InputProps={{
                                         startAdornment: (
@@ -1661,15 +1666,20 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                                     <DateTimePicker
                                         label="Start Date"
                                         format={'HH:mm DD/MM/YYYY'}
-                                        value={dayjs(formData.startDate)}
+                                        value={formData.startDate ? dayjs(formData.startDate) : dayjs().add(1, 'day')}
+                                        minDate={dayjs().add(1, 'day')}
                                         onChange={(newDate) => setFormData({...formData, startDate: newDate})}
                                     />
-                                    <DateTimePicker
-                                        label="End Date"
-                                        format={'HH:mm DD/MM/YYYY'}
-                                        value={dayjs(formData.endDate)}
-                                        onChange={(newDate) => setFormData({...formData, endDate: newDate})}
-                                    />
+                                    {formData.startDate &&
+                                        <DateTimePicker
+                                            label="End Date"
+                                            format={'HH:mm DD/MM/YYYY'}
+                                            value={formData.endDate ? dayjs(formData.endDate) : dayjs(formData.startDate).add(2, 'day')}
+                                            minDate={dayjs(formData.startDate).add(2, 'day')}
+                                            maxDate={dayjs(dayjs(formData.startDate).year() + '-12-31')}
+                                            onChange={(newDate) => setFormData({...formData, endDate: newDate})}
+                                        />
+                                    }
                                 </Stack>
                             </Box>
                         </Stack>

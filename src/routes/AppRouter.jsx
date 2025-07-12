@@ -704,6 +704,14 @@ const router = createBrowserRouter([
                 ),
             },
             {
+                path: "transactions",
+                element: (
+                    <UserPageWrapper requiredRoles={["ADMISSION"]}>
+                        <TransactionList/>
+                    </UserPageWrapper>
+                ),
+            },
+            {
                 path: "registrations/:id/review",
                 element: (
                     <UserPageWrapper requiredRoles={["ADMISSION"]}>
@@ -722,14 +730,6 @@ const router = createBrowserRouter([
                             title="Admission Reports"
                             description="View admission statistics."
                         />
-                    </UserPageWrapper>
-                ),
-            },
-            {
-                path: "transactions",
-                element: (
-                    <UserPageWrapper requiredRoles={["ADMISSION"]}>
-                        <TransactionList/>
                     </UserPageWrapper>
                 ),
             },

@@ -98,7 +98,7 @@ export const getChildren = async () => {
 
 export const refillForm = async (formData) => {
     try {
-        if (!formData || !formData.studentId || !formData.householdRegistrationAddress) {
+        if (!formData || !formData.studentId || !formData.householdRegistrationAddress || !formData.childCharacteristicsFormImg || !formData.commitmentImg) {
             throw new Error("Missing required form data");
         }
 
