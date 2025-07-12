@@ -399,6 +399,20 @@ const LessonManage = () => {
                   }}
                 >
                   Duration per week (Hours)
+                  <Button
+                    onClick={handleSortClick}
+                    size="small"
+                    sx={{
+                      minWidth: 'auto',
+                      ml: 1,
+                      color: '#1976d2',
+                      '&:hover': {
+                        backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                      },
+                    }}
+                  >
+                    {sortOrder === 'asc' ? '↑' : '↓'}
+                  </Button>
                 </TableCell>
                 <TableCell
                   align="center"
@@ -627,7 +641,7 @@ const LessonManage = () => {
       <Dialog
         open={isDetailModalOpen}
         onClose={handleCloseDetail}
-        maxWidth="lg"
+        maxWidth="md"
         fullWidth
         sx={{
           "& .MuiDialog-paper": {
@@ -636,8 +650,6 @@ const LessonManage = () => {
             boxShadow: "0 8px 32px rgba(25,118,210,0.18)",
             p: 0,
             fontFamily: "Inter, Roboto, Arial, sans-serif",
-            maxHeight: "90vh",
-            overflow: "hidden",
           },
         }}
       >
@@ -652,16 +664,11 @@ const LessonManage = () => {
             py: 3,
             letterSpacing: 1,
             fontFamily: "Inter, Roboto, Arial, sans-serif",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
           }}
         >
-          <LibraryBooksIcon sx={{ fontSize: 32, color: "#1976d2" }} />
           Lesson Details
         </DialogTitle>
-        <DialogContent sx={{ p: 0, overflow: "auto", maxHeight: "calc(90vh - 140px)" }}>
+        <DialogContent sx={{ p: 0 }}>
           {isLoadingSyllabuses ? (
             <Box
               sx={{
@@ -673,411 +680,114 @@ const LessonManage = () => {
             >
               <CircularProgress size={40} />
             </Box>
-          ) : (
-            <Box
-              sx={{
-                p: { xs: 2, sm: 4 },
-                fontFamily: "Inter, Roboto, Arial, sans-serif",
-              }}
-            >
-              {/* Lesson Information Section */}
-              <Card
-                sx={{
-                  mb: 4,
-                  borderRadius: 4,
-                  boxShadow: "0 4px 24px rgba(56,189,248,0.10)",
-                  borderLeft: "6px solid #1976d2",
-                  background: "linear-gradient(90deg, #e3f0fd 60%, #fff 100%)",
-                  overflow: "hidden",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    px: 3,
-                    py: 2.5,
-                    background: "linear-gradient(90deg, #e3f2fd 60%, #bbdefb 100%)",
-                    borderTopLeftRadius: 18,
-                    borderTopRightRadius: 18,
-                  }}
-                >
-                  <LibraryBooksIcon sx={{ color: "#1976d2", fontSize: 32 }} />
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: "1.25rem",
-                      color: "#1976d2",
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    Lesson Information
-                  </Typography>
-                </Box>
-                
-                {lessonDetail ? (
-                  <Box sx={{ p: 3 }}>
-                    {/* Header with Lesson ID and Duration */}
-                    <Box sx={{ mb: 3 }}>
-                      <Grid container spacing={3}>
-                        <Grid item xs={12} sm={6}>
-                          <Card
-                            sx={{
-                              bgcolor: "#e3f2fd",
-                              borderRadius: 3,
-                              p: 2.5,
-                              height: "100%",
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "flex-start",
-                              justifyContent: "center",
-                              border: "2px solid #bbdefb",
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                color: "#666",
-                                fontWeight: 600,
-                                fontSize: "1.08rem",
-                                mb: 1,
-                                fontFamily: "inherit",
-                              }}
-                            >
-                              Lesson ID
-                            </Typography>
-                            <Typography
-                              sx={{
-                                color: "#1976d2",
-                                fontWeight: 700,
-                                fontSize: "1.25rem",
-                                letterSpacing: 0.5,
-                                fontFamily: "inherit",
-                              }}
-                            >
-                              #{lessonDetail.id}
-                            </Typography>
-                          </Card>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Card
-                            sx={{
-                              bgcolor: "#e3f2fd",
-                              borderRadius: 3,
-                              p: 2.5,
-                              height: "100%",
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "flex-start",
-                              justifyContent: "center",
-                              border: "2px solid #bbdefb",
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                color: "#666",
-                                fontWeight: 600,
-                                fontSize: "1.08rem",
-                                mb: 1,
-                                fontFamily: "inherit",
-                              }}
-                            >
-                              Duration per Week
-                            </Typography>
-                            <Typography
-                              sx={{
-                                color: "#1976d2",
-                                fontWeight: 700,
-                                fontSize: "1.25rem",
-                                letterSpacing: 0.5,
-                                fontFamily: "inherit",
-                              }}
-                            >
-                              {typeof lessonDetail.duration === "number"
-                                ? `${lessonDetail.duration} hours`
-                                : "N/A"}
-                            </Typography>
-                          </Card>
-                        </Grid>
-                      </Grid>
-                    </Box>
-
-                    <Divider
-                      sx={{
-                        my: 3,
-                        background: "#bbdefb",
-                        height: 2,
-                        borderRadius: 1,
-                      }}
-                    />
-
-                    {/* Lesson Name */}
-                    <Card
-                      sx={{
-                        bgcolor: "#e3f2fd",
-                        borderRadius: 3,
-                        p: 2.5,
-                        mb: 3,
-                        border: "2px solid #bbdefb",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          color: "#666",
-                          fontWeight: 600,
-                          fontSize: "1.08rem",
-                          mb: 1,
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        Lesson Name
-                      </Typography>
-                      <Typography
-                        sx={{
-                          color: "#1976d2",
-                          fontWeight: 700,
-                          fontSize: "1.5rem",
-                          fontFamily: "inherit",
-                          whiteSpace: "pre-line",
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {lessonDetail.topic ?? "N/A"}
-                      </Typography>
-                    </Card>
-
-                    <Divider
-                      sx={{
-                        my: 3,
-                        background: "#bbdefb",
-                        height: 2,
-                        borderRadius: 1,
-                      }}
-                    />
-
-                    {/* Objective */}
-                    <Card
-                      sx={{
-                        bgcolor: "#e3f2fd",
-                        borderRadius: 3,
-                        p: 2.5,
-                        mb: 3,
-                        border: "2px solid #bbdefb",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          color: "#666",
-                          fontWeight: 600,
-                          fontSize: "1.08rem",
-                          mb: 1,
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        Learning Objective
-                      </Typography>
-                      <Typography
-                        sx={{
-                          color: "#1976d2",
-                          fontWeight: 600,
-                          fontSize: "1.15rem",
-                          fontFamily: "inherit",
-                          whiteSpace: "pre-line",
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        {lessonDetail.objective ?? "N/A"}
-                      </Typography>
-                    </Card>
-
-                    <Divider
-                      sx={{
-                        my: 3,
-                        background: "#bbdefb",
-                        height: 2,
-                        borderRadius: 1,
-                      }}
-                    />
-
-                    {/* Description */}
-                    <Card
-                      sx={{
-                        bgcolor: "#e3f2fd",
-                        borderRadius: 3,
-                        p: 2.5,
-                        mb: 0,
-                        border: "2px solid #bbdefb",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          color: "#666",
-                          fontWeight: 600,
-                          fontSize: "1.08rem",
-                          mb: 1,
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        Lesson Description
-                      </Typography>
-                      <Typography
-                        sx={{
-                          color: "#1976d2",
-                          fontWeight: 600,
-                          fontSize: "1.15rem",
-                          fontFamily: "inherit",
-                          whiteSpace: "pre-line",
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        {lessonDetail.description ?? "N/A"}
-                      </Typography>
-                    </Card>
-                  </Box>
-                ) : (
-                  <Box sx={{ p: 4, textAlign: "center" }}>
-                    <Typography
-                      color="error"
-                      sx={{ fontSize: "1.1rem", fontWeight: 500 }}
-                    >
-                      Lesson not found.
+          ) : lessonDetail ? (
+            <Box sx={{ p: { xs: 2, sm: 4 }, background: '#f6fafd' }}>
+              {/* Main Info */}
+              <Card sx={{ p: 4, borderRadius: 3, boxShadow: 2, maxWidth: 700, mx: 'auto', mb: 3 }}>
+                <Typography variant="h6" fontWeight={800} align="center" sx={{ mb: 3, letterSpacing: 1 }}>
+                  Lesson Information
+                </Typography>
+                <Grid container spacing={17} sx={{ mb: 1 }} display="flex" justifyContent="flex-start">
+                  <Grid item xs={12} sm={4} sx={{ textAlign: "left" }}>
+                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                      Lesson Name
                     </Typography>
-                  </Box>
-                )}
+                    <Typography variant="body1" fontWeight={600}>
+                      {lessonDetail.topic ?? "N/A"}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={4} sx={{ textAlign: "left" }}>
+                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                      Duration per Week
+                    </Typography>
+                    <Typography variant="body1" fontWeight={600}>
+                      {typeof lessonDetail.duration === "number" ? `${lessonDetail.duration} hours` : "N/A"}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={4} sx={{ textAlign: "left" }}>
+                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                      Objective
+                    </Typography>
+                    <Typography variant="body1" fontWeight={600}>
+                      {lessonDetail.objective ?? "N/A"}
+                    </Typography>
+                  </Grid>
+                </Grid>
+                <Grid container spacing={2} display="flex" justifyContent="flex-start">
+                  
+                  <Grid item xs={12} sm={12} sx={{ textAlign: "left" }}>
+                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                      Description
+                    </Typography>
+                    <Typography variant="body1" fontWeight={600}>
+                      {lessonDetail.description ?? "N/A"}
+                    </Typography>
+                  </Grid>
+                </Grid>
               </Card>
-
-              {/* Syllabuses Section */}
-              <Card
-                sx={{
-                  borderRadius: 4,
-                  boxShadow: "0 4px 24px rgba(34,197,94,0.10)",
-                  borderLeft: "6px solid #16a34a",
-                  background: "linear-gradient(90deg, #e8fbe9 60%, #fff 100%)",
-                  overflow: "hidden",
-                }}
-              >
+              <Divider sx={{ my: 4, fontWeight: 700, fontSize: 18 }}>
+                Syllabuses Using This Lesson
+              </Divider>
+              {/* Syllabuses List */}
+              {syllabusesData?.data?.data?.length > 0 ? (
+                <Grid container spacing={3} > 
+                  {syllabusesData.data.data.map((syllabus) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={syllabus.id }>
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          p: 2.5,
+                          borderRadius: 3,
+                          boxShadow: '0 2px 8px rgba(34,197,94,0.10)',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            boxShadow: '0 6px 24px rgba(34,197,94,0.18)',
+                            transform: 'translateY(-2px) scale(1.03)',
+                          },
+                          height: '100%',
+                          textAlign: 'center',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={1} mb={1} justifyContent="center">
+                          <LibraryBooksIcon color="success" />
+                          <Typography fontWeight={700}>{syllabus.subject}</Typography>
+                        </Box>
+                        <Typography color="text.secondary" variant="body2" sx={{ mb: 1 }}>
+                          Syllabus ID: #{syllabus.id}
+                        </Typography>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
                 <Box
                   sx={{
+                    p: 4,
+                    textAlign: "center",
+                    bgcolor: "#f8f9fa",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 3,
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
                     gap: 2,
-                    px: 3,
-                    py: 2.5,
-                    background: "linear-gradient(90deg, #e8fbe9 60%, #bbf7d0 100%)",
-                    borderTopLeftRadius: 18,
-                    borderTopRightRadius: 18,
                   }}
                 >
-                  <LibraryBooksIcon sx={{ color: "#16a34a", fontSize: 32 }} />
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: "1.25rem",
-                      color: "#16a34a",
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    Syllabuses Using This Lesson
+                  <LibraryBooksIcon sx={{ color: "#bdbdbd", fontSize: 40, mb: 1 }} />
+                  <Typography color="text.secondary" fontWeight={600} fontSize="1.1rem">
+                    This lesson is not used in any syllabus yet.
                   </Typography>
                 </Box>
-                
-                <Box sx={{ p: 3 }}>
-                  {syllabusesData?.data?.data?.length > 0 ? (
-                    <Grid container spacing={3}>
-                      {syllabusesData.data.data.map((syllabus) => (
-                        <Grid
-                          item
-                          xs={12}
-                          sm={6}
-                          md={4}
-                          lg={3}
-                          key={syllabus.id}
-                        >
-                          <Card
-                            sx={{
-                              p: 2.5,
-                              borderRadius: 3,
-                              bgcolor: "#fff",
-                              boxShadow: "0 2px 8px rgba(34,197,94,0.10)",
-                              border: "2px solid #bbf7d0",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 2,
-                              transition: "all 0.2s",
-                              cursor: "pointer",
-                              "&:hover": {
-                                bgcolor: "#f0fdfa",
-                                boxShadow: "0 6px 16px rgba(34,197,94,0.18)",
-                                transform: "translateY(-2px) scale(1.03)",
-                                borderColor: "#16a34a",
-                              },
-                            }}
-                          >
-                            <LibraryBooksIcon
-                              sx={{ color: "#16a34a", fontSize: 28 }}
-                            />
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                sx={{
-                                  fontWeight: 700,
-                                  color: "#222",
-                                  fontSize: "1.08rem",
-                                  fontFamily: "inherit",
-                                  mb: 0.5,
-                                }}
-                              >
-                                {syllabus.subject}
-                              </Typography>
-                              <Typography
-                                sx={{
-                                  color: "#666",
-                                  fontSize: "0.9rem",
-                                  fontFamily: "inherit",
-                                }}
-                              >
-                                Syllabus ID: #{syllabus.id}
-                              </Typography>
-                            </Box>
-                          </Card>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  ) : (
-                    <Card
-                      sx={{
-                        p: 4,
-                        textAlign: "center",
-                        bgcolor: "#f8f9fa",
-                        border: "2px solid #e0e0e0",
-                        borderRadius: 3,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <LibraryBooksIcon
-                        sx={{ color: "#bdbdbd", fontSize: 48, mb: 1 }}
-                      />
-                      <Typography
-                        color="text.secondary"
-                        fontWeight={600}
-                        fontSize="1.1rem"
-                        sx={{ fontFamily: "inherit" }}
-                      >
-                        This lesson is not used in any syllabus yet.
-                      </Typography>
-                      <Typography
-                        color="text.secondary"
-                        fontSize="0.9rem"
-                        sx={{ fontFamily: "inherit" }}
-                      >
-                        The lesson will appear here once it's added to a syllabus.
-                      </Typography>
-                    </Card>
-                  )}
-                </Box>
-              </Card>
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ p: 4, textAlign: "center" }}>
+              <Typography color="error" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
+                Lesson not found.
+              </Typography>
             </Box>
           )}
         </DialogContent>

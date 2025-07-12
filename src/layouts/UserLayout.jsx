@@ -49,10 +49,10 @@ const UserLayout = ({ children }) => {
             path: "/user/parent/child-list",
           },
           {
-            key: "/user/parent/calendar",
+            key: "/user/parent/class-schedule",
             icon: Calendar,
             label: "Class Schedule",
-            path: "/user/parent/calendar",
+            path: "/user/parent/class-schedule",
           },
           {
             key: "/user/parent/forms",

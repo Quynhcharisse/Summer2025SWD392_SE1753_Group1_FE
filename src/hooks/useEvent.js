@@ -121,9 +121,20 @@ export const useChildren = () => {
   });
 };
 
-export const useRegisteredEvents = () => {
+// Sửa: Không tự động fetch registered events khi mount, cho phép truyền options để override
+export const useRegisteredEvents = (options = {}) => {
   return useQuery({
     queryKey: ['registeredEvents'],
     queryFn: eventService.getRegisteredEvents,
+    enabled: false, // Mặc định không fetch tự động
+    ...options, // Cho phép override enabled nếu cần
+  });
+};
+
+export const useEventStudents = (eventId) => {
+  return useQuery({
+    queryKey: ['eventStudents', eventId],
+    queryFn: () => eventService.getEventStudents(eventId),
+    enabled: !!eventId,
   });
 };

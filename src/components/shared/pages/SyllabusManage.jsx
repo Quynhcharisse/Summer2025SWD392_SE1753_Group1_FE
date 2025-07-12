@@ -36,6 +36,9 @@ import {
   Select,
   MenuItem,
   Tooltip,
+  Card,
+  Chip,
+  Divider,
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -1501,346 +1504,145 @@ const SyllabusManage = () => {
               <CircularProgress size={40} />
             </Box>
           ) : detailData?.data?.data ? (
-            <Box
-              sx={{
-                p: { xs: 2, sm: 4 },
-                fontFamily: "Inter, Roboto, Arial, sans-serif",
-              }}
-            >
-              {/* Block 1: Syllabus Information */}
-              <Box
-                sx={{
-                  borderRadius: 4,
-                  boxShadow: "0 4px 24px rgba(56,189,248,0.10)",
-                  borderLeft: "6px solid #1976d2",
-                  mb: 4,
-                  background: "linear-gradient(90deg, #e3f0fd 60%, #fff 100%)",
-                  overflow: "hidden",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    px: 3,
-                    py: 2.5,
-                    background:
-                      "linear-gradient(90deg, #e3f2fd 60%, #bbdefb 100%)",
-                    borderTopLeftRadius: 18,
-                    borderTopRightRadius: 18,
-                  }}
-                >
-                  <LayersIcon sx={{ color: "#1976d2", fontSize: 32 }} />
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: "1.25rem",
-                      color: "#1976d2",
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    Syllabus Information
-                  </Typography>
-                </Box>
-                <Grid container spacing={3} sx={{ p: 3 }}>
-                  {/* Hàng 1: Subject, Number of Week, Hours of Syllabus */}
-                  <Grid item xs={12} sm={4}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 0.5,
-                      }}
-                    >
-                      <LibraryBooksIcon
-                        sx={{ color: "#90caf9", fontSize: 22 }}
-                      />
-                      <Typography
-                        sx={{
-                          color: "#888",
-                          fontWeight: 600,
-                          fontFamily: "inherit",
-                          whiteSpace: "nowrap",
-                          minWidth: 90,
-                        }}
-                      >
-                        Syllabus Name:
-                      </Typography>
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: "#1976d2",
-                        fontSize: "1.08rem",
-                        fontFamily: "inherit",
-                        ml: 4,
-                      }}
-                    >
+            <Box sx={{ p: { xs: 2, sm: 4 }, background: '#f6fafd' }}>
+              
+              {/* Main Info */}
+              <Card sx={{ p: 4, borderRadius: 3, boxShadow: 2, maxWidth: 700, mx: 'auto', mb: 3 }}>
+                <Typography variant="h6" fontWeight={800} align="center" sx={{ mb: 3, letterSpacing: 1 }}>
+                  Syllabus Information
+                </Typography>
+                {/* Row 1: Syllabus Name | Number of Weeks */}
+                <Grid container spacing={30} sx={{ mb: 1 }} display="flex" justifyContent="flex-start">
+                  <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
+                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                      Syllabus Name
+                    </Typography>
+                    <Typography variant="body1" fontWeight={600}>
                       {detailData.data.data.subject}
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 0.5,
-                      }}
-                    >
-                      <AccessTimeIcon sx={{ color: "#90caf9", fontSize: 22 }} />
-                      <Typography
-                        sx={{
-                          color: "#888",
-                          fontWeight: 600,
-                          fontFamily: "inherit",
-                          whiteSpace: "nowrap",
-                          minWidth: 140,
-                        }}
-                      >
-                        Number of Week:
-                      </Typography>
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: "#1976d2",
-                        fontSize: "1.08rem",
-                        fontFamily: "inherit",
-                        ml: 4,
-                      }}
-                    >
+                  <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
+                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                      Number of Weeks
+                    </Typography>
+                    <Typography variant="body1" fontWeight={600}>
                       {detailData.data.data.numberOfWeek} weeks
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 0.5,
-                      }}
-                    >
-                      <AccessTimeIcon sx={{ color: "#90caf9", fontSize: 22 }} />
-                      <Typography
-                        sx={{
-                          color: "#888",
-                          fontWeight: 600,
-                          fontFamily: "inherit",
-                          whiteSpace: "nowrap",
-                          minWidth: 120,
-                        }}
-                      >
-                        Hours of Syllabus:
-                      </Typography>
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: "#1976d2",
-                        fontSize: "1.08rem",
-                        fontFamily: "inherit",
-                        ml: 4,
-                      }}
-                    >
+                </Grid>
+                {/* Row 2: Hours of Syllabus | Grade */}
+                <Grid container spacing={27.5} sx={{ mb: 1 }}>
+                  <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
+                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                      Hours of Syllabus
+                    </Typography>
+                    <Typography variant="body1" fontWeight={600}>
                       {detailData.data.data.numberOfWeek * 30 || "N/A"} hours
                     </Typography>
                   </Grid>
-                  {/* Hàng 2: Grade, Description */}
-                  <Grid item xs={12} sm={4}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 0.5,
-                      }}
-                    >
-                      <LayersIcon sx={{ color: "#90caf9", fontSize: 22 }} />
-                      <Typography
-                        sx={{
-                          color: "#888",
-                          fontWeight: 600,
-                          fontFamily: "inherit",
-                          whiteSpace: "nowrap",
-                          minWidth: 110,
-                        }}
-                      >
-                        Grade:
-                      </Typography>
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: "#1976d2",
-                        fontSize: "1.08rem",
-                        fontFamily: "inherit",
-                        ml: 4,
-                      }}
-                    >
-                      {detailData.data.data.grade}
+                  <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
+                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                      Grade
                     </Typography>
+                    <Chip
+                      label={detailData.data.data.grade}
+                      color={
+                        detailData.data.data.grade === "LEAF"
+                          ? "success"
+                          : detailData.data.data.grade === "BUD"
+                          ? "warning"
+                          : detailData.data.data.grade === "SEED"
+                          ? "error"
+                          : "default"
+                      }
+                      sx={{ fontWeight: 700, fontSize: 16, px: 2, py: 1, height: 32, borderRadius: 2, letterSpacing: 1 }}
+                    />
                   </Grid>
-                  <Grid item xs={12} sm={8}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 0.5,
-                      }}
-                    >
-                      <InfoIcon sx={{ color: "#90caf9", fontSize: 22 }} />
-                      <Typography
-                        sx={{
-                          color: "#888",
-                          fontWeight: 600,
-                          fontFamily: "inherit",
-                          whiteSpace: "nowrap",
-                          minWidth: 120,
-                        }}
-                      >
-                        Description:
-                      </Typography>
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontWeight: 500,
-                        color: "#222",
-                        fontSize: "1.08rem",
-                        fontFamily: "inherit",
-                        background: "#f5faff",
-                        borderRadius: 2,
-                        px: 2,
-                        py: 1,
-                        ml: 4,
-                      }}
-                    >
+                </Grid>
+                {/* Row 3: Description (full width) */}
+                <Grid container spacing={2}  display="flex" justifyContent="flex-start">
+                  <Grid item xs={12} sx={{ textAlign: "left" }}>
+                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700} sx={{ mt: -0.5 }}>
+                      Description
+                    </Typography>
+                    <Typography variant="body1" fontWeight={500}>
                       {detailData.data.data.description}
                     </Typography>
                   </Grid>
                 </Grid>
-              </Box>
+              </Card>
 
-              {/* Block 2: Lessons */}
-              <Box
-                sx={{
-                  borderRadius: 4,
-                  boxShadow: "0 4px 24px rgba(34,197,94,0.10)",
-                  borderLeft: "6px solid #16a34a",
-                  background: "linear-gradient(90deg, #e8fbe9 60%, #fff 100%)",
-                  overflow: "hidden",
-                }}
-              >
+              {/* Lessons List */}
+              <Divider sx={{ my: 4, fontWeight: 700, fontSize: 18 }}>
+                Lessons
+              </Divider>
+              {isLoadingAssignedLessons ? (
+                <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : assignedLessonsData?.data?.data?.length > 0 ? (
+                <Grid container spacing={2}>
+                  {assignedLessonsData.data.data.map((lesson) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={lesson.id}>
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          p: 2.5,
+                          borderRadius: 3,
+                          boxShadow: '0 2px 8px rgba(25,118,210,0.08)',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            boxShadow: '0 6px 24px rgba(25,118,210,0.18)',
+                            transform: 'translateY(-2px) scale(1.03)',
+                          },
+                          height: '100%',
+                          textAlign: 'center',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={1} mb={1} justifyContent="center">
+                          <LibraryBooksIcon color="primary" />
+                          <Typography fontWeight={700}>{lesson.topic}</Typography>
+                        </Box>
+                        <Typography color="text.secondary" variant="body2" sx={{ mb: 1 }}>
+                          {lesson.description}
+                        </Typography>
+                        <Chip
+                          label={`Duration: ${lesson.duration} hours`}
+                          color="info"
+                          size="small"
+                          sx={{ mt: 1, fontWeight: 600 }}
+                        />
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
                 <Box
                   sx={{
+                    p: 4,
+                    textAlign: "center",
+                    bgcolor: "#f8f9fa",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 3,
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
                     gap: 2,
-                    px: 3,
-                    py: 2.5,
-                    background:
-                      "linear-gradient(90deg, #e8fbe9 60%, #bbf7d0 100%)",
-                    borderTopLeftRadius: 18,
-                    borderTopRightRadius: 18,
                   }}
                 >
-                  <LibraryBooksIcon sx={{ color: "#16a34a", fontSize: 32 }} />
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: "1.25rem",
-                      color: "#16a34a",
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    Lessons
+                  <LibraryBooksIcon sx={{ color: "#bdbdbd", fontSize: 40, mb: 1 }} />
+                  <Typography color="text.secondary" fontWeight={600} fontSize="1.1rem">
+                    No lessons assigned.
                   </Typography>
                 </Box>
-                <Box sx={{ p: 3 }}>
-                  {isLoadingAssignedLessons ? (
-                    <Box
-                      sx={{ display: "flex", justifyContent: "center", p: 3 }}
-                    >
-                      <CircularProgress size={24} />
-                    </Box>
-                  ) : assignedLessonsData?.data?.data?.length > 0 ? (
-                    <Grid container spacing={3}>
-                      {assignedLessonsData.data.data.map((lesson) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={lesson.id}>
-                          <Box
-                            sx={{
-                              p: 2.5,
-                              borderRadius: 3,
-                              bgcolor: "#fff",
-                              boxShadow: "0 2px 8px rgba(34,197,94,0.10)",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 2,
-                              transition: "all 0.2s",
-                              cursor: "pointer",
-                              "&:hover": {
-                                bgcolor: "#f0fdfa",
-                                boxShadow: "0 6px 16px rgba(34,197,94,0.18)",
-                                transform: "translateY(-2px) scale(1.03)",
-                              },
-                            }}
-                          >
-                            <LibraryBooksIcon
-                              sx={{ color: "#16a34a", fontSize: 28 }}
-                            />
-                            <Typography
-                              sx={{
-                                fontWeight: 700,
-                                color: "#222",
-                                fontSize: "1.08rem",
-                                fontFamily: "inherit",
-                              }}
-                            >
-                              {lesson.topic}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  ) : (
-                    <Box
-                      sx={{
-                        p: 4,
-                        textAlign: "center",
-                        bgcolor: "#f8f9fa",
-                        border: "1px solid #e0e0e0",
-                        borderRadius: 3,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <LibraryBooksIcon
-                        sx={{ color: "#bdbdbd", fontSize: 40, mb: 1 }}
-                      />
-                      <Typography
-                        color="text.secondary"
-                        fontWeight={600}
-                        fontSize="1.1rem"
-                      >
-                        No lessons assigned.
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              </Box>
+              )}
             </Box>
           ) : (
             <Box sx={{ p: 4, textAlign: "center" }}>
-              <Typography
-                color="error"
-                sx={{ fontSize: "1.1rem", fontWeight: 500 }}
-              >
+              <Typography color="error" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
                 Failed to load syllabus details.
               </Typography>
             </Box>

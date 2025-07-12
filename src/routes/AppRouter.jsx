@@ -11,10 +11,12 @@ import { routeToTranslationKey } from "@/utils/i18nRoutes.js";
 import EditChildForm from "@pages/EditChildForm";
 import AddChildForm from "@pages/AddChildForm";
 import EnrollmentApplicationList from "@pages/EnrollmentApplicationList";
-import 'bootstrap/dist/css/bootstrap.min.css'
 import Login from "@pages/Login";
 import SignUp from "@pages/SignUp";
 import Unauthorized from "@pages/Unauthorized";
+import { Class } from "@mui/icons-material";
+import ClassSchedule from "@/components/shared/pages/ClassSchedule";
+import ClassDetail from "@/components/shared/pages/ClassDetail";
 
 // Lazy import pages
 const Home = lazy(() => import("@pages/Home"));
@@ -42,6 +44,7 @@ const EducationDashboard = lazy(() => import("@pages/EducationDashboard"));
 const UserProfile = lazy(() => import("@pages/UserProfile"));
 const ComingSoon = lazy(() => import("@pages/ComingSoon"));
 const EventDetail = lazy(() => import("@pages/EventDetail"));
+const EventChildExport = lazy(() => import("@pages/EventChildExport"));
 
 
 const Syllabus = lazy(() => import("@pages/SyllabusManage"));
@@ -611,6 +614,14 @@ const router = createBrowserRouter([
           </UserPageWrapper>
         ),
       },
+      {
+        path: "event/students/:eventId",
+        element: (
+          <UserPageWrapper requiredRoles={['EDUCATION']}>
+            <EventChildExport />
+          </UserPageWrapper>
+        ),
+      },
     ],
   },
 
@@ -812,14 +823,19 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "calendar",
+        path: "class-schedule",
         element: (
           <UserPageWrapper requiredRoles={["PARENT"]}>
-            <ComingSoon
-              title="Parent Calendar"
-              description="Your child's schedule."
-            />
+            <ClassSchedule />
           </UserPageWrapper>
+        ),
+      },
+      {
+        path: "class-detail/:childId",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <ClassDetail />
+            </UserPageWrapper>
         ),
       },
       {
