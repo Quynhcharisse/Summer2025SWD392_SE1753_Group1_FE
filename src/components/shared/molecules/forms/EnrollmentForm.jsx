@@ -277,7 +277,7 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
   };
 
   const onFormSubmit = (formData) => {
-    console.log('📝 EnrollmentForm onSubmit called with:', formData);
+//     console.log('📝 EnrollmentForm onSubmit called with:', formData);
     onSubmit(formData);
   };
 

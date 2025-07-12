@@ -21,11 +21,16 @@ const capitalizeFirstLetter = (str) => {
     .join(' ');
 };
 
+//note dong 24_sua lai ham tinh
 const validateAge = (dateOfBirth) => {
   const today = new Date();
   const birthDate = new Date(dateOfBirth);
-  const age = today.getFullYear() - birthDate.getFullYear();
-  return age >= MIN_AGE && age <= MAX_AGE;
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+  if(monthDiff < 0 || monthDiff === 0 && today.getDate() < birthDate.getDate()) {
+    age--
+  }
+  return age >= MIN_AGE && age <= MAX_AGE
 };
 
 const getValidYearRange = () => {
@@ -196,7 +201,7 @@ const AddChildForm = () => {
       enqueueSnackbar(t('parent:child_form.success'), { variant: "success" });
       navigate("/user/parent/child-list");
     } catch (err) {
-      console.error("Child registration error:", err);
+//       console.error("Child registration error:", err);
       setError("root.serverError", { 
         type: "manual", 
         message: t('parent:child_form.error')

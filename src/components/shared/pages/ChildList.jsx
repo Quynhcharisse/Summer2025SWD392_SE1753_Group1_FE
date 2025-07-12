@@ -1,28 +1,12 @@
 import { Button, Spinner } from "@atoms";
 import { PageTemplate } from "@templates";
 import { Baby, Plus } from "lucide-react";
+import RenderFormPopUp from "./RenderFormPopUp";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  getChildren,
-  updateChild,
-  deleteChild,
-} from "@api/services/parentService";
-import { useSnackbar } from "notistack";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-} from "@mui/material";
-import { uploadImageToCloudinary, validateImage } from "@utils/cloudinary";
-
-const MAX_EDIT_TIMES = 5;
+import { getChildren } from "@api/services/parentService";
 
 const ChildList = () => {
-  const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [children, setChildren] = useState([]);
@@ -30,26 +14,13 @@ const ChildList = () => {
   const [isPopUpOpen, setIsPopUpOpen] = useState(false);
   const [admissionTerms, setAdmissionTerms] = useState([]);
   const [refresh, setRefresh] = useState(false);
-  const [editCounts, setEditCounts] = useState({});
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingChild, setEditingChild] = useState(null);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    gender: "",
-    dateOfBirth: "",
-    placeOfBirth: "",
-    profileImage: "",
-    birthCertificateImg: "",
-    householdRegistrationImg: "",
-  });
 
   useEffect(() => {
     const fetchChildren = async () => {
       try {
         setLoading(true);
-        setError("");
         const response = await getChildren();
-        // console.log("Fetching children data:", response);
+//         console.log(response);
 
         if (response.data) {
           setChildren(response.data);
@@ -58,7 +29,7 @@ const ChildList = () => {
           setError("No child information found");
         }
       } catch (err) {
-        // console.error("Failed to fetch children:", err);
+//         console.error("Failed to fetch children:", err);
         setError("Error fetching child list information");
       } finally {
         setLoading(false);
@@ -66,7 +37,7 @@ const ChildList = () => {
     };
 
     fetchChildren();
-  }, [refresh]);
+  }, []);
 
   useEffect(() => {
     setAdmissionTerms([
@@ -80,110 +51,12 @@ const ChildList = () => {
   };
 
   const handleSelectChild = (child) => {
-    navigate(`/user/parent/forms`, {
+    navigate(`/user/parent/enrollment/application`, {
       state: { studentId: child.id },
     });
   };
 
   const GetForm = () => setRefresh((r) => !r);
-
-  const openEditModal = (child) => {
-    setEditingChild(child);
-    setEditForm({
-      name: child.name || "",
-      gender: child.gender || "",
-      dateOfBirth: child.dateOfBirth ? child.dateOfBirth.slice(0, 10) : "",
-      placeOfBirth: child.placeOfBirth || "",
-      profileImage: child.profileImage || "",
-      birthCertificateImg: child.birthCertificateImg || "",
-      householdRegistrationImg: child.householdRegistrationImg || "",
-    });
-    setEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setEditModalOpen(false);
-    setEditingChild(null);
-  };
-
-  const handleEditFormChange = (e) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
-  };
-
-  // Lưu file ảnh vào state, chỉ upload khi nhấn Save
-  const handleImageChange = (e) => {
-    const { name, files } = e.target;
-    if (files && files[0]) {
-      try {
-        validateImage(files[0]);
-        setEditForm((prev) => ({ ...prev, [name]: files[0] }));
-      } catch (error) {
-        enqueueSnackbar(error.message || "Invalid image.", { variant: "error" });
-      }
-    }
-  };
-
-  const handleEditChild = async () => {
-    if (!editingChild) return;
-    if ((editCounts[editingChild.id] || 0) >= MAX_EDIT_TIMES) {
-      enqueueSnackbar(
-        "You have reached the maximum number of edits (5) for this child.",
-        { variant: "warning" }
-      );
-      return;
-    }
-    try {
-      // Upload images nếu là file, còn nếu là url thì giữ nguyên
-      let profileImage = editForm.profileImage;
-      let birthCertificateImg = editForm.birthCertificateImg;
-      let householdRegistrationImg = editForm.householdRegistrationImg;
-      if (profileImage instanceof File) {
-        profileImage = await uploadImageToCloudinary(profileImage);
-      }
-      if (birthCertificateImg instanceof File) {
-        birthCertificateImg = await uploadImageToCloudinary(birthCertificateImg);
-      }
-      if (householdRegistrationImg instanceof File) {
-        householdRegistrationImg = await uploadImageToCloudinary(householdRegistrationImg);
-      }
-      await updateChild({
-        ...editingChild,
-        ...editForm,
-        profileImage,
-        birthCertificateImg,
-        householdRegistrationImg,
-      });
-      setEditCounts((prev) => ({
-        ...prev,
-        [editingChild.id]: (prev[editingChild.id] || 0) + 1,
-      }));
-      setRefresh(prev => !prev);
-      enqueueSnackbar("Child updated successfully.", { variant: "success" });
-      closeEditModal();
-    } catch (err) {
-      enqueueSnackbar("Failed to update child.", { variant: "error" });
-    }
-  };
-
-  const handleDeleteChild = async (childId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this child? This action cannot be undone."
-      )
-    ) {
-      try {
-        await deleteChild(childId);
-        setRefresh(prev => !prev);
-        enqueueSnackbar("Child deleted successfully.", { variant: "success" });
-      } catch (err) {
-        enqueueSnackbar("Failed to delete child.", { variant: "error" });
-      }
-    }
-  };
-
-  const handleEnrollChild = (child) => {
-    navigate("/user/parent/forms", { state: { studentId: child.id } });
-  };
 
   if (loading) {
     return (
@@ -270,31 +143,22 @@ const ChildList = () => {
               </div>
               <Button
                 variant="primary"
-                className="w-full mb-2"
-                onClick={() => handleEnrollChild(child)}
+                className="w-full"
+                onClick={() => setIsPopUpOpen(true)}
               >
                 Enroll
               </Button>
-              <Button
-                variant="secondary"
-                className="w-full mb-2"
-                onClick={() => openEditModal(child)}
-                disabled={(editCounts[child.id] || 0) >= MAX_EDIT_TIMES}
-              >
-                Edit ({editCounts[child.id] || 0}/5)
-              </Button>
-              {/* Ẩn nút xóa child trong UI
-              <Button
-                variant="danger"
-                className="w-full"
-                onClick={() => handleDeleteChild(child.id)}
-              >
-                Delete
-              </Button> */}
             </div>
           ))}
         </div>
       )}
+      <RenderFormPopUp
+        handleClosePopUp={() => setIsPopUpOpen(false)}
+        isPopUpOpen={isPopUpOpen}
+        students={children}
+        GetForm={GetForm}
+        admissionTerms={admissionTerms}
+      />
     </PageTemplate>
   );
 };

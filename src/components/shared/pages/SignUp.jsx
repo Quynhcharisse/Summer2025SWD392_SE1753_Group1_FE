@@ -1,11 +1,12 @@
 import React, {useState} from "react";
 import PropTypes from "prop-types";
-import {Link, useNavigate} from "react-router-dom";
+import {Link, useNavigate, useSearchParams} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import authService from "@services/authService";
 import {ROUTES} from "@/constants/routes";
 import {Spinner} from "../atoms";
 import SignUpForm from "../molecules/forms/SignUpForm";
+import EmailVerificationForm from "../molecules/forms/EmailVerificationForm";
 import {CheckCircle} from "lucide-react";
 
 // Success message component following Atomic Design principles
@@ -144,19 +145,54 @@ const SignUpFooter = () => {
 const SignUp = () => {
     const navigate = useNavigate();
     const {t} = useTranslation("auth");
+    const [searchParams] = useSearchParams();
     const [loading, setLoading] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [submitError, setSubmitError] = useState("");
 
-    const handleSubmit = async (formData) => {
+    // Check if we have code and email in URL params
+    const code = searchParams.get('code');
+    const email = searchParams.get('email');
+    const isVerified = Boolean(code && email);
 
-        // Reset previous errors
+    const handleEmailVerify = async (email) => {
         setSubmitError("");
         setLoading(true);
 
         try {
-            // Call the registration API
-            const response = await authService.register(formData);
+            // Request verification code
+            await authService.requestVerificationCode(email);
+            // Redirect to login page with success message
+            navigate(ROUTES.LOGIN, {
+                state: {
+                    message: t("emailVerification.checkEmail"),
+                    email: email
+                }
+            });
+        } catch (error) {
+            if (error.response?.data?.message) {
+                setSubmitError(error.response.data.message);
+            } else if (error.message) {
+                setSubmitError(error.message);
+            } else {
+                setSubmitError(t("register.errors.genericError"));
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSignUpSubmit = async (formData) => {
+        setSubmitError("");
+        setLoading(true);
+
+        try {
+            // Call the registration API with the code from URL
+            await authService.register({
+                ...formData,
+                code: code
+            });
+            
             // Show success message
             setShowSuccess(true);
 
@@ -164,9 +200,7 @@ const SignUp = () => {
             setTimeout(() => {
                 handleContinueToLogin(formData.email);
             }, 3000);
-
         } catch (error) {
-            // Set appropriate error message
             if (error.response?.data?.message) {
                 setSubmitError(error.response.data.message);
             } else if (error.message) {
@@ -194,15 +228,11 @@ const SignUp = () => {
 
     // Show success screen if registration was successful
     if (showSuccess) {
-        return (
-            <SuccessMessage
-                onContinue={() => handleContinueToLogin()}
-            />
-        );
-    }  // Main signup page with compact layout for 3/4 screen
+        return <SuccessMessage onContinue={() => handleContinueToLogin()} />;
+    }
+
     return (
-        <div
-            className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-4 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-4 px-4">
             <div className="w-full max-w-6xl mx-auto space-y-4">
                 {/* Logo and Header - Compact */}
                 <div className="text-center">
@@ -215,11 +245,11 @@ const SignUp = () => {
                     </div>
 
                     <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                        Create New Account
+                        {isVerified ? t("register.title") : t("emailVerification.title")}
                     </h2>
 
                     <p className="text-sm text-gray-600">
-                        Join us to start your learning journey
+                        {isVerified ? t("register.subtitle") : t("emailVerification.description")}
                     </p>
                 </div>
 
@@ -233,44 +263,38 @@ const SignUp = () => {
                     </div>
                 </div>
 
-                {/* SignUp Form */}
-                <SignUpForm
-                    onSubmit={handleSubmit}
-                    loading={loading}
-                    className=""
-                />
-
-                {/* Footer - Compact */}
-                <div className="flex justify-center">
-                    <div className="w-full max-w-md text-center space-y-2">
-                        <div className="flex items-center">
-                            <div className="flex-1 border-t border-gray-200"></div>
-                            <span className="px-3 text-gray-500 text-xs">or</span>
-                            <div className="flex-1 border-t border-gray-200"></div>
+                {/* Show either email verification form or signup form */}
+                {isVerified ? (
+                    <>
+                        <SignUpForm
+                            onSubmit={handleSignUpSubmit}
+                            loading={loading}
+                        />
+                        <div className="flex justify-center">
+                            <div className="w-full max-w-md text-center space-y-2">
+                                <div className="flex items-center">
+                                    <div className="flex-1 border-t border-gray-200"></div>
+                                    <span className="px-3 text-gray-500 text-xs">or</span>
+                                    <div className="flex-1 border-t border-gray-200"></div>
+                                </div>
+                                <p className="text-gray-600 text-sm">
+                                    {t("register.alreadyHaveAccount")}{" "}
+                                    <Link
+                                        to={ROUTES.LOGIN}
+                                        className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
+                                    >
+                                        {t("register.signIn")}
+                                    </Link>
+                                </p>
+                            </div>
                         </div>
-                        <p className="text-gray-600 text-sm">
-                            Already have an account?{" "}
-                            <Link
-                                to={ROUTES.LOGIN}
-                                className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
-                            >
-                                Sign in now
-                            </Link>
-                        </p>
-
-                        <p className="text-xs text-gray-500 leading-relaxed">
-                            By creating an account, you agree to our{" "}
-                            <button className="text-blue-600 hover:underline">
-                                Terms of Service
-                            </button>
-                            {" "}
-                            and{" "}
-                            <button className="text-blue-600 hover:underline">
-                                Privacy Policy
-                            </button>
-                        </p>
-                    </div>
-                </div>
+                    </>
+                ) : (
+                    <EmailVerificationForm
+                        onVerify={handleEmailVerify}
+                        loading={loading}
+                    />
+                )}
 
                 {/* Copyright - Smaller */}
                 <div className="text-center text-xs text-gray-500">

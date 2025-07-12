@@ -415,7 +415,7 @@ const EventManage = () => {
       }
       handleClose();
     } catch (error) {
-      console.error("Operation error:", error);
+//       console.error("Operation error:", error);
       setSnackbar({
         open: true,
         message:
@@ -479,7 +479,7 @@ const EventManage = () => {
         severity: "success",
       });
     } catch (error) {
-      console.error("Error handling image upload:", error);
+//       console.error("Error handling image upload:", error);
       setSnackbar({
         open: true,
         message: error.message || "Failed to upload image. Please try again.",

@@ -461,7 +461,7 @@ const SyllabusManage = () => {
       }
       handleClose();
     } catch (error) {
-      console.error("Error submitting syllabus:", error);
+//       console.error("Error submitting syllabus:", error);
       const errorMessage =
         error?.response?.data?.message || "Operation failed. Please try again.";
       setSnackbar({

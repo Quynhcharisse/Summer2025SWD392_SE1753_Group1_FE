@@ -32,7 +32,7 @@ export const AUTH_ROUTES = {
   LOGIN: "/auth/login",
   REGISTER: "/auth/register", // Primary route for registration
   FORGOT_PASSWORD: "/auth/forgot-password",
-  RESET_PASSWORD: "/auth/reset-password",
+  RESET_PASSWORD: "/auth/reset-pass", // Updated to match the link format
 
   // Legacy routes for compatibility
   // LEGACY_LOGIN: "/login",

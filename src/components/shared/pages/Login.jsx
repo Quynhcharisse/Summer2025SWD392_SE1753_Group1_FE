@@ -1,9 +1,9 @@
-import { AUTH_ROUTES, getDashboardRoute } from "@/constants/routes";
+import {AUTH_ROUTES, getDashboardRoute} from "@/constants/routes";
 import authService from "@services/authService";
-import { getCurrentTokenData } from "@services/JWTService.jsx";
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import {getCurrentTokenData} from "@services/JWTService.jsx";
+import {useEffect, useState} from "react";
+import {Link, useLocation, useNavigate} from "react-router-dom";
+import {useTranslation} from "react-i18next";
 import Input from "../atoms/Input";
 
 // Helper function to handle role-based navigation
@@ -12,9 +12,9 @@ const handleRoleBasedNavigation = (navigate, tokenData) => {
         navigate("/");
         return;
     }
-    
+
     const role = tokenData.role.toLowerCase();
-    
+
     // Use the centralized dashboard route logic
     const dashboardRoute = getDashboardRoute(role);
     navigate(dashboardRoute);
@@ -48,8 +48,8 @@ const getRedirectMessage = (redirectUrl, fromUrl, t) => {
 function Login() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { t } = useTranslation("auth");
-    
+    const {t} = useTranslation("auth");
+
     // Get success message and pre-filled email from signup redirect
     const successMessage = location.state?.message;
     const prefilledEmail = location.state?.email || "";    // Get redirect parameters from URL and state
@@ -72,7 +72,7 @@ function Login() {
             return () => clearTimeout(timer);
         }
     }, [successMessage]);    // Display messages for enrollment redirects
-  
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -80,48 +80,48 @@ function Login() {
         setErrors({});
 
         try {
-            const response = await authService.login({ email, password });
+            const response = await authService.login({email, password});
 
             if (response && response.data) { // Check if response exists and has data
                 // Store user data immediately
                 storeUserData(response?.data || response, email);
-                
+
                 // Get token data directly without waiting, avoid delays
                 const tokenData = getCurrentTokenData();
-                
+
                 if (!tokenData) {
-                    console.error("🔑 No token data available, but proceeding with login");
+//                     console.error("🔑 No token data available, but proceeding with login");
                 }
-                // console.log("🔑 Final token data for navigation:", tokenData);
+//                 // console.log("🔑 Final token data for navigation:", tokenData);
 
                 // Check for first login indicators
                 const responseData = response?.data || response;
-                const isFirstLogin = responseData?.firstLogin || 
-                                   responseData?.tempPassword || 
-                                   responseData?.requirePasswordChange ||
-                                   responseData?.isFirstLogin;                // Handle redirect logic
+                const isFirstLogin = responseData?.firstLogin ||
+                    responseData?.tempPassword ||
+                    responseData?.requirePasswordChange ||
+                    responseData?.isFirstLogin;                // Handle redirect logic
                 if (redirectUrl) {
                     // Ensure redirect URL is properly formatted
                     const cleanRedirectUrl = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`;
-                    
-                    navigate(cleanRedirectUrl, { 
+
+                    navigate(cleanRedirectUrl, {
                         replace: true,
-                        state: { 
+                        state: {
                             loginSuccess: true,
                             fromLogin: true,
                             fromUrl: fromUrl,
-                            message: redirectUrl.includes('enrollment') 
-                                ? "Đăng nhập thành công! Bạn có thể tiếp tục đăng ký nhập học."
-                                : "Đăng nhập thành công!"
+                            message: redirectUrl.includes('enrollment')
+                                ? "Login successful! You can continue with the enrollment process."
+                                : "Login successful!"
                         }
                     });
                 } else if (isFirstLogin) {
                     // Redirect to profile page for first login
-                    navigate('/user/shared/profile', { 
+                    navigate('/user/shared/profile', {
                         replace: true,
-                        state: { 
+                        state: {
                             firstLogin: true,
-                            message: "Chào mừng! Vui lòng cập nhật mật khẩu và thông tin cá nhân."
+                            message: "Welcome! Please update your password and personal information."
                         }
                     });
                 } else {
@@ -129,25 +129,25 @@ function Login() {
                     handleRoleBasedNavigation(navigate, tokenData);
                 }
             } else {
-                setErrors({ submit: t("login.errors.genericError") });
+                setErrors({submit: t("login.errors.genericError")});
             }
         } catch (error) {
-            
+
             // Clear password for security (keep email for UX)
             setPassword('');
-            
+
             if (error.response?.status === 401) {
-                setErrors({ 
+                setErrors({
                     submit: t("login.errors.invalidCredentials")
                 });
             } else if (error.response?.data?.message) {
-                setErrors({ submit: error.response.data.message });
+                setErrors({submit: error.response.data.message});
             } else {
-                setErrors({ 
+                setErrors({
                     submit: t("login.errors.genericError")
                 });
             }
-            
+
             // Auto focus to password field for retry
             setTimeout(() => {
                 const passwordField = document.querySelector('input[name="password"]');
@@ -158,7 +158,8 @@ function Login() {
         } finally {
             setIsLoading(false);
         }
-    };    const loginFormProps = {
+    };
+    const loginFormProps = {
         email,
         setEmail,
         password,
@@ -167,23 +168,31 @@ function Login() {
         isLoading,
         errors,
         showSuccessMessage,
-        successMessage,        redirectInfo: redirectUrl ? {
+        successMessage, redirectInfo: redirectUrl ? {
             isFromEnrollment: redirectUrl.includes('enrollment'),
             fromUrl: fromUrl,
             message: getRedirectMessage(redirectUrl, fromUrl, t)
         } : null
-    };    return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
-            <div className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-sm border border-gray-200/50 shadow-xl rounded-3xl p-8 space-y-8 animate-fade-in relative overflow-hidden">
+    };
+    return (
+        <div
+            className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+            <div
+                className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-sm border border-gray-200/50 shadow-xl rounded-3xl p-8 space-y-8 animate-fade-in relative overflow-hidden">
                 {/* Decorative Background Elements */}
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl"></div>
-                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-purple-400/15 to-pink-400/15 rounded-full blur-xl"></div>
+                <div
+                    className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                <div
+                    className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl"></div>
+                <div
+                    className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-purple-400/15 to-pink-400/15 rounded-full blur-xl"></div>
 
                 {/* Header */}
                 <div className="text-center space-y-4 relative z-10">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl mx-auto flex items-center justify-center shadow-lg">
-                        <img src="/SUNSHINE.png" alt="Sunshine Preschool" className="w-12 h-12 object-contain filter brightness-0 invert" />
+                    <div
+                        className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl mx-auto flex items-center justify-center shadow-lg">
+                        <img src="/SUNSHINE.png" alt="Sunshine Preschool"
+                             className="w-12 h-12 object-contain filter brightness-0 invert"/>
                     </div>
                     <div>
                         <h2 className="text-3xl font-bold text-gray-800 tracking-tight mb-2">
@@ -202,13 +211,19 @@ function Login() {
                             </Link>
                         </p>
                     </div>
-                </div>                {/* Success Message */}
+                </div>
+                {/* Success Message */}
                 {showSuccessMessage && successMessage && (
-                    <div className="bg-green-50/80 backdrop-blur-sm border border-green-200/60 rounded-xl p-4 relative z-10">
+                    <div
+                        className="bg-green-50/80 backdrop-blur-sm border border-green-200/60 rounded-xl p-4 relative z-10">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            <div
+                                className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd"
+                                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                          clipRule="evenodd"/>
                                 </svg>
                             </div>
                             <span className="text-sm font-medium text-green-800">{successMessage}</span>
@@ -217,23 +232,33 @@ function Login() {
                 )}
                 {/* Redirect Info */}
                 {loginFormProps.redirectInfo && (
-                    <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-200/60 rounded-xl p-4 relative z-10">
+                    <div
+                        className="bg-blue-50/80 backdrop-blur-sm border border-blue-200/60 rounded-xl p-4 relative z-10">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            <div
+                                className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd"
+                                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                          clipRule="evenodd"/>
                                 </svg>
                             </div>
-                            <span className="text-sm font-medium text-blue-800">{loginFormProps.redirectInfo.message}</span>
+                            <span
+                                className="text-sm font-medium text-blue-800">{loginFormProps.redirectInfo.message}</span>
                         </div>
                     </div>
-                )}                {/* Login Form */}
+                )}
+                {/* Login Form */}
                 <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         <div className="relative group">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <svg className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                <svg
+                                    className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                          d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
                                 </svg>
                             </div>
                             <Input
@@ -252,8 +277,11 @@ function Login() {
                         </div>
                         <div className="relative group">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <svg className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                <svg
+                                    className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                 </svg>
                             </div>
                             <Input
@@ -270,17 +298,24 @@ function Login() {
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
-                    </div>                    {/* Error Message */}
+                    </div>
+                    {/* Error Message */}
                     {errors.submit && (
-                        <div className="bg-red-50/80 backdrop-blur-sm border border-red-200/60 rounded-xl p-4 flex items-center gap-3">
-                            <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        <div
+                            className="bg-red-50/80 backdrop-blur-sm border border-red-200/60 rounded-xl p-4 flex items-center gap-3">
+                            <div
+                                className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd"
+                                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                          clipRule="evenodd"/>
                                 </svg>
                             </div>
                             <span className="text-sm font-medium text-red-800">{errors.submit}</span>
                         </div>
-                    )}                    <div className="pt-2">
+                    )}
+                    <div className="pt-2">
                         <button
                             type="submit"
                             disabled={isLoading}
@@ -288,22 +323,27 @@ function Login() {
                         >
                             {isLoading ? (
                                 <>
-                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor"
+                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                     <span>{t("login.signingIn")}</span>
                                 </>
                             ) : (
                                 <>
                                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                                     </svg>
                                     <span>{t("login.signInButton")}</span>
                                 </>
                             )}
                         </button>
-                    </div>                </form>
+                    </div>
+                </form>
                 <div className="text-center relative z-10">
                     <Link
                         to={AUTH_ROUTES.FORGOT_PASSWORD}

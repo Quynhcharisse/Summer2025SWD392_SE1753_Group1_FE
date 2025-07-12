@@ -1,4 +1,5 @@
 import apiClient from "@api/apiClient.js";
+import dayjs from "dayjs";
 
 export const getFormTracking = async () => {
     const response = await apiClient.get("/admission/form/list")
@@ -63,7 +64,7 @@ export const createExtraTerm = async (formData) => {
         });
         return response.data;
     } catch (error) {
-        console.error('Error creating extra term:', error);
+//         console.error('Error creating extra term:', error);
         throw error;
     }
 };
@@ -87,6 +88,40 @@ export const updateTermStatus = async (termId) => {
         });
         return response.data;
     } catch (error) {
+        throw error;
+    }
+};
+
+export const getTransactionList = async () => {
+    try {
+        const response = await apiClient.get('/admission/transactions');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const exportTransactions = async () => {
+    try {
+        const response = await apiClient.get('/admission/export', {
+            responseType: 'blob'
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getDailyTotal = async () => {
+    try {
+        const response = await apiClient.post('/admission/daily/total/transaction', {
+            date: dayjs().format('YYYY-MM-DD'),
+            totalAmount: 0
+        });
+//         console.log('API Response:', response);
+        return response.data;
+    } catch (error) {
+//         console.error('Error in getDailyTotal:', error.response || error);
         throw error;
     }
 };

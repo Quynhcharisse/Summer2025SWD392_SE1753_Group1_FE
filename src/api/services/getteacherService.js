@@ -5,7 +5,7 @@ export const getTeacherList = async () => {
         const response = await apiClient.get("/hr/teacher");
         return response;
     } catch (error) {
-        console.error("Get teacher list error:", error);
+//         console.error("Get teacher list error:", error);
         throw error;
     }
 };

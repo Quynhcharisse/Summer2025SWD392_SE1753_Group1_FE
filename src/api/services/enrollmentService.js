@@ -11,7 +11,7 @@ export const getEnrollmentInfo = async () => {
     const response = await apiClient.get('/enrollment/info');
     return response.data;
   } catch (error) {
-    console.error('Get enrollment info failed:', error);
+//     console.error('Get enrollment info failed:', error);
     throw error;
   }
 };
@@ -22,7 +22,7 @@ export const checkEnrollmentEligibility = async () => {
     const response = await apiClient.get('/enrollment/eligibility');
     return response.data;
   } catch (error) {
-    console.error('Check enrollment eligibility failed:', error);
+//     console.error('Check enrollment eligibility failed:', error);
     throw error;
   }
 };
@@ -30,14 +30,14 @@ export const checkEnrollmentEligibility = async () => {
 // Submit enrollment application
 export const submitEnrollmentApplication = async (applicationData) => {
   try {
-    console.log('📝 Submitting enrollment application:', applicationData);
+//     console.log('📝 Submitting enrollment application:', applicationData);
     
     const response = await apiClient.post('/enrollment/apply', applicationData);
     
-    console.log('✅ Enrollment application submitted successfully:', response.data);
+//     console.log('✅ Enrollment application submitted successfully:', response.data);
     return response.data;
   } catch (error) {
-    console.error('❌ Enrollment application submission failed:', error);
+//     console.error('❌ Enrollment application submission failed:', error);
     throw error;
   }
 };
@@ -48,7 +48,7 @@ export const getUserEnrollmentApplications = async () => {
     const response = await apiClient.get('/user/parent/forms');
     return response.data;
   } catch (error) {
-    console.error('Get user enrollment applications failed:', error);
+//     console.error('Get user enrollment applications failed:', error);
     throw error;
   }
 };
@@ -68,7 +68,7 @@ export const uploadEnrollmentDocument = async (applicationId, documentType, file
     
     return response.data;
   } catch (error) {
-    console.error('Upload enrollment document failed:', error);
+//     console.error('Upload enrollment document failed:', error);
     throw error;
   }
 };
@@ -79,7 +79,7 @@ export const getAvailablePrograms = async () => {
     const response = await apiClient.get('/enrollment/programs');
     return response.data;
   } catch (error) {
-    console.error('Get available programs failed:', error);
+//     console.error('Get available programs failed:', error);
     throw error;
   }
 };

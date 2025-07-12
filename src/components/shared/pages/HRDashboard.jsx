@@ -1,13 +1,20 @@
 import React from 'react';
-import { Users, TrendingUp, UserCheck, Calendar, FileText, Clock } from 'lucide-react';
+import { Users, TrendingUp, UserCheck, Calendar, FileText, Clock, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const HRDashboard = () => {
+  const navigate = useNavigate();
+
+  const handleQuickAction = (path) => {
+    navigate(path);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg shadow-lg">
         <h1 className="text-2xl font-bold mb-2">HR Dashboard</h1>
-        <p className="text-blue-100">HR management and activities</p>
+        <p className="text-blue-100">Human Resources management and activities</p>
       </div>
 
       {/* Stats Cards */}
@@ -15,7 +22,7 @@ const HRDashboard = () => {
         <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Employees</p>
+              <p className="text-sm font-medium text-gray-600">Total Teachers</p>
               <p className="text-2xl font-bold text-gray-900">45</p>
               <p className="text-xs text-green-600">+3 this month</p>
             </div>
@@ -26,9 +33,9 @@ const HRDashboard = () => {
         <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Present Today</p>
-              <p className="text-2xl font-bold text-gray-900">42</p>
-              <p className="text-xs text-green-600">93.3%</p>
+              <p className="text-sm font-medium text-gray-600">Total Parents</p>
+              <p className="text-2xl font-bold text-gray-900">123</p>
+              <p className="text-xs text-green-600">+8 this month</p>
             </div>
             <UserCheck className="w-12 h-12 text-green-500" />
           </div>
@@ -66,17 +73,53 @@ const HRDashboard = () => {
             Quick Actions
           </h3>
           <div className="space-y-3">
-            <button className="w-full text-left p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
-              <p className="font-medium text-blue-900">Attendance Management</p>
-              <p className="text-sm text-blue-600">View and update employee attendance</p>
+            <button 
+              onClick={() => handleQuickAction('/user/hr/teachers')}
+              className="w-full text-left p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-900">Teacher Management</p>
+                  <p className="text-sm text-blue-600">View and manage teacher records</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
+              </div>
             </button>
-            <button className="w-full text-left p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-              <p className="font-medium text-green-900">Approve Leave Requests</p>
-              <p className="text-sm text-green-600">8 requests pending approval</p>
+            <button 
+              onClick={() => handleQuickAction('/user/hr/parents')}
+              className="w-full text-left p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-green-900">Parent Management</p>
+                  <p className="text-sm text-green-600">View and export parent information</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-green-600 group-hover:translate-x-1 transition-transform" />
+              </div>
             </button>
-            <button className="w-full text-left p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
-              <p className="font-medium text-purple-900">New Recruitment</p>
-              <p className="text-sm text-purple-600">Post job openings and review applications</p>
+            <button 
+              onClick={() => handleQuickAction('/user/hr/recruitment')}
+              className="w-full text-left p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-purple-900">Recruitment</p>
+                  <p className="text-sm text-purple-600">Post job openings and review applications</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-purple-600 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
+            <button 
+              onClick={() => handleQuickAction('/user/hr/reports')}
+              className="w-full text-left p-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-yellow-900">HR Reports</p>
+                  <p className="text-sm text-yellow-600">Generate HR statistics and reports</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-yellow-600 group-hover:translate-x-1 transition-transform" />
+              </div>
             </button>
           </div>
         </div>
