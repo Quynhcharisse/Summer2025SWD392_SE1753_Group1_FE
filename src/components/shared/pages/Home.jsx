@@ -274,9 +274,9 @@ export default function Home() {
               price={t("prog1_price")}
               badge={{ text: t("prog1_badge"), variant: "primary" }}
               onEnroll={handleEnrollmentClick}
-              onLearnMore={() =>
-//                 console.log("Learning more about Toddler Discovery")
-              }
+//               onLearnMore={() =>
+// //                 console.log("Learning more about Toddler Discovery")
+//               }
             />
             <ProgramCard
               title={t("prog2_title")}
@@ -290,9 +290,9 @@ export default function Home() {
               price={t("prog2_price")}
               badge={{ text: t("prog2_badge"), variant: "secondary" }}
               onEnroll={handleEnrollmentClick}
-              onLearnMore={() =>
-//                 console.log("Learning more about Pre-K Excellence")
-              }
+//               onLearnMore={() =>
+// //                 console.log("Learning more about Pre-K Excellence")
+//               }
             />
             <ProgramCard
               title={t("prog3_title")}
@@ -306,9 +306,9 @@ export default function Home() {
               price={t("prog3_price")}
               badge={{ text: t("prog3_badge"), variant: "outline" }}
               onEnroll={handleEnrollmentClick}
-              onLearnMore={() =>
-//                 console.log("Learning more about After School Care")
-              }
+//               onLearnMore={() =>
+// //                 console.log("Learning more about After School Care")
+//               }
             />
           </div>
         </div>
