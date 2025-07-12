@@ -7,6 +7,7 @@ import { useEventActive, useEventDetail, useEventTeachers, useRegisteredEvents }
 import { Alert, CircularProgress, Snackbar, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import CalendarIcon from "@icons/CalendarIcon";
+import { getCurrentTokenData } from "@services/JWTService.jsx";
 
 // Helper to format date/time using dayjs 24h
 const formatDate = (dateStr) => {
@@ -44,14 +45,27 @@ const Events = () => {
   };
 
   const [openRegisteredDialog, setOpenRegisteredDialog] = React.useState(false);
-  const { data: registeredEventsData, isLoading: isLoadingRegistered, refetch: refetchRegisteredEvents } = useRegisteredEvents();
+  // Sửa: Không tự động fetch registered events khi mount
+  const { data: registeredEventsData, isLoading: isLoadingRegistered, refetch: refetchRegisteredEvents } = useRegisteredEvents({
+    enabled: false,
+  });
 
   const user = JSON.parse(localStorage.getItem("user"));
   const isLoggedIn = !!user;
 
   const handleOpenRegisteredDialog = () => {
     if (!isLoggedIn) {
-      navigate("/login");
+      navigate("/auth/login");
+      return;
+    }
+    // Kiểm tra role, nếu không phải parent thì cảnh báo
+    const tokenData = getCurrentTokenData();
+    if (!tokenData || tokenData.role?.toLowerCase() !== "parent") {
+      setSnackbar({
+        open: true,
+        message: "Chỉ phụ huynh (parent) mới sử dụng được chức năng này!",
+        severity: "warning",
+      });
       return;
     }
     refetchRegisteredEvents();

@@ -368,7 +368,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                 enqueueSnackbar(response.message || 'Failed to create extra term', {variant: 'error'});
             }
         } catch (error) {
-            console.error('Error creating extra term:', error);
+//             console.error('Error creating extra term:', error);
             enqueueSnackbar(
                 error.response?.data?.message || 'Error creating extra term',
                 {variant: 'error'}
@@ -1406,7 +1406,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                 setSelectedGrade('');
             }
         } catch (error) {
-            console.error("Error getting default fees:", error);
+//             console.error("Error getting default fees:", error);
             enqueueSnackbar("Error loading fees", {variant: "error"});
         }
     };
@@ -1472,11 +1472,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                 }
             }));
 
-            console.log('Creating term with data:', {
-                startDate: startDateISO,
-                endDate: endDateISO,
-                termItemList: termItems
-            });
+
 
             const response = await createTerm(
                 startDateISO,
@@ -1492,7 +1488,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                 enqueueSnackbar(response.message || "Failed to create term", {variant: "error"});
             }
         } catch (error) {
-            console.error("Error in handleCreate:", error);
+//             console.error("Error in handleCreate:", error);
             enqueueSnackbar(error.response?.data?.message || "Error creating term", {variant: "error"});
         }
     };
@@ -2142,10 +2138,10 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
                     const sortedYears = [...response.data].sort((a, b) => b - a);
                     setYears(['all', ...sortedYears]);
                 } else {
-                    console.error('Failed to fetch years:', response.message);
+//                     console.error('Failed to fetch years:', response.message);
                 }
             } catch (error) {
-                console.error('Error fetching years:', error);
+//                 console.error('Error fetching years:', error);
             }
         };
         fetchYears();

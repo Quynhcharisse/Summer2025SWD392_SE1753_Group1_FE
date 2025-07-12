@@ -2,6 +2,9 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import {refreshToken} from "@services/JWTService.jsx";
 
+// Create a custom event for auth failures
+const authFailureEvent = new Event('authFailure');
+
 const apiClient = axios.create({
   baseURL: "http://localhost:8080/api/v1",
   headers: {
@@ -18,8 +21,9 @@ apiClient.interceptors.response.use(
 
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
         if (originalRequest.url === "/auth/refresh") {
-          console.error("Refresh token request failed, redirecting to the login.");
-          window.location.href = "/auth/login";
+//           console.error("Refresh token request failed");
+          // Dispatch auth failure event instead of direct navigation
+          window.dispatchEvent(authFailureEvent);
           return Promise.reject(error);
         }
 
@@ -28,11 +32,13 @@ apiClient.interceptors.response.use(
           if (refreshRes.success) {
             return apiClient(originalRequest);
           } else {
-            window.location.href = "/auth/login";
+            // Dispatch auth failure event instead of direct navigation
+            window.dispatchEvent(authFailureEvent);
           }
         } catch (refreshError) {
-          console.error("Refresh token request failed", refreshError);
-          window.location.href = "/auth/login";
+//           console.error("Refresh token request failed", refreshError);
+          // Dispatch auth failure event instead of direct navigation
+          window.dispatchEvent(authFailureEvent);
         }
       }
 

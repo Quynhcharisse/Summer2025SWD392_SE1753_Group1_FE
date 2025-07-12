@@ -38,7 +38,7 @@ export default function TransactionList() {
                 enqueueSnackbar(response.message || 'Failed to fetch transactions', {variant: 'error'});
             }
         } catch (error) {
-            console.error('Error fetching transactions:', error);
+//             console.error('Error fetching transactions:', error);
             enqueueSnackbar(error.response?.data?.message || 'Error fetching transactions', {variant: 'error'});
         }
     };
@@ -55,7 +55,7 @@ export default function TransactionList() {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
         } catch (error) {
-            console.error('Error exporting transactions:', error);
+//             console.error('Error exporting transactions:', error);
             enqueueSnackbar(error.response?.data?.message || 'Error exporting transactions', {variant: 'error'});
         }
     };

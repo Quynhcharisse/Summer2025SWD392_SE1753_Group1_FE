@@ -56,7 +56,7 @@ export default function Home() {
     });
 
     if (success) {
-      console.log("Navigated to enrollment successfully");
+//       console.log("Navigated to enrollment successfully");
     }
   };
   // Handle dashboard navigation with auth check
@@ -69,7 +69,7 @@ export default function Home() {
     });
 
     if (success) {
-      console.log("Navigated to dashboard successfully");
+//       console.log("Navigated to dashboard successfully");
     }
   };
 
@@ -81,7 +81,7 @@ export default function Home() {
     }
 
     setIsSearching(true);
-    console.log("Searching for:", searchQuery);
+//     console.log("Searching for:", searchQuery);
 
     try {
       // Simulate API call for search
@@ -104,7 +104,7 @@ export default function Home() {
 
       setSearchResults(mockResults);
     } catch (error) {
-      console.error("Search error:", error);
+//       console.error("Search error:", error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -128,17 +128,17 @@ export default function Home() {
     recognition.lang = "vi-VN"; // Vietnamese language
 
     recognition.onstart = () => {
-      console.log("Speech recognition started");
+//       console.log("Speech recognition started");
     };
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      console.log("Speech result:", transcript);
+//       console.log("Speech result:", transcript);
 
       // Trigger search with speech result
       handleSearch(transcript);
     };
     recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
+//       console.error("Speech recognition error:", event.error);
 
       let errorMessage;
       switch (event.error) {
@@ -160,14 +160,14 @@ export default function Home() {
     };
 
     recognition.onend = () => {
-      console.log("Speech recognition ended");
+//       console.log("Speech recognition ended");
     };
 
     // Start recognition
     try {
       recognition.start();
     } catch (error) {
-      console.error("Failed to start speech recognition:", error);
+//       console.error("Failed to start speech recognition:", error);
       alert("Failed to start speech recognition");
     }
   }, [speechSupported, handleSearch]);
@@ -238,7 +238,7 @@ export default function Home() {
               variant="numbered"
               status="active"
               actionLabel={t("step1_action")}
-              onAction={() => console.log("Booking tour")}
+//               onAction={() => console.log("Booking tour")}
             />
             <ProcessStepCard
               step={2}
@@ -274,9 +274,9 @@ export default function Home() {
               price={t("prog1_price")}
               badge={{ text: t("prog1_badge"), variant: "primary" }}
               onEnroll={handleEnrollmentClick}
-              onLearnMore={() =>
-                console.log("Learning more about Toddler Discovery")
-              }
+//               onLearnMore={() =>
+// //                 console.log("Learning more about Toddler Discovery")
+//               }
             />
             <ProgramCard
               title={t("prog2_title")}
@@ -290,9 +290,9 @@ export default function Home() {
               price={t("prog2_price")}
               badge={{ text: t("prog2_badge"), variant: "secondary" }}
               onEnroll={handleEnrollmentClick}
-              onLearnMore={() =>
-                console.log("Learning more about Pre-K Excellence")
-              }
+//               onLearnMore={() =>
+// //                 console.log("Learning more about Pre-K Excellence")
+//               }
             />
             <ProgramCard
               title={t("prog3_title")}
@@ -306,9 +306,9 @@ export default function Home() {
               price={t("prog3_price")}
               badge={{ text: t("prog3_badge"), variant: "outline" }}
               onEnroll={handleEnrollmentClick}
-              onLearnMore={() =>
-                console.log("Learning more about After School Care")
-              }
+//               onLearnMore={() =>
+// //                 console.log("Learning more about After School Care")
+//               }
             />
           </div>
         </div>

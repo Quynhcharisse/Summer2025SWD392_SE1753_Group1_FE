@@ -201,7 +201,7 @@ const AddChildForm = () => {
       enqueueSnackbar(t('parent:child_form.success'), { variant: "success" });
       navigate("/user/parent/child-list");
     } catch (err) {
-      console.error("Child registration error:", err);
+//       console.error("Child registration error:", err);
       setError("root.serverError", { 
         type: "manual", 
         message: t('parent:child_form.error')

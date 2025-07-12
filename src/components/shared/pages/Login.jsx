@@ -90,9 +90,9 @@ function Login() {
                 const tokenData = getCurrentTokenData();
 
                 if (!tokenData) {
-                    console.error("🔑 No token data available, but proceeding with login");
+//                     console.error("🔑 No token data available, but proceeding with login");
                 }
-                // console.log("🔑 Final token data for navigation:", tokenData);
+//                 // console.log("🔑 Final token data for navigation:", tokenData);
 
                 // Check for first login indicators
                 const responseData = response?.data || response;
@@ -111,8 +111,8 @@ function Login() {
                             fromLogin: true,
                             fromUrl: fromUrl,
                             message: redirectUrl.includes('enrollment')
-                                ? "Đăng nhập thành công! Bạn có thể tiếp tục đăng ký nhập học."
-                                : "Đăng nhập thành công!"
+                                ? "Login successful! You can continue with the enrollment process."
+                                : "Login successful!"
                         }
                     });
                 } else if (isFirstLogin) {
@@ -121,7 +121,7 @@ function Login() {
                         replace: true,
                         state: {
                             firstLogin: true,
-                            message: "Chào mừng! Vui lòng cập nhật mật khẩu và thông tin cá nhân."
+                            message: "Welcome! Please update your password and personal information."
                         }
                     });
                 } else {

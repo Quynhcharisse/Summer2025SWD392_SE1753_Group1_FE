@@ -27,7 +27,7 @@ const Header = ({
     if (onSearch) {
       onSearch(searchValue);
     } else {
-      console.log("Header: Searching for:", searchValue);
+//       console.log("Header: Searching for:", searchValue);
     }
   };
 
@@ -44,7 +44,7 @@ const Header = ({
     if (onSpeechToText) {
       onSpeechToText();
     } else {
-      console.log("Header: Voice search activated");
+//       console.log("Header: Voice search activated");
     }
   };
   return (

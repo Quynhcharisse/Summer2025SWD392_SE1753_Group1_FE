@@ -8,7 +8,7 @@ export const getFormInformation = async () => {
         }
         return response.data;
     } catch (error) {
-        console.error("Error fetching form information:", error);
+        //     console.error("Error fetching form information:", error);
         throw error;
     }
 };
@@ -36,7 +36,7 @@ export const submittedForm = async (formData) => {
         }
         return response.data;
     } catch (error) {
-        console.error("Error submitting form:", error);
+        //     console.error("Error submitting form:", error);
         throw error;
     }
 };
@@ -78,7 +78,7 @@ export const createChild = async (childData) => {
         }
         return response.data;
     } catch (error) {
-        console.error("Error creating child:", error);
+        //     console.error("Error creating child:", error);
         throw error;
     }
 };
@@ -91,16 +91,16 @@ export const getChildren = async () => {
         }
         return response.data;
     } catch (error) {
-        console.error("Error fetching children:", error);
+        //     console.error("Error fetching children:", error);
         throw error;
     }
 };
 
 export const refillForm = async (formData) => {
-    try {
-        if (!formData || !formData.studentId || !formData.householdRegistrationAddress || !formData.childCharacteristicsFormImg || !formData.commitmentImg) {
-            throw new Error("Missing required form data");
-        }
+  try {
+    if (!formData || !formData.studentId || !formData.householdRegistrationAddress || !formData.childCharacteristicsFormImg || !formData.commitmentImg) {
+      throw new Error("Missing required form data");
+    }
 
         const response = await apiClient.post("/parent/form/refill", {
             formId: formData.formId,
@@ -116,7 +116,7 @@ export const refillForm = async (formData) => {
         }
         return response.data;
     } catch (error) {
-        console.error("Error resubmitting form:", error);
+        //     console.error("Error resubmitting form:", error);
         throw error;
     }
 };
@@ -129,7 +129,7 @@ export const updateChild = async (childData) => {
         if (!response?.data) throw new Error("Failed to update child");
         return response.data;
     } catch (error) {
-        console.error("Error updating child:", error);
+//         console.error("Error updating child:", error);
         throw error;
     }
 };
@@ -142,7 +142,7 @@ export const deleteChild = async (childId) => {
         if (!response?.data) throw new Error("Failed to delete child");
         return response.data;
     } catch (error) {
-        console.error("Error deleting child:", error);
+//         console.error("Error deleting child:", error);
         throw error;
     }
 };

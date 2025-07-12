@@ -135,7 +135,7 @@ const SyllabusAssign = () => {
       setSelectedUIAssigned([]);
       setSelectedUIUnassigned([]);
     } catch (error) {
-      console.error("Assignment error:", error);
+//       console.error("Assignment error:", error);
       setSnackbar({
         open: true,
         message: error.response?.data?.message || "Failed to save assignment",

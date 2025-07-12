@@ -51,10 +51,10 @@ const UserLayout = ({children}) => {
                         path: "/user/parent/child-list",
                     },
                     {
-                        key: "/user/parent/calendar",
+                        key: "/user/parent/class-schedule",
                         icon: Calendar,
                         label: "Class Schedule",
-                        path: "/user/parent/calendar",
+                        path: "/user/parent/class-schedule",
                     },
                     {
                         key: "/user/parent/forms",
@@ -154,16 +154,16 @@ const UserLayout = ({children}) => {
                         path: '/user/hr/dashboard'
                     },
                     {
-                        key: '/user/hr/staff',
+                        key: '/user/hr/teachers',
                         icon: Users,
-                        label: 'Staff Management',
-                        path: '/user/hr/staff'
+                        label: 'Teacher Management',
+                        path: '/user/hr/teachers'
                     },
                     {
-                        key: '/user/hr/reports',
+                        key: '/user/hr/parents',
                         icon: TrendingUp,
-                        label: 'HR Reports',
-                        path: '/user/hr/reports'
+                        label: 'Parent Management',
+                        path: '/user/hr/parents'
                     },
                     {
                         key: "/user/shared/profile",
@@ -279,7 +279,7 @@ const UserLayout = ({children}) => {
             await authService.logout();
         } catch (e) {
             // Dù lỗi vẫn tiếp tục xóa FE và chuyển trang
-            console.error("Logout API failed:", e);
+//             console.error("Logout API failed:", e);
         }
         // Sau đó xóa local FE
         localStorage.removeItem('user');
