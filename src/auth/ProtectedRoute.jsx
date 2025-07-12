@@ -1,91 +1,113 @@
 /**
- * Protected Route Component
- * Handles route protection based on user authentication and roles
+ * Protected Route Component - JWT + Cookie Implementation
+ * Handles route protection based on user authentication and roles using:
+ * - Access token in regular cookie (contains role for client-side logic)
+ * - Refresh token in HttpOnly cookie (automatically managed by server)
  */
-import {decodeToken, refreshToken} from "@services/JWTService.jsx";
-import Cookies from "js-cookie";
-import PropTypes from "prop-types";
-import {Navigate, useNavigate} from "react-router-dom";
-import {roleMiddleware} from "./roleMiddleware";
-import {jwtDecode} from "jwt-decode";
-import {AUTH_ROUTES} from "../constants/routes";
+import { Navigate } from "react-router-dom";
+import { getCurrentTokenData, hasAnyRole, isTokenExpired, hasAccessToken } from "@services/JWTService.jsx";
+import { useState, useEffect } from "react";
+import PropTypes from 'prop-types';
 
-const ProtectedRoute = ({children, allowedRoles = []}) => {
-    const navigate = useNavigate();
-    const accessToken = Cookies.get("access");
-    const checkToken = Cookies.get("check");
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [hasPermission, setHasPermission] = useState(false);
 
-    // console.log("ProtectedRoute Debug:", {
-    //   accessToken: accessToken ? "exists" : "missing",
-    //   checkToken: checkToken ? "exists" : "missing",
-    //   allowedRoles,
-    // });  // No authentication tokens found
-    if (!accessToken && !checkToken) {
-        // console.log("No tokens found, redirecting to login");
-        // console.log("You are not authenticated"); // Replace notification logic
-        return <Navigate to={AUTH_ROUTES.LOGIN} replace/>;
-    }
-
-    // Check access token if available
-    if (accessToken) {
+    useEffect(() => {
+        checkAuthentication();
+    }, [allowedRoles]);    const attemptTokenRefresh = async () => {
+//         console.log("🔄 Access token expired, attempting refresh...");
+        
         try {
-            const decoded = decodeToken(accessToken);
-            // console.log("Token decoded successfully:", {
-            //   role: decoded.role,
-            //   allowedRoles,
-            // });
-
-            const decodedToken = jwtDecode(accessToken);
-            const currentTime = Math.floor(Date.now() / 1000);
-            if (decodedToken.exp < currentTime) {
-                // console.log("Access token expired. Redirecting to login.");
-                return <Navigate to={AUTH_ROUTES.LOGIN} replace/>;
+            const { refreshToken } = await import('@services/JWTService.jsx');
+            await refreshToken();
+            
+            const tokenData = getCurrentTokenData();
+            if (!tokenData) {
+//                 console.log("❌ Token refresh failed or returned invalid token");
+                return null;
             }
-
-            // Check if user role is allowed
-            if (
-                allowedRoles.length > 0 &&
-                !roleMiddleware(allowedRoles)(decoded.role)
-            ) {
-                // console.log("Access denied for role:", decoded.role);
-                // console.log("You don't have permission to access this page", {
-                //   variant: "error",
-                // });
-                // Should create an UNAUTHORIZED route in routes.js if needed
-                return <Navigate to="/unauthorized" replace/>;
-            }
-
-            // console.log("Access granted for role:", decoded.role);
-            return children;
-        } catch (error) {
-            // console.error("Token decode error:", error);
+            
+//             console.log("✅ Token refresh successful");
+            return tokenData;
+        } catch (refreshError) {
+//             console.error("❌ Token refresh failed:", refreshError);
+            return null;
         }
-    }
+    };
 
-    // Try to refresh token if check token exists
-    if (checkToken) {
-        refreshToken().then((res) => {
-            if (res && res.success) {
-                window.location.reload();
-            } else {
-                navigate(AUTH_ROUTES.LOGIN);
+    const checkAuthentication = async () => {
+        try {
+            let tokenData = getCurrentTokenData();
+            
+            // Handle missing or expired token
+            if (!tokenData) {
+                if (isTokenExpired()) {
+                    tokenData = await attemptTokenRefresh();
+                } else if (!hasAccessToken()) {
+//                     console.log("❌ No access token found");
+                } else {
+//                     console.log("❌ Invalid access token");
+                }
+                
+                if (!tokenData) {
+                    setIsAuthenticated(false);
+                    setIsLoading(false);
+                    return;
+                }
             }
-        })
-            .catch((error) => {
-                console.error("Token refresh failed:", error);
-                navigate(AUTH_ROUTES.LOGIN);
-            });
 
-        // Show loading state while refreshing
-        return <div>Authenticating...</div>;
+            // User is authenticated
+            setIsAuthenticated(true);
+
+            // Check role permissions
+            if (allowedRoles.length > 0) {
+                const hasRequiredRole = hasAnyRole(allowedRoles);
+                setHasPermission(hasRequiredRole);
+                
+                if (!hasRequiredRole) {
+//                     console.warn(`Access denied. Required roles: ${allowedRoles.join(', ')}, User role: ${tokenData.role}`);
+                }
+            } else {
+                setHasPermission(true);
+            }
+
+        } catch (error) {
+//             console.error("Authentication check failed:", error);
+            setIsAuthenticated(false);
+            setHasPermission(false);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Show loading state while checking authentication
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Checking authentication...</span>
+            </div>
+        );
+    }    // Not authenticated - redirect to login with current path
+    if (!isAuthenticated) {
+        const currentPath = window.location.pathname;
+        const loginUrl = `/auth/login?redirect=${encodeURIComponent(currentPath)}`;
+//         console.log("🔐 ProtectedRoute - Redirecting to login:", loginUrl);
+        return <Navigate to={loginUrl} replace />;
     }
-    // Fallback to login
-    return <Navigate to={AUTH_ROUTES.LOGIN} replace/>;
+
+    // Authenticated but no permission - redirect to unauthorized
+    if (!hasPermission) {
+        return <Navigate to="/unauthorized" replace />;
+    }    // Authenticated and has permission - render children
+    return children;
 };
 
 ProtectedRoute.propTypes = {
     children: PropTypes.node.isRequired,
-    allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
+    allowedRoles: PropTypes.arrayOf(PropTypes.string)
 };
 
-export {ProtectedRoute};
+export default ProtectedRoute;

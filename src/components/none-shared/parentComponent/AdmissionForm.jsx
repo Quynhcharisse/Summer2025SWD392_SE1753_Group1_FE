@@ -989,7 +989,7 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
 
             return uploadResults;
         } catch (error) {
-            console.error('Error uploading images:', error);
+//             console.error('Error uploading images:', error);
             return null;
         }
     };
@@ -1674,7 +1674,7 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
             }
 
         } catch (error) {
-            console.error("Error handling file upload:", error);
+//             console.error("Error handling file upload:", error);
             enqueueSnackbar("Error processing file", {variant: "error"});
         }
     }

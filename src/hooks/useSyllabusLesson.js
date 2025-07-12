@@ -68,7 +68,7 @@ export const useAssignLessons = () => {
                 const response = await syllabusLessonService.assignLessons(id, lessonNames);
                 return response.data;
             } catch (error) {
-                console.error('Error assigning lessons:', error);
+//                 console.error('Error assigning lessons:', error);
                 if (error.response?.status === 404) {
                     throw new Error('Syllabus or lessons not found');
                 } else if (error.response?.status === 403) {
@@ -86,7 +86,7 @@ export const useAssignLessons = () => {
             });
         },
         onError: (error) => {
-            console.error('Mutation error:', error);
+//             console.error('Mutation error:', error);
             throw error;
         }
     });
@@ -109,7 +109,7 @@ export const useUnassignLessons = () => {
                 const response = await syllabusLessonService.unassignLessons(id, lessonNames);
                 return response.data;
             } catch (error) {
-                console.error('Error unassigning lessons:', error);
+//                 console.error('Error unassigning lessons:', error);
                 // Enhance error message for client
                 if (error.response?.status === 404) {
                     throw new Error('Syllabus or lessons not found');
@@ -129,7 +129,7 @@ export const useUnassignLessons = () => {
             });
         },
         onError: (error) => {
-            console.error('Mutation error:', error);
+//             console.error('Mutation error:', error);
             throw error;
         }
     });

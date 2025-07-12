@@ -28,7 +28,7 @@ const Admission = () => {
     });
     
     if (success) {
-      console.log('Navigated to enrollment successfully');
+//       console.log('Navigated to enrollment successfully');
     }
   };
 
@@ -137,7 +137,7 @@ const Admission = () => {
                 onClick={() => setSelectedAge(program.id)}                actions={[
                   {
                     label: "Learn More",
-                    onClick: () => console.log(`Learn more about ${program.name}`),
+//                     onClick: () => console.log(`Learn more about ${program.name}`),
                     variant: "outline"
                   },
                   {
@@ -161,7 +161,7 @@ const Admission = () => {
                 description={step.description}
                 icon={step.icon}
                 variant="primary"
-                onClick={() => console.log(`Step ${step.step} clicked`)}
+//                 onClick={() => console.log(`Step ${step.step} clicked`)}
               />
             ))}
           </div>

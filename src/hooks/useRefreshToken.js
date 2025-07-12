@@ -28,29 +28,29 @@ const useRefreshToken = (options = {}) => {
       try {
         const accessToken = Cookies.get("access");
         if (!accessToken) {
-          console.log("🔄 useRefreshToken - No access token found");
+//           console.log("🔄 useRefreshToken - No access token found");
           return;
         }
 
         const tokenData = parseJwt(accessToken);
         if (!tokenData) {
-          console.log("🔄 useRefreshToken - Invalid token format");
+//           console.log("🔄 useRefreshToken - Invalid token format");
           return;
         }
 
         const currentTime = Math.floor(Date.now() / 1000);
         const timeUntilExpiry = tokenData.exp - currentTime;
 
-        console.log(`🔄 useRefreshToken - Token expires in ${timeUntilExpiry} seconds`);
+//         console.log(`🔄 useRefreshToken - Token expires in ${timeUntilExpiry} seconds`);
 
         // Refresh if token expires within threshold
         if (timeUntilExpiry > 0 && timeUntilExpiry <= refreshThreshold) {
-          console.log("🔄 useRefreshToken - Token expires soon, refreshing...");
+//           console.log("🔄 useRefreshToken - Token expires soon, refreshing...");
           
           const response = await authService.refreshToken();
           if (response) {
             // The server will set the new access token cookie automatically
-            console.log("✅ useRefreshToken - Token refresh successful");
+//             console.log("✅ useRefreshToken - Token refresh successful");
             
             // Update auth context if needed
             if (setAuth) {
@@ -61,11 +61,11 @@ const useRefreshToken = (options = {}) => {
             }
           }
         } else if (timeUntilExpiry <= 0) {
-          console.log("🔄 useRefreshToken - Token expired, attempting refresh...");
+//           console.log("🔄 useRefreshToken - Token expired, attempting refresh...");
           
           try {
             await authService.refreshToken();
-            console.log("✅ useRefreshToken - Expired token refresh successful");
+//             console.log("✅ useRefreshToken - Expired token refresh successful");
             
             // Update auth context if needed
             if (setAuth) {
@@ -75,7 +75,7 @@ const useRefreshToken = (options = {}) => {
               }));
             }
           } catch (error) {
-            console.error("❌ useRefreshToken - Failed to refresh expired token:", error);
+//             console.error("❌ useRefreshToken - Failed to refresh expired token:", error);
             // Update auth context to reflect failed authentication
             if (setAuth) {
               setAuth(prev => ({
@@ -86,7 +86,7 @@ const useRefreshToken = (options = {}) => {
           }
         }
       } catch (error) {
-        console.error("❌ useRefreshToken - Error during token check:", error);
+//         console.error("❌ useRefreshToken - Error during token check:", error);
       }
     };
 

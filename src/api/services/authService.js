@@ -10,21 +10,19 @@ export const login = async (credentials) => {
     return response.data;
   } catch (error) {
     if (error.code === "ERR_NETWORK") {
-      console.error(
-        "Network error: Unable to reach the server. Please check your connection or the server URL."
-      );
+//       console.error(
+     
     } else {
-      console.error("Login error:", error);
+//       console.error("Login error:", error);
     }
     throw error;
   }
 };
 
-export const logout = async  () => {
-  const response = await apiClient.get('/auth/logout')
-  return response ? response.data : null
-}
-
+export const logout = async () => {
+  const response = await apiClient.get("/auth/logout");
+  return response ? response.data : null;
+};
 
 /**
  * Refresh access token using HttpOnly refresh cookie
@@ -35,7 +33,7 @@ export const refreshToken = async () => {
     const response = await apiClient.post("/auth/refresh");
     return response.data;
   } catch (error) {
-    console.error("Token refresh failed:", error);
+//     console.error("Token refresh failed:", error);
     throw error;
   }
 };
@@ -43,6 +41,7 @@ export const refreshToken = async () => {
 export const signUp = async (userData) => {
   try {
     const response = await apiClient.post("/auth/register", {
+      code: userData.code,
       email: userData.email,
       password: userData.password,
       confirmPassword: userData.confirmPassword,
@@ -55,11 +54,10 @@ export const signUp = async (userData) => {
     return response.data;
   } catch (error) {
     if (error.code === "ERR_NETWORK") {
-      console.error(
-        "Network error: Unable to reach the server. Please check your connection or the server URL."
-      );
+//       console.error(
+     
     } else {
-      console.error("Sign up error:", error);
+//       console.error("Sign up error:", error);
     }
     throw error;
   }
@@ -70,12 +68,12 @@ export const signUp = async (userData) => {
  */
 export const requestPasswordReset = async (email) => {
   try {
-    const response = await apiClient.post("/auth/password/reset", {
+    const response = await apiClient.post("/auth/password/forgot", {
       email,
     });
     return response.data;
   } catch (error) {
-    console.error("Password reset request failed:", error);
+//     console.error("Password reset request failed:", error);
     throw error;
   }
 };
@@ -105,26 +103,25 @@ export const confirmPasswordReset = async (
     );
     return response.data;
   } catch (error) {
-    console.error("Password reset confirmation failed:", error);
+//     console.error("Password reset confirmation failed:", error);
     throw error;
   }
 };
 
 export const register = async (userData) => {
   try {
-    console.log("🔥 register function called with:", userData);
-    console.log("📤 Making POST request to /auth/register");
+//     console.log("🔥 register function called with:", userData);
+//     console.log("📤 Making POST request to /auth/register");
     const response = await apiClient.post("/auth/register", userData);
-    console.log("✅ API Response:", response);
+//     console.log("✅ API Response:", response);
     return response.data;
   } catch (error) {
-    console.log("❌ API Error:", error);
+//     console.log("❌ API Error:", error);
     if (error.code === "ERR_NETWORK") {
-      console.error(
-        "Network error: Unable to reach the server. Please check your connection or the server URL."
-      );
+//       console.error(
+      
     } else {
-      console.error("Registration error:", error);
+//       console.error("Registration error:", error);
     }
     throw error;
   }
@@ -138,7 +135,23 @@ export const resetPassword = async (passwordData) => {
     const response = await apiClient.post("/auth/password/reset", passwordData);
     return response.data;
   } catch (error) {
-    console.error("Password reset failed:", error);
+//     console.error("Password reset failed:", error);
+    throw error;
+  }
+};
+
+/**
+ * Reset user password with code from email
+ */
+export const resetPasswordWithCode = async (resetData) => {
+  try {
+    const response = await apiClient.post(
+      "/auth/password/forgot/reset",
+      resetData
+    );
+    return response.data;
+  } catch (error) {
+//     console.error("Password reset with code failed:", error);
     throw error;
   }
 };
@@ -151,7 +164,7 @@ export const getUserProfile = async () => {
     const response = await apiClient.get("/account/profile");
     return response.data;
   } catch (error) {
-    console.error("Get user profile failed:", error);
+//     console.error("Get user profile failed:", error);
     throw error;
   }
 };
@@ -164,7 +177,33 @@ export const updateUserProfile = async (profileData) => {
     const response = await apiClient.put("/account/profile", profileData);
     return response.data;
   } catch (error) {
-    console.error("Update user profile failed:", error);
+//     console.error("Update user profile failed:", error);
+    throw error;
+  }
+};
+
+export const requestOTP = async (data) => {
+  const response = await apiClient.post("/auth/register/otp/verify", data);
+  return response.data;
+};
+
+export const verifyOTP = async (data) => {
+  const response = await apiClient.post("/auth/register", data);
+  return response.data;
+};
+
+/**
+ * Request verification code for registration
+ * @param {string} email - The email to send verification code to
+ */
+export const requestVerificationCode = async (email) => {
+  try {
+    const response = await apiClient.post("/auth/register/code/verify", {
+      email,
+    });
+    return response.data;
+  } catch (error) {
+//     console.error("Failed to request verification code:", error);
     throw error;
   }
 };
@@ -179,8 +218,13 @@ export const authService = {
   confirmPasswordReset,
   register,
   resetPassword,
+  resetPasswordWithCode, // Add the new function
   getUserProfile,
+  getCurrentUser: getUserProfile, // Alias for backward compatibility
   updateUserProfile,
+  requestOTP,
+  verifyOTP,
+  requestVerificationCode, // Add the new function
 };
 
 export default authService;

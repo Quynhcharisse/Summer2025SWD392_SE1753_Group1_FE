@@ -29,7 +29,7 @@ const Admission = () => {
     });
     
     if (success) {
-      console.log('Navigated to enrollment successfully');
+//       console.log('Navigated to enrollment successfully');
     }
   };
 

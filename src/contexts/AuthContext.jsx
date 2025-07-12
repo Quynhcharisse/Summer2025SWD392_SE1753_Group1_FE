@@ -2,10 +2,12 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole } from '@services/JWTService.jsx';
 import { authService } from '@api/services/authService';
 import Cookies from 'js-cookie';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+    const navigate = useNavigate();
     const [auth, setAuth] = useState({
         isAuthenticated: false,
         user: null,
@@ -40,7 +42,7 @@ export const AuthProvider = ({ children }) => {
                     });
                     return;
                 } catch (error) {
-                    console.error("Failed to refresh token:", error);
+//                     console.error("Failed to refresh token:", error);
                 }
             }
 
@@ -50,7 +52,7 @@ export const AuthProvider = ({ children }) => {
                 loading: false
             });
         } catch (error) {
-            console.error("Error checking auth status:", error);
+//             console.error("Error checking auth status:", error);
             setAuth({
                 isAuthenticated: false,
                 user: null,
@@ -58,6 +60,23 @@ export const AuthProvider = ({ children }) => {
             });
         }
     };
+
+    // Handle auth failure events
+    useEffect(() => {
+        const handleAuthFailure = () => {
+            setAuth({
+                isAuthenticated: false,
+                user: null,
+                loading: false
+            });
+            navigate('/auth/login');
+        };
+
+        window.addEventListener('authFailure', handleAuthFailure);
+        return () => {
+            window.removeEventListener('authFailure', handleAuthFailure);
+        };
+    }, [navigate]);
 
     useEffect(() => {
         checkAuthStatus();
