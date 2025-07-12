@@ -48,6 +48,7 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import GroupIcon from "@mui/icons-material/Group";
 import { styled } from "@mui/material/styles";
 
 // Custom Timeline Step Component
@@ -794,6 +795,24 @@ const EventManage = () => {
                         startIcon={<EditIcon />}
                       >
                         Cancel
+                      </Button>
+                      <Button
+                        variant="contained"
+                        sx={{
+                          backgroundColor: "#16a34a",
+                          color: "#fff",
+                          minWidth: 44,
+                          borderRadius: 2,
+                          boxShadow: "0 2px 8px rgba(34,197,94,0.10)",
+                          "&:hover": { backgroundColor: "#15803d" },
+                          fontWeight: 600,
+                          p: 1.2,
+                        }}
+                        onClick={() => navigate(`/user/education/event/students/${row.id}`)}
+                        size="small"
+                        startIcon={<GroupIcon />}
+                      >
+                        View Students
                       </Button>
                     </Box>
                   </TableCell>

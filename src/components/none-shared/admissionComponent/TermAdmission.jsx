@@ -1467,11 +1467,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                 }
             }));
 
-//             console.log('Creating term with data:', {
-                startDate: startDateISO,
-                endDate: endDateISO,
-                termItemList: termItems
-            });
+
 
             const response = await createTerm(
                 startDateISO,

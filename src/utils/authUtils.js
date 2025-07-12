@@ -70,10 +70,7 @@ export const checkEnrollmentAccess = async () => {
         } catch (refreshError) {
 //           console.error('❌ checkEnrollmentAccess - Token refresh failed with error:', refreshError);
 //           console.error('❌ checkEnrollmentAccess - Error details:', {
-            message: refreshError.message,
-            status: refreshError.response?.status,
-            data: refreshError.response?.data
-          });
+            
           // Fall through to require login
         }
       } else {
@@ -145,12 +142,7 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
       const loginUrl = getLoginURL(targetEnrollmentRoute, currentUrl);
       
 //       console.log("🔐 handleEnrollmentNavigation - Redirecting to login:", {
-        currentUrl,
-        targetEnrollmentRoute,
-        loginUrl,
-        authCheckAction: authCheck.action,
-        authCheckMessage: authCheck.message
-      });
+        
       
       navigate(loginUrl);
       

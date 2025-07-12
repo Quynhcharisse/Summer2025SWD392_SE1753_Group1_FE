@@ -179,12 +179,6 @@ export default function EducationClassManage() {
 
   useEffect(() => {
     if (selectedYear && selectedGrade) {
-//       console.log(
-        "Fetching classes for year:",
-        selectedYear,
-        "and grade:",
-        selectedGrade
-      );
       setLoading(true);
       getClassesByYearAndGrade(selectedYear, selectedGrade)
         .then((res) => {
@@ -317,12 +311,6 @@ export default function EducationClassManage() {
     try {
       // Validate form
       if (!selectedYear || !selectedGrade || !selectedSyllabus || !startDate) {
-//         console.error("Missing required fields:", {
-          selectedYear,
-          selectedGrade,
-          selectedSyllabus,
-          startDate,
-        });
         alert("Please fill in all required information!");
         return;
       }
@@ -360,12 +348,6 @@ export default function EducationClassManage() {
       // Refresh number of unassigned students
       await refreshNumUnassigned();
     } catch (error) {
-//       console.error("Error in create class:", error);
-//       console.error("Error details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
       alert(
         error.response?.data?.message ||
           "An error occurred while creating the class!"
@@ -448,7 +430,10 @@ export default function EducationClassManage() {
       fetchStudentsForClass(assigningClassId);
       setSelectedUnassigned([]);
       refreshNumUnassigned();
-    } catch (err) {}
+    } catch (err) {
+      // The error message and error variable are not in a valid statement.
+      // This catch block is effectively empty.
+    }
   };
 
   // Handle confirmation from modal
@@ -516,9 +501,9 @@ export default function EducationClassManage() {
         setNumUnassigned(res.data.data ?? 0);
       } catch (error) {
 //         console.error(
-          "Failed to refresh number of unassigned students:",
-          error
-        );
+//           "Failed to refresh number of unassigned students:",
+//           error
+//         );
         // Keep current value if there's an error
       }
     }
@@ -557,7 +542,6 @@ export default function EducationClassManage() {
       
       enqueueSnackbar(`Successfully auto-assigned students to classes`, { variant: "success" });
     } catch (error) {
-//       console.error("Auto assign error:", error);
       enqueueSnackbar(
         error.response?.data?.message || "Failed to automatically assign students", 
         { variant: "error" }

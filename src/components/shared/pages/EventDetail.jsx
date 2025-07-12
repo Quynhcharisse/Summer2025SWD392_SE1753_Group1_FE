@@ -70,7 +70,7 @@ const EventDetail = () => {
 
   const handleRegisterClick = () => {
     if (!isLoggedIn) {
-      navigate("/login");
+      navigate("/auth/login");
       return;
     }
     handleOpenRegisterDialog();

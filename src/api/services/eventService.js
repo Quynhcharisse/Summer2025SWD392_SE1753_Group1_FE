@@ -106,4 +106,28 @@ export const getRegisteredEvents = async () => {
     }
 };
 
+export const getEventStudents = async (eventId) => {
+    try {
+        const response = await apiClient.get(`/education/event/assign/students?id=${eventId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Get event students error:', error);
+        throw error;
+    }
+};
+
+export const exportEventParticipants = async (eventId) => {
+    try {
+        const response = await apiClient.get(`/education/event/participants/export`, {
+            params: { id: eventId },
+            responseType: 'blob',
+        });
+        return response;
+    } catch (error) {
+        console.error('Export event participants error:', error);
+        throw error;
+    }
+};
+
+
 

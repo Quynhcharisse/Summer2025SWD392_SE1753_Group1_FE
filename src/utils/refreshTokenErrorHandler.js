@@ -78,14 +78,7 @@ export const handleRefreshTokenError = (error, options = {}) => {
   } = options;
   
   const errorType = categorizeRefreshError(error);
-  
-//   console.error("🚫 Refresh token error:", {
-    type: errorType,
-    status: error.response?.status,
-    message: error.message,
-    response: error.response?.data
-  });
-  
+ 
   // Log specific error messages
   switch (errorType) {
     case REFRESH_ERROR_TYPES.EXPIRED:

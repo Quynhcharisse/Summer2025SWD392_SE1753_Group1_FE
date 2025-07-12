@@ -14,6 +14,10 @@ import { AuthProvider } from "@contexts/AuthContext";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import EducationClassManage from "@/components/shared/pages/EducationClassManage";
 import ViewClassByEducation from "@/components/shared/pages/ViewClassByEducation";
+import Unauthorized from "@pages/Unauthorized";
+import { Class } from "@mui/icons-material";
+import ClassSchedule from "@/components/shared/pages/ClassSchedule";
+import ClassDetail from "@/components/shared/pages/ClassDetail";
 
 // Lazy import pages
 const Home = lazy(() => import("@pages/Home"));
@@ -39,6 +43,7 @@ const EducationDashboard = lazy(() => import("@pages/EducationDashboard"));
 const UserProfile = lazy(() => import("@pages/UserProfile"));
 const ComingSoon = lazy(() => import("@pages/ComingSoon"));
 const EventDetail = lazy(() => import("@pages/EventDetail"));
+const EventChildExport = lazy(() => import("@pages/EventChildExport"));
 
 // HR Components
 const TeacherList = lazy(() =>
@@ -374,11 +379,25 @@ const router = createBrowserRouter([
       {
         path: "forms",
         element: (
+            <UserPageWrapper requiredRoles={["PARENT"]}>
+                <AdmissionForm/>
+            </UserPageWrapper>
+        ),
+    },
+      {
+        path: "class-schedule",
+        element: (
           <UserPageWrapper requiredRoles={["PARENT"]}>
-            <Suspense fallback={<div>Loading AdmissionForm...</div>}>
-              <AdmissionForm />
-            </Suspense>
+            <ClassSchedule />
           </UserPageWrapper>
+        ),
+      },
+      {
+        path: "class-detail/:childId",
+        element: (
+          <UserPageWrapper requiredRoles={["PARENT"]}>
+            <ClassDetail />
+            </UserPageWrapper>
         ),
       },
       // Add other routes if needed, e.g.: feedback, messages, notifications...
@@ -587,6 +606,14 @@ const router = createBrowserRouter([
               title="Student Assessment"
               description="Track and evaluate student progress."
             />
+          </UserPageWrapper>
+        ),
+      },
+      {
+        path: "event/students/:eventId",
+        element: (
+          <UserPageWrapper requiredRoles={['EDUCATION']}>
+            <EventChildExport />
           </UserPageWrapper>
         ),
       },

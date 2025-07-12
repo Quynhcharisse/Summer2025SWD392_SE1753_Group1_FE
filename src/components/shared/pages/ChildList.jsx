@@ -4,7 +4,8 @@ import { Baby, Plus } from "lucide-react";
 import RenderFormPopUp from "./RenderFormPopUp";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getChildren } from "@api/services/parentService";
+import { getChildren , updateChild } from "@api/services/parentService";
+import EditChildPopUp from "./EditChildPopUp";
 
 const ChildList = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const ChildList = () => {
   const [isPopUpOpen, setIsPopUpOpen] = useState(false);
   const [admissionTerms, setAdmissionTerms] = useState([]);
   const [refresh, setRefresh] = useState(false);
+  const [editChildId, setEditChildId] = useState(null);
 
   useEffect(() => {
     const fetchChildren = async () => {
@@ -143,10 +145,17 @@ const ChildList = () => {
               </div>
               <Button
                 variant="primary"
-                className="w-full"
+                className="w-full mb-2"
                 onClick={() => setIsPopUpOpen(true)}
               >
                 Enroll
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setEditChildId(child.id)}
+              >
+                Edit
               </Button>
             </div>
           ))}
@@ -158,6 +167,12 @@ const ChildList = () => {
         students={children}
         GetForm={GetForm}
         admissionTerms={admissionTerms}
+      />
+      <EditChildPopUp
+        open={!!editChildId}
+        childId={editChildId}
+        onClose={() => setEditChildId(null)}
+        onSuccess={GetForm}
       />
     </PageTemplate>
   );
