@@ -5,7 +5,7 @@ export const getEventList = async () => {
         const response = await apiClient.get("/education/event/list");
         return response;
     } catch (error) {
-        console.error("Get event list error:", error);
+//         console.error("Get event list error:", error);
         throw error;
     }
 };
@@ -15,7 +15,7 @@ export const getEventDetail = async (id) => {
         const response = await apiClient.get(`/education/event/detail?id=${id}`);
         return response;
     } catch (error) {
-        console.error("Get event detail error:", error);
+//         console.error("Get event detail error:", error);
         throw error;
     }
 };
@@ -25,7 +25,7 @@ export const createEvent = async (data) => {
         const response = await apiClient.post("/education/event", data);
         return response;
     } catch (error) {
-        console.error("Create event error:", error);
+//         console.error("Create event error:", error);
         throw error;
     }
 };
@@ -35,7 +35,7 @@ export const cancelEvent = async ({ id, reason }) => {
         const response = await apiClient.put(`/education/event/cancel?id=${id}`, { reason });
         return response;
     } catch (error) {
-        console.error(`Cancel event error for ID ${id}:`, error);
+//         console.error(`Cancel event error for ID ${id}:`, error);
         throw error;
     }
 };
@@ -45,7 +45,7 @@ export const getEventTeachers = async (eventId) => {
         const response = await apiClient.get(`/education/event/assign/teachers?id=${eventId}`);
         return response.data;
     } catch (error) {
-        console.error('Get event teachers error:', error);
+//         console.error('Get event teachers error:', error);
         throw error;
     }
 };
@@ -55,7 +55,7 @@ export const getEventActive = async () => {
         const response = await apiClient.get("/auth/event/active");
         return response;
     } catch (error) {
-        console.error("Get event list error:", error);
+//         console.error("Get event list error:", error);
         throw error;
     }
 };
@@ -65,7 +65,7 @@ export const getEventActiveDetail = async (id) => {
         const response = await apiClient.get(`/auth/event/detail?id=${id}`);
         return response;
     } catch (error) {
-        console.error("Get event active detail error:", error);
+//         console.error("Get event active detail error:", error);
         throw error;
     }
 };
@@ -78,7 +78,7 @@ export const registerEvent = async ({ eventId, studentIds }) => {
         });
         return response;
     } catch (error) {
-        console.error("Register event error:", error);
+//         console.error("Register event error:", error);
         throw error;
     }
 };
@@ -91,7 +91,7 @@ export const getChildren = async () => {
         }
         return response.data;
     } catch (error) {
-        console.error("Error fetching children:", error);
+//         console.error("Error fetching children:", error);
         throw error;
     }
 };
@@ -101,7 +101,7 @@ export const getRegisteredEvents = async () => {
         const response = await apiClient.get("/parent/event/register");
         return response;
     } catch (error) {
-        console.error("Get registered events error:", error);
+//         console.error("Get registered events error:", error);
         throw error;
     }
 };

@@ -21,7 +21,7 @@ const PageTemplate = ({
       showHeader={showHeader}
       showFooter={showFooter}
     >
-      <div className={`max-w-7xl mx-auto px-4 py-6 ${containerClassName}`}>
+      <div className={` ${containerClassName}`}>
         {/* Page Header */}        {(title || subtitle || breadcrumbs || actions) && (
           <div className="mb-6">
             {breadcrumbs && (

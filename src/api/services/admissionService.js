@@ -64,7 +64,7 @@ export const createExtraTerm = async (formData) => {
         });
         return response.data;
     } catch (error) {
-        console.error('Error creating extra term:', error);
+//         console.error('Error creating extra term:', error);
         throw error;
     }
 };
@@ -118,10 +118,10 @@ export const getDailyTotal = async () => {
             date: dayjs().format('YYYY-MM-DD'),
             totalAmount: 0
         });
-        console.log('API Response:', response);
+//         console.log('API Response:', response);
         return response.data;
     } catch (error) {
-        console.error('Error in getDailyTotal:', error.response || error);
+//         console.error('Error in getDailyTotal:', error.response || error);
         throw error;
     }
 };

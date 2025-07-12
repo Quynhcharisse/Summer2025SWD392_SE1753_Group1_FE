@@ -46,7 +46,7 @@ const MyApplications = () => {
       setApplications(response.applications || []);
       
     } catch (error) {
-      console.error("Failed to load applications:", error);
+//       console.error("Failed to load applications:", error);
       setError("Không thể tải danh sách đơn đăng ký. Vui lòng thử lại.");
     } finally {
       setLoading(false);

@@ -20,11 +20,11 @@ const AdmissionChart = () => {
         setError(null);
         try {
             const response = await getDailyTotal();
-            console.log('API Response:', response);
+//             console.log('API Response:', response);
 
             if (response?.success && response.data?.dailyData) {
                 const data = response.data.dailyData;
-                console.log('Processing data:', data);
+//                 console.log('Processing data:', data);
 
                 const lastEntry = data[data.length - 1] || {totalAmount: 0};
 
@@ -34,11 +34,11 @@ const AdmissionChart = () => {
                     totalAmount: lastEntry.totalAmount
                 });
             } else {
-                console.error('Invalid response structure:', response);
+//                 console.error('Invalid response structure:', response);
                 setError('Invalid data received from server');
             }
         } catch (error) {
-            console.error('Error fetching chart data:', error);
+//             console.error('Error fetching chart data:', error);
             setError(error.message || 'Error fetching data');
         } finally {
             setLoading(false);

@@ -25,7 +25,7 @@ const SearchDemo = () => {
     }
 
     setIsSearching(true);
-    console.log("🔍 Searching for:", searchQuery);
+//     console.log("🔍 Searching for:", searchQuery);
 
     try {
       // Simulate API delay
@@ -61,7 +61,7 @@ const SearchDemo = () => {
 
       setSearchResults(mockResults);
     } catch (error) {
-      console.error("❌ Search error:", error);
+//       console.error("❌ Search error:", error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -86,15 +86,15 @@ const SearchDemo = () => {
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
-      console.log("🎤 Speech recognition started");
+//       console.log("🎤 Speech recognition started");
       setSpeechStatus("listening");
     };
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       const confidence = event.results[0][0].confidence;
 
-      console.log("🗣️ Speech result:", transcript);
-      console.log("📊 Confidence:", confidence);
+//       console.log("🗣️ Speech result:", transcript);
+//       console.log("📊 Confidence:", confidence);
 
       setSpeechStatus("processing");
       setSearchValue(transcript); // Update search value with speech result
@@ -106,7 +106,7 @@ const SearchDemo = () => {
     };
 
     recognition.onerror = (event) => {
-      console.error("❌ Speech recognition error:", event.error);
+//       console.error("❌ Speech recognition error:", event.error);
       setSpeechStatus("idle");
 
       let errorMessage;
@@ -135,7 +135,7 @@ const SearchDemo = () => {
     };
 
     recognition.onend = () => {
-      console.log("⏹️ Speech recognition ended");
+//       console.log("⏹️ Speech recognition ended");
       if (speechStatus === "listening") {
         setSpeechStatus("idle");
       }
@@ -145,7 +145,7 @@ const SearchDemo = () => {
     try {
       recognition.start();
     } catch (error) {
-      console.error("❌ Failed to start speech recognition:", error);
+//       console.error("❌ Failed to start speech recognition:", error);
       setSpeechStatus("idle");
       alert("❌ Failed to start speech recognition");
     }
@@ -302,22 +302,22 @@ const SearchDemo = () => {
                 <SearchBar
                   size="sm"
                   placeholder="Small search"
-                  onSearch={(v) => console.log("Small:", v)}
+//                   onSearch={(v) => console.log("Small:", v)}
                 />
                 <SearchBar
                   size="md"
                   placeholder="Medium search"
-                  onSearch={(v) => console.log("Medium:", v)}
+//                   onSearch={(v) => console.log("Medium:", v)}
                 />
                 <SearchBar
                   size="lg"
                   placeholder="Large search"
-                  onSearch={(v) => console.log("Large:", v)}
+//                   onSearch={(v) => console.log("Large:", v)}
                 />
                 <SearchBar
                   size="xl"
                   placeholder="Extra large search"
-                  onSearch={(v) => console.log("XL:", v)}
+//                   onSearch={(v) => console.log("XL:", v)}
                 />
               </div>
             </div>
@@ -331,17 +331,17 @@ const SearchDemo = () => {
                 <SearchBar
                   theme="light"
                   placeholder="Light theme"
-                  onSearch={(v) => console.log("Light:", v)}
+//                   onSearch={(v) => console.log("Light:", v)}
                 />
                 <SearchBar
                   theme="dark"
                   placeholder="Dark theme"
-                  onSearch={(v) => console.log("Dark:", v)}
+//                   onSearch={(v) => console.log("Dark:", v)}
                 />
                 <SearchBar
                   theme="minimal"
                   placeholder="Minimal theme"
-                  onSearch={(v) => console.log("Minimal:", v)}
+//                   onSearch={(v) => console.log("Minimal:", v)}
                 />
               </div>
             </div>
@@ -355,22 +355,22 @@ const SearchDemo = () => {
                 <SearchBar
                   variant="default"
                   placeholder="Default variant"
-                  onSearch={(v) => console.log("Default:", v)}
+//                   onSearch={(v) => console.log("Default:", v)}
                 />
                 <SearchBar
                   variant="rounded"
                   placeholder="Rounded variant"
-                  onSearch={(v) => console.log("Rounded:", v)}
+//                   onSearch={(v) => console.log("Rounded:", v)}
                 />
                 <SearchBar
                   variant="square"
                   placeholder="Square variant"
-                  onSearch={(v) => console.log("Square:", v)}
+//                   onSearch={(v) => console.log("Square:", v)}
                 />
                 <SearchBar
                   variant="none"
                   placeholder="No border variant"
-                  onSearch={(v) => console.log("None:", v)}
+//                   onSearch={(v) => console.log("None:", v)}
                 />
               </div>
             </div>

@@ -45,7 +45,7 @@ const UserDashboard = () => {
           }
         }
       } catch (error) {
-        console.error('Error loading user data:', error);
+//         console.error('Error loading user data:', error);
       } finally {
         setLoading(false);
       }

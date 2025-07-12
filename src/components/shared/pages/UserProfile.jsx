@@ -31,16 +31,16 @@ const VALIDATION_RULES = {
       required: "Full name is required",
       minLength: "Full name must be at least 2 characters",
       maxLength: "Full name cannot exceed 50 characters",
-      pattern: "Full name can only contain letters and spaces"
-    }
+      pattern: "Full name can only contain letters and spaces",
+    },
   },
   phone: {
     required: true,
     pattern: /^[0-9]{10}$/,
     message: {
       required: "Phone number is required",
-      pattern: "Phone number must be 10 digits"
-    }
+      pattern: "Phone number must be 10 digits",
+    },
   },
   address: {
     required: true,
@@ -49,19 +49,19 @@ const VALIDATION_RULES = {
     message: {
       required: "Address is required",
       minLength: "Address must be at least 10 characters",
-      maxLength: "Address cannot exceed 200 characters"
-    }
+      maxLength: "Address cannot exceed 200 characters",
+    },
   },
   gender: {
     required: true,
     message: {
-      required: "Please select a gender"
-    }
-  }
+      required: "Please select a gender",
+    },
+  },
 };
 
 const UserProfile = () => {
-  console.log("🔍 UserProfile component rendered");
+  //   console.log("🔍 UserProfile component rendered");
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -89,7 +89,7 @@ const UserProfile = () => {
   });
 
   useEffect(() => {
-    console.log("🔄 UserProfile useEffect triggered, calling loadProfile");
+    //     console.log("🔄 UserProfile useEffect triggered, calling loadProfile");
     loadProfile();
   }, []);
 
@@ -99,16 +99,17 @@ const UserProfile = () => {
       setError("");
 
       const response = await authService.getUserProfile();
-      console.log("📋 Profile response:", response);
-      
+      //       console.log("📋 Profile response:", response);
+
       // Extract actual data from response
       const profileData = response.data || response;
-      console.log("📋 Profile data extracted:", profileData);
-      console.log("📋 Setting profile state with:", profileData);
+      //       console.log("📋 Profile data extracted:", profileData);
+      //       console.log("📋 Setting profile state with:", profileData);
       setProfile(profileData);
 
       // Check if this is first login (profile incomplete or password needs reset)
-      const needsPasswordReset = profileData.firstLogin || profileData.tempPassword;
+      const needsPasswordReset =
+        profileData.firstLogin || profileData.tempPassword;
       setIsFirstLogin(needsPasswordReset);
       setShowPasswordReset(needsPasswordReset);
 
@@ -124,16 +125,13 @@ const UserProfile = () => {
         ...prev,
         email: profileData.email || "",
       }));
-      
-      console.log("✅ Profile loaded successfully, final state:", {
-        profile: profileData,
-        formData: { name: profileData.name, phone: profileData.phone, address: profileData.address, gender: profileData.gender }
-      });
+
+      //       console.log("✅ Profile loaded successfully, final state:", {
     } catch (error) {
-      console.error("❌ Failed to load profile:", error);
+      //       console.error("❌ Failed to load profile:", error);
       setError("Failed to load profile. Please try again.");
     } finally {
-      console.log("🏁 loadProfile finished, setting loading to false");
+      //       console.log("🏁 loadProfile finished, setting loading to false");
       setLoading(false);
     }
   };
@@ -165,19 +163,19 @@ const UserProfile = () => {
   // Handle form change with validation
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     const error = validateField(name, value);
-    setFormErrors(prev => ({
+    setFormErrors((prev) => ({
       ...prev,
-      [name]: error
+      [name]: error,
     }));
   };
 
   // Validate all fields before saving
   const validateForm = () => {
     const errors = {};
-    Object.keys(VALIDATION_RULES).forEach(field => {
+    Object.keys(VALIDATION_RULES).forEach((field) => {
       const error = validateField(field, formData[field]);
       if (error) {
         errors[field] = error;
@@ -203,7 +201,7 @@ const UserProfile = () => {
       setEditing(false);
       await loadProfile();
     } catch (error) {
-      console.error("Failed to update profile:", error);
+      //       console.error("Failed to update profile:", error);
       setError("Update failed. Please try again.");
     } finally {
       setSaving(false);
@@ -236,7 +234,7 @@ const UserProfile = () => {
       setShowPasswordReset(false);
       setIsFirstLogin(false);
     } catch (error) {
-      console.error("Password reset failed:", error);
+      //       console.error("Password reset failed:", error);
       setError("Password reset failed. Please try again.");
     } finally {
       setSaving(false);
@@ -249,10 +247,10 @@ const UserProfile = () => {
     navigate(dashboardRoute);
   };
 
-  console.log("🎭 Render state:", { loading, profile, formData, error });
+  //   console.log("🎭 Render state:", { loading, profile, formData, error });
 
   if (loading) {
-    console.log("⏳ Showing loading state");
+    //     console.log("⏳ Showing loading state");
     return (
       <PageTemplate title="Personal Information">
         <div className="text-center py-8">
@@ -335,7 +333,8 @@ const UserProfile = () => {
                   First Time Login
                 </h4>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Please update your personal information and change your password to complete account setup.
+                  Please update your personal information and change your
+                  password to complete account setup.
                 </p>
               </div>
             </div>
@@ -451,10 +450,12 @@ const UserProfile = () => {
                       value={formData.name}
                       onChange={handleFormChange}
                       placeholder="Enter your full name"
-                      className={formErrors.name ? 'border-red-500' : ''}
+                      className={formErrors.name ? "border-red-500" : ""}
                     />
                     {formErrors.name && (
-                      <span className="text-red-500 text-sm mt-1">{formErrors.name}</span>
+                      <span className="text-red-500 text-sm mt-1">
+                        {formErrors.name}
+                      </span>
                     )}
                   </div>
                 ) : (
@@ -485,7 +486,6 @@ const UserProfile = () => {
                 </div>
               </div>
 
-              {/* Gender - Editable */}
               <div>
                 <Label htmlFor="gender">Gender</Label>
                 {editing ? (
@@ -496,7 +496,7 @@ const UserProfile = () => {
                       value={formData.gender}
                       onChange={handleFormChange}
                       className={`w-full p-2 border rounded-md ${
-                        formErrors.gender ? 'border-red-500' : 'border-gray-300'
+                        formErrors.gender ? "border-red-500" : "border-gray-300"
                       } focus:ring-2 focus:ring-blue-500`}
                     >
                       <option value="">Select gender</option>
@@ -505,18 +505,20 @@ const UserProfile = () => {
                       <option value="OTHER">Other</option>
                     </select>
                     {formErrors.gender && (
-                      <span className="text-red-500 text-sm mt-1">{formErrors.gender}</span>
+                      <span className="text-red-500 text-sm mt-1">
+                        {formErrors.gender}
+                      </span>
                     )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                     <Users className="w-4 h-4 text-gray-500" />
                     <span className="text-gray-900">
-                      {formData.gender === "MALE" 
-                        ? "Male" 
-                        : formData.gender === "FEMALE" 
-                        ? "Female" 
-                        : formData.gender === "OTHER"
+                      {(formData.gender || profile?.gender) === "male"
+                        ? "Male"
+                        : (formData.gender || profile?.gender) === "female"
+                        ? "Female"
+                        : (formData.gender || profile?.gender) === "other"
                         ? "Other"
                         : "Not updated"}
                     </span>
@@ -535,10 +537,12 @@ const UserProfile = () => {
                       value={formData.phone}
                       onChange={handleFormChange}
                       placeholder="Enter your phone number"
-                      className={formErrors.phone ? 'border-red-500' : ''}
+                      className={formErrors.phone ? "border-red-500" : ""}
                     />
                     {formErrors.phone && (
-                      <span className="text-red-500 text-sm mt-1">{formErrors.phone}</span>
+                      <span className="text-red-500 text-sm mt-1">
+                        {formErrors.phone}
+                      </span>
                     )}
                   </div>
                 ) : (
@@ -576,12 +580,16 @@ const UserProfile = () => {
                       onChange={handleFormChange}
                       placeholder="Enter your address"
                       className={`w-full p-2 border rounded-md ${
-                        formErrors.address ? 'border-red-500' : 'border-gray-300'
+                        formErrors.address
+                          ? "border-red-500"
+                          : "border-gray-300"
                       } focus:ring-2 focus:ring-blue-500`}
                       rows={3}
                     />
                     {formErrors.address && (
-                      <span className="text-red-500 text-sm mt-1">{formErrors.address}</span>
+                      <span className="text-red-500 text-sm mt-1">
+                        {formErrors.address}
+                      </span>
                     )}
                   </div>
                 ) : (

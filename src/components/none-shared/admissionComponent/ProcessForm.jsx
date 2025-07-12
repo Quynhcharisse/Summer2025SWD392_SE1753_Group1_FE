@@ -519,40 +519,40 @@ export default function ProcessForm() {
     const [selectedForm, setSelectedForm] = useState(null) // tuong trung cho 1 cai selected
 
     function HandleSelectedForm(form) {
-        console.log("Selected form:", form);
+//         console.log("Selected form:", form);
         setSelectedForm(form)
     }
 
     const handleOpenPopup = (type) => {
-        console.log("Opening popup with type:", type);
+//         console.log("Opening popup with type:", type);
         setPopup({...popUp, isOpen: true, type: type});
     }
 
     const handleClosePopup = () => {
-        console.log("Closing popup");
+//         console.log("Closing popup");
         setPopup({...popUp, isOpen: false, type: ''});
         GetFormByAdmission()
     }
 
     async function GetFormByAdmission() {
-        console.log("Fetching forms...");
+//         console.log("Fetching forms...");
         try {
             const response = await getFormTracking()
-            console.log("API Response:", response);
+//             console.log("API Response:", response);
             if (response && response.success) {
-                console.log("Setting form list:", response.data);
+//                 console.log("Setting form list:", response.data);
                 setFormList(response.data)
             } else {
-                console.error("API call failed:", response);
+//                 console.error("API call failed:", response);
             }
         } catch (error) {
-            console.error("Error fetching forms:", error);
+//             console.error("Error fetching forms:", error);
         }
     }
 
     //useEffcet sẽ chạy lần đầu tiên, or sẽ chạy khi có thay đổi
     useEffect(() => {
-        console.log("Component mounted, fetching forms...");
+//         console.log("Component mounted, fetching forms...");
         GetFormByAdmission()
     }, [])
 

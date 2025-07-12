@@ -34,14 +34,14 @@ export const uploadImageToCloudinary = async (file) => {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Cloudinary upload error:', error);
+//       console.error('Cloudinary upload error:', error);
       throw new Error(error.message || 'Failed to upload image');
     }
 
     const data = await response.json();
     return data.secure_url;
   } catch (error) {
-    console.error('Error uploading image to Cloudinary:', error);
+//     console.error('Error uploading image to Cloudinary:', error);
     throw error;
   }
 };
@@ -61,7 +61,7 @@ export const getPublicIdFromUrl = (url) => {
     const match = url.match(regex);
     return match ? match[1] : null;
   } catch (error) {
-    console.error('Error extracting public ID from URL:', error);
+//     console.error('Error extracting public ID from URL:', error);
     return null;
   }
 };
@@ -120,7 +120,7 @@ export const deleteImageFromCloudinary = async (publicId) => {
     const data = await response.json();
     return data.result === 'ok';
   } catch (error) {
-    console.error('Error deleting image from Cloudinary:', error);
+//     console.error('Error deleting image from Cloudinary:', error);
     return false;
   }
 };

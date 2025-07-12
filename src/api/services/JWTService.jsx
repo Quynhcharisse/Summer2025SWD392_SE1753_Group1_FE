@@ -20,13 +20,13 @@ export const decodeToken = (token) => {
         // Validate token expiration
         const currentTime = Math.floor(Date.now() / 1000);
         if (decoded.exp < currentTime) {
-            console.warn("Token has expired");
+//             console.warn("Token has expired");
             return null;
         }
 
         return decoded;
     } catch (error) {
-        console.error("Failed to decode token:", error);
+//         console.error("Failed to decode token:", error);
         return null;
     }
 };
@@ -39,7 +39,7 @@ export const getCurrentTokenData = () => {
     let accessToken = Cookies.get("access");
 
     // Debug logging
-    // console.log("🔍 getCurrentTokenData - Cookie access token:", accessToken ? "exists" : "missing");
+//     // console.log("🔍 getCurrentTokenData - Cookie access token:", accessToken ? "exists" : "missing");
 
     if (!accessToken) {
         // Fallback: try to get from localStorage
@@ -49,21 +49,21 @@ export const getCurrentTokenData = () => {
                 const userObj = JSON.parse(userStr);
                 if (userObj?.token) {
                     accessToken = userObj.token;
-                    // console.log("🔍 getCurrentTokenData - Found token in localStorage fallback");
+//                     // console.log("🔍 getCurrentTokenData - Found token in localStorage fallback");
                 }
             } catch (e) {
-                console.warn("🔍 getCurrentTokenData - Failed to parse localStorage user data:", e.message);
+//                 console.warn("🔍 getCurrentTokenData - Failed to parse localStorage user data:", e.message);
             }
         }
     }
 
     if (!accessToken) {
-        // console.log("🔍 getCurrentTokenData - No access token found in cookies or localStorage");
+//         // console.log("🔍 getCurrentTokenData - No access token found in cookies or localStorage");
         return null;
     }
 
     const decoded = decodeToken(accessToken);
-    // console.log("🔍 getCurrentTokenData - Decoded token:", decoded ? "valid" : "invalid/expired");
+//     // console.log("🔍 getCurrentTokenData - Decoded token:", decoded ? "valid" : "invalid/expired");
     return decoded;
 };
 
@@ -104,10 +104,10 @@ export const isTokenExpired = () => {
  * Check if user is authenticated by validating access token
  */
 export const isAuthenticated = () => {
-    // console.log("🔍 isAuthenticated - Starting check");
+//     // console.log("🔍 isAuthenticated - Starting check");
     const tokenData = getCurrentTokenData();
-    // console.log("🔍 isAuthenticated - Token data:", tokenData ? "exists" : "null");
-    // console.log("🔍 isAuthenticated - Result:", !!tokenData);
+//     // console.log("🔍 isAuthenticated - Token data:", tokenData ? "exists" : "null");
+//     // console.log("🔍 isAuthenticated - Result:", !!tokenData);
     return !!tokenData;
 };
 
@@ -143,25 +143,25 @@ export const hasAnyRole = (roles = []) => {
  */
 export const refreshToken = async () => {
     try {
-        // console.log("🔄 Refreshing access token...");
+//         // console.log("🔄 Refreshing access token...");
         const response = await apiClient.post("/auth/refresh");
 
-        // console.log("📡 Refresh token response:", {
+//         // console.log("📡 Refresh token response:", {
         //   status: response.status,
         //   statusText: response.statusText,
         //   data: response.data ? "exists" : "null"
         // });
 
         if (response.status === 200 || response.status === 201) {
-            // console.log("✅ Token refresh successful");
+//             // console.log("✅ Token refresh successful");
             return response.data;
         } else {
-            // console.error("❌ Unexpected refresh response status:", response.status);
+//             // console.error("❌ Unexpected refresh response status:", response.status);
             throw new Error(`Unexpected response status: ${response.status}`);
         }
     } catch (error) {
-        // console.error("❌ Refresh token failed:", error);
-        // console.error("❌ Error response:", error.response?.data);
+//         // console.error("❌ Refresh token failed:", error);
+//         // console.error("❌ Error response:", error.response?.data);
 
         // Use centralized error handler
         handleRefreshTokenError(error, {
@@ -189,7 +189,7 @@ export const logout = async () => {
 
         return response.data;
     } catch (error) {
-        console.error("Logout failed:", error);
+//         console.error("Logout failed:", error);
 
         // Even if server request fails, clear local data
         localStorage.removeItem("user");
@@ -206,18 +206,18 @@ export const logout = async () => {
  */
 export const waitForTokenAvailability = async (maxAttempts = 5, delayMs = 200) => {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        // console.log(`🔍 waitForTokenAvailability - Attempt ${attempt}/${maxAttempts}`);
+//         // console.log(`🔍 waitForTokenAvailability - Attempt ${attempt}/${maxAttempts}`);
         const tokenData = getCurrentTokenData();
         if (tokenData) {
-            // console.log(`🔍 waitForTokenAvailability - Token found on attempt ${attempt}`);
+//             // console.log(`🔍 waitForTokenAvailability - Token found on attempt ${attempt}`);
             return tokenData;
         }
 
         if (attempt < maxAttempts) {
-            // console.log(`🔍 waitForTokenAvailability - Waiting ${delayMs}ms before next attempt`);
+//             // console.log(`🔍 waitForTokenAvailability - Waiting ${delayMs}ms before next attempt`);
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
     }
-    // console.warn('🔍 waitForTokenAvailability - Token not available after all attempts');
+//     // console.warn('🔍 waitForTokenAvailability - Token not available after all attempts');
     return null;
 };

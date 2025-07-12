@@ -7,19 +7,19 @@ import { getLoginURL, getEnrollmentRoute } from '../constants/routes';
  */
 export const checkEnrollmentAccess = async () => {
   try {
-    console.log("🔐 checkEnrollmentAccess - *** FUNCTION CALLED ***");
-    console.log("🔐 checkEnrollmentAccess - Starting authentication check");
+//     console.log("🔐 checkEnrollmentAccess - *** FUNCTION CALLED ***");
+//     console.log("🔐 checkEnrollmentAccess - Starting authentication check");
     
     // First check if user has a valid token
     const isAuth = isAuthenticated();
-    console.log("🔐 checkEnrollmentAccess - isAuthenticated():", isAuth);
+//     console.log("🔐 checkEnrollmentAccess - isAuthenticated():", isAuth);
     
     if (isAuth) {
       const tokenData = getCurrentTokenData();
-      console.log("🔐 checkEnrollmentAccess - Token data:", tokenData ? { role: tokenData.role, exp: tokenData.exp } : "null");
+//       console.log("🔐 checkEnrollmentAccess - Token data:", tokenData ? { role: tokenData.role, exp: tokenData.exp } : "null");
       
       if (!tokenData) {
-        console.warn("🔐 checkEnrollmentAccess - isAuthenticated() true but getCurrentTokenData() null");
+//         console.warn("🔐 checkEnrollmentAccess - isAuthenticated() true but getCurrentTokenData() null");
         return {
           isAuthenticated: false,
           action: 'require_login',
@@ -32,13 +32,13 @@ export const checkEnrollmentAccess = async () => {
       const timeUntilExpiry = tokenData.exp - currentTime;
       const fiveMinutes = 5 * 60;
       
-      console.log("🔐 checkEnrollmentAccess - Time until expiry:", timeUntilExpiry, "seconds");
-      console.log("🔐 checkEnrollmentAccess - Current time:", currentTime);
-      console.log("🔐 checkEnrollmentAccess - Token expires at:", tokenData.exp);
+//       console.log("🔐 checkEnrollmentAccess - Time until expiry:", timeUntilExpiry, "seconds");
+//       console.log("🔐 checkEnrollmentAccess - Current time:", currentTime);
+//       console.log("🔐 checkEnrollmentAccess - Token expires at:", tokenData.exp);
       
       if (timeUntilExpiry > fiveMinutes) {
         // Token is valid and has sufficient time left
-        console.log("🔐 checkEnrollmentAccess - Token valid, access granted");
+//         console.log("🔐 checkEnrollmentAccess - Token valid, access granted");
         return {
           isAuthenticated: true,
           action: 'allow',
@@ -47,17 +47,17 @@ export const checkEnrollmentAccess = async () => {
         };
       } else if (timeUntilExpiry > 0) {
         // Token is valid but expires soon, try to refresh
-        console.log("🔐 checkEnrollmentAccess - Token expires soon, attempting refresh");
+//         console.log("🔐 checkEnrollmentAccess - Token expires soon, attempting refresh");
         try {
-          console.log("🔄 checkEnrollmentAccess - Calling refreshToken()...");
+//           console.log("🔄 checkEnrollmentAccess - Calling refreshToken()...");
           await refreshToken();
-          console.log("✅ checkEnrollmentAccess - refreshToken() completed successfully");
+//           console.log("✅ checkEnrollmentAccess - refreshToken() completed successfully");
           
           const newTokenData = getCurrentTokenData();
-          console.log("🔍 checkEnrollmentAccess - New token data after refresh:", newTokenData ? { role: newTokenData.role, exp: newTokenData.exp } : "null");
+//           console.log("🔍 checkEnrollmentAccess - New token data after refresh:", newTokenData ? { role: newTokenData.role, exp: newTokenData.exp } : "null");
           
           if (newTokenData) {
-            console.log("✅ checkEnrollmentAccess - Token refresh successful, granting access");
+//             console.log("✅ checkEnrollmentAccess - Token refresh successful, granting access");
             return {
               isAuthenticated: true,
               action: 'allow',
@@ -65,11 +65,11 @@ export const checkEnrollmentAccess = async () => {
               message: 'Token refreshed, access granted'
             };
           } else {
-            console.warn("⚠️ checkEnrollmentAccess - refreshToken() succeeded but newTokenData is null");
+//             console.warn("⚠️ checkEnrollmentAccess - refreshToken() succeeded but newTokenData is null");
           }
         } catch (refreshError) {
-          console.error('❌ checkEnrollmentAccess - Token refresh failed with error:', refreshError);
-          console.error('❌ checkEnrollmentAccess - Error details:', {
+//           console.error('❌ checkEnrollmentAccess - Token refresh failed with error:', refreshError);
+//           console.error('❌ checkEnrollmentAccess - Error details:', {
             message: refreshError.message,
             status: refreshError.response?.status,
             data: refreshError.response?.data
@@ -77,14 +77,14 @@ export const checkEnrollmentAccess = async () => {
           // Fall through to require login
         }
       } else {
-        console.log("🔐 checkEnrollmentAccess - Token expired");
+//         console.log("🔐 checkEnrollmentAccess - Token expired");
       }
     } else {
-      console.log("🔐 checkEnrollmentAccess - User not authenticated");
+//       console.log("🔐 checkEnrollmentAccess - User not authenticated");
     }
     
     // No valid token or refresh failed
-    console.log("🔐 checkEnrollmentAccess - Requiring login");
+//     console.log("🔐 checkEnrollmentAccess - Requiring login");
     return {
       isAuthenticated: false,
       action: 'require_login',
@@ -92,7 +92,7 @@ export const checkEnrollmentAccess = async () => {
     };
     
   } catch (error) {
-    console.error('🔐 checkEnrollmentAccess - Error:', error);
+//     console.error('🔐 checkEnrollmentAccess - Error:', error);
     return {
       isAuthenticated: false,
       action: 'require_login',
@@ -111,22 +111,22 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
   const { showNotification, redirectPath } = options;
   
   try {
-    console.log("🎯 handleEnrollmentNavigation - Starting enrollment navigation");
-    console.log("🎯 handleEnrollmentNavigation - About to call checkEnrollmentAccess");
+//     console.log("🎯 handleEnrollmentNavigation - Starting enrollment navigation");
+//     console.log("🎯 handleEnrollmentNavigation - About to call checkEnrollmentAccess");
     
     const authCheck = await checkEnrollmentAccess();
     
-    console.log("🎯 handleEnrollmentNavigation - Auth check completed");
-    console.log("🎯 handleEnrollmentNavigation - Auth check result:", authCheck);
+//     console.log("🎯 handleEnrollmentNavigation - Auth check completed");
+//     console.log("🎯 handleEnrollmentNavigation - Auth check result:", authCheck);
     
     if (authCheck.action === 'allow') {
       // User is authenticated, get appropriate route based on role
       const userRole = authCheck.user?.role;
-      console.log("🎯 handleEnrollmentNavigation - User role:", userRole);
+//       console.log("🎯 handleEnrollmentNavigation - User role:", userRole);
       
       // If a specific redirectPath is provided, use it; otherwise use role-based route
       const targetRoute = redirectPath || getEnrollmentRoute(userRole);
-      console.log("🎯 handleEnrollmentNavigation - Target route:", targetRoute);
+//       console.log("🎯 handleEnrollmentNavigation - Target route:", targetRoute);
       
       // Navigate to the target route
       navigate(targetRoute);
@@ -144,7 +144,7 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
       // Create login URL with proper redirect parameters
       const loginUrl = getLoginURL(targetEnrollmentRoute, currentUrl);
       
-      console.log("🔐 handleEnrollmentNavigation - Redirecting to login:", {
+//       console.log("🔐 handleEnrollmentNavigation - Redirecting to login:", {
         currentUrl,
         targetEnrollmentRoute,
         loginUrl,
@@ -161,7 +161,7 @@ export const handleEnrollmentNavigation = async (navigate, options = {}) => {
       return false;
     }
   } catch (error) {
-    console.error('🚫 handleEnrollmentNavigation - Error:', error);
+//     console.error('🚫 handleEnrollmentNavigation - Error:', error);
     
     // Fallback to login page with default enrollment route
     const defaultEnrollmentRoute = "/user/parent/forms";

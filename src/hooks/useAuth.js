@@ -19,7 +19,7 @@ export const useAuth = () => {
             
             // If token is expired, try to refresh
             if (!isAuth && isTokenExpired()) {
-                console.log("🔄 Token expired, attempting refresh...");
+//                 console.log("🔄 Token expired, attempting refresh...");
                 
                 try {
                     await refreshToken();
@@ -27,17 +27,17 @@ export const useAuth = () => {
                     isAuth = isAuthenticated();
                     
                     if (isAuth) {
-                        console.log("✅ Token refresh successful in useAuth");
+//                         console.log("✅ Token refresh successful in useAuth");
                     }
                 } catch (refreshError) {
-                    console.error("❌ Token refresh failed in useAuth:", refreshError);
+//                     console.error("❌ Token refresh failed in useAuth:", refreshError);
                 }
             }
             
             setAuthenticated(isAuth);
             setUser(tokenData);
         } catch (error) {
-            console.error("Error checking auth status:", error);
+//             console.error("Error checking auth status:", error);
             setAuthenticated(false);
             setUser(null);
         } finally {

@@ -47,7 +47,7 @@ export const categorizeRefreshError = (error) => {
  * Clear all authentication data
  */
 export const clearAuthData = () => {
-  console.log("🧹 Clearing authentication data...");
+//   console.log("🧹 Clearing authentication data...");
   
   // Clear localStorage
   localStorage.removeItem('user');
@@ -59,7 +59,7 @@ export const clearAuthData = () => {
     document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
   });
   
-  console.log("✅ Authentication data cleared");
+//   console.log("✅ Authentication data cleared");
 };
 
 /**
@@ -79,7 +79,7 @@ export const handleRefreshTokenError = (error, options = {}) => {
   
   const errorType = categorizeRefreshError(error);
   
-  console.error("🚫 Refresh token error:", {
+//   console.error("🚫 Refresh token error:", {
     type: errorType,
     status: error.response?.status,
     message: error.message,
@@ -89,19 +89,19 @@ export const handleRefreshTokenError = (error, options = {}) => {
   // Log specific error messages
   switch (errorType) {
     case REFRESH_ERROR_TYPES.EXPIRED:
-      console.error("🕒 Refresh token has expired. User needs to login again.");
+//       console.error("🕒 Refresh token has expired. User needs to login again.");
       break;
     case REFRESH_ERROR_TYPES.INVALID:
-      console.error("🔐 Refresh token is invalid or malformed.");
+//       console.error("🔐 Refresh token is invalid or malformed.");
       break;
     case REFRESH_ERROR_TYPES.NETWORK:
-      console.error("🌐 Network error occurred during token refresh.");
+//       console.error("🌐 Network error occurred during token refresh.");
       break;
     case REFRESH_ERROR_TYPES.SERVER:
-      console.error("🖥️ Server error occurred during token refresh.");
+//       console.error("🖥️ Server error occurred during token refresh.");
       break;
     default:
-      console.error("❓ Unknown error occurred during token refresh.");
+//       console.error("❓ Unknown error occurred during token refresh.");
   }
   
   // Clear auth data for expired/invalid tokens
@@ -117,7 +117,7 @@ export const handleRefreshTokenError = (error, options = {}) => {
     if (redirectToLogin) {
       const currentPath = window.location.pathname;
       const redirectUrl = `${loginPath}?redirect=${encodeURIComponent(currentPath)}`;
-      console.log("🔄 Redirecting to login:", redirectUrl);
+//       console.log("🔄 Redirecting to login:", redirectUrl);
       window.location.href = redirectUrl;
     }
   }
@@ -132,20 +132,20 @@ export const handleRefreshTokenError = (error, options = {}) => {
  */
 export const attemptTokenRefresh = async (options = {}) => {
   try {
-    console.log("🔄 Attempting token refresh...");
+//     console.log("🔄 Attempting token refresh...");
     
     const result = await refreshToken();
     
     if (result) {
-      console.log("✅ Token refresh successful");
+//       console.log("✅ Token refresh successful");
       return true;
     } else {
-      console.log("❌ Token refresh returned empty result");
+//       console.log("❌ Token refresh returned empty result");
       return false;
     }
     
   } catch (error) {
-    console.error("❌ Token refresh failed:", error);
+//     console.error("❌ Token refresh failed:", error);
     handleRefreshTokenError(error, options);
     return false;
   }

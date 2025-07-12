@@ -23,7 +23,7 @@ const EnrollmentApplicationList = () => {
           setApplications([]);
         }
       } catch (err) {
-        console.error("Failed to fetch enrollment applications:", err);
+//         console.error("Failed to fetch enrollment applications:", err);
         setError("Error loading application list");
       } finally {
         setLoading(false);
