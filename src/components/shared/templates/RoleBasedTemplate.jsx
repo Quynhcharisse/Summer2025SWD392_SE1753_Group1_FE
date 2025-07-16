@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types';
 import { Footer, Header } from '@organisms';
 import { themeClasses } from '@theme/colors';
-import useRefreshToken from '../../../hooks/useRefreshToken';
+// import useRefreshToken from '../../../hooks/useRefreshToken';
 
 const RoleBasedTemplate = ({ children }) => {
-  useRefreshToken();
+  // Temporarily disable useRefreshToken to avoid conflicts
+  // useRefreshToken();
 
   return (
     <div className={`min-h-screen flex flex-col ${themeClasses.backgroundSurface} ${themeClasses.textPrimary}`}>

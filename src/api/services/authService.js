@@ -1,23 +1,13 @@
 import apiClient from "@api/apiClient";
 
 export const login = async (credentials) => {
-  try {
     const { email, password } = credentials;
     const response = await apiClient.post("/auth/login", {
       email,
       password,
     });
-    return response.data;
-  } catch (error) {
-    if (error.code === "ERR_NETWORK") {
-//       console.error(
-     
-    } else {
-//       console.error("Login error:", error);
-    }
-    throw error;
-  }
-};
+    return response || null
+}
 
 export const logout = async () => {
   const response = await apiClient.get("/auth/logout");

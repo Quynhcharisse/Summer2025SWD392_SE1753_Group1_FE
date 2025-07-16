@@ -5,8 +5,8 @@ import {useEffect, useState} from "react";
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import Input from "../atoms/Input";
+import {enqueueSnackbar} from "notistack";
 
-// Helper function to handle role-based navigation
 const handleRoleBasedNavigation = (navigate, tokenData) => {
     if (!tokenData?.role) {
         navigate("/");
@@ -71,8 +71,7 @@ function Login() {
             }, 5000);
             return () => clearTimeout(timer);
         }
-    }, [successMessage]);    // Display messages for enrollment redirects
-
+    }, [successMessage]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -82,26 +81,20 @@ function Login() {
         try {
             const response = await authService.login({email, password});
 
-            if (response && response.data) { // Check if response exists and has data
-                // Store user data immediately
-                storeUserData(response?.data || response, email);
+            if (response && response.status === 200) {
+                storeUserData(response.data, email);
 
-                // Get token data directly without waiting, avoid delays
                 const tokenData = getCurrentTokenData();
-
                 if (!tokenData) {
-//                     console.error("🔑 No token data available, but proceeding with login");
+                    console.error("No token data available, but proceeding with login");
                 }
-//                 // console.log("🔑 Final token data for navigation:", tokenData);
-
-                // Check for first login indicators
-                const responseData = response?.data || response;
+                const responseData = response.data;
                 const isFirstLogin = responseData?.firstLogin ||
                     responseData?.tempPassword ||
                     responseData?.requirePasswordChange ||
-                    responseData?.isFirstLogin;                // Handle redirect logic
+                    responseData?.isFirstLogin;
+
                 if (redirectUrl) {
-                    // Ensure redirect URL is properly formatted
                     const cleanRedirectUrl = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`;
 
                     navigate(cleanRedirectUrl, {
@@ -116,7 +109,6 @@ function Login() {
                         }
                     });
                 } else if (isFirstLogin) {
-                    // Redirect to profile page for first login
                     navigate('/user/shared/profile', {
                         replace: true,
                         state: {
@@ -125,40 +117,18 @@ function Login() {
                         }
                     });
                 } else {
-                    // Use role-based navigation
                     handleRoleBasedNavigation(navigate, tokenData);
                 }
             } else {
                 setErrors({submit: t("login.errors.genericError")});
             }
         } catch (error) {
-
-            // Clear password for security (keep email for UX)
-            setPassword('');
-
-            if (error.response?.status === 401) {
-                setErrors({
-                    submit: t("login.errors.invalidCredentials")
-                });
-            } else if (error.response?.data?.message) {
-                setErrors({submit: error.response.data.message});
-            } else {
-                setErrors({
-                    submit: t("login.errors.genericError")
-                });
-            }
-
-            // Auto focus to password field for retry
-            setTimeout(() => {
-                const passwordField = document.querySelector('input[name="password"]');
-                if (passwordField) {
-                    passwordField.focus();
-                }
-            }, 100);
+            enqueueSnackbar(error.response.data.message, {variant: "error"})
         } finally {
             setIsLoading(false);
         }
-    };
+    }
+
     const loginFormProps = {
         email,
         setEmail,
@@ -176,7 +146,10 @@ function Login() {
     };
     return (
         <div
-            className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+            className="min-h-screen flex items-center justify-center py-8 px-4"
+            style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            }}>
             <div
                 className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-sm border border-gray-200/50 shadow-xl rounded-3xl p-8 space-y-8 animate-fade-in relative overflow-hidden">
                 {/* Decorative Background Elements */}

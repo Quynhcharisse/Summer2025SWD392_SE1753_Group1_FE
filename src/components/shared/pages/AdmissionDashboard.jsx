@@ -11,10 +11,12 @@ import {
   Eye,
   UserCheck,
   AlertCircle,
-  TrendingUp
+  TrendingUp,
+  CreditCard
 } from "lucide-react";
 import { isAuthenticated, getCurrentTokenData } from "@services/JWTService.jsx";
 import { authService } from "@services/authService.js";
+import { getAdmissionFormStatusSummary } from "@services/admissionService.js";
 
 const AdmissionDashboard = () => {
   const navigate = useNavigate();
@@ -40,6 +42,53 @@ const AdmissionDashboard = () => {
         const tokenData = getCurrentTokenData();
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser || tokenData);
+
+        // Get real admission form status summary
+        try {
+          const statusSummary = await getAdmissionFormStatusSummary();
+          if (statusSummary && statusSummary.success) {
+            const data = statusSummary.data;
+            // Map backend status to frontend stats
+            setStats({
+              total:
+                  (data.pendingApprovalCount || 0) +
+                  (data.refilledCount || 0) +
+                  (data.approvedCount || 0) +
+                  (data.rejectedCount || 0) +
+                  (data.paymentCount || 0),
+              pending: data.pendingApprovalCount || 0,
+              underReview: data.refilledCount || 0, // giả sử đang xem xét là refilled
+              approved: data.approvedCount || 0,
+              rejected: data.rejectedCount || 0,
+              payment: data.paymentCount || 0, // Thêm payment count
+              // waitlisted: 0, // không có trường này trong BE
+              // thisWeek: 0,   // chưa có trong BE
+              // thisMonth: 0   // chưa có trong BE
+            });
+
+          } else {
+            // Fallback to empty stats if API fails
+            setStats({
+              total: 0,
+              pending: 0,
+              underReview: 0,
+              approved: 0,
+              rejected: 0,
+              payment: 0
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch admission form status summary:', error);
+          // Fallback to empty stats if API fails
+          setStats({
+            total: 0,
+            pending: 0,
+            underReview: 0,
+            approved: 0,
+            rejected: 0,
+            payment: 0
+          });
+        }
 
         // Mock registration data for now
         setRegistrations([
@@ -74,16 +123,6 @@ const AdmissionDashboard = () => {
             priority: 'normal'
           }
         ]);
-
-        setStats({
-          total: 45,
-          pending: 12,
-          underReview: 8,
-          approved: 20,
-          rejected: 5,
-          thisWeek: 7,
-          thisMonth: 28
-        });
 
       } catch (error) {
 //         console.error('Failed to load admission dashboard data:', error);
@@ -186,11 +225,11 @@ const AdmissionDashboard = () => {
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="This Week"
-            value={stats.thisWeek}
-            description="New applications"
-            icon={TrendingUp}
-            trend={{ value: 12, isPositive: true }}
+            title="Payment Required"
+            value={stats.payment}
+            description="Awaiting payment"
+            icon={CreditCard}
+            trend={{ value: 0, isPositive: true }}
           />
         </section>
 
@@ -305,6 +344,10 @@ const AdmissionDashboard = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Rejected:</span>
                   <Badge variant="destructive">{stats.rejected}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Payment Required:</span>
+                  <Badge variant="secondary">{stats.payment}</Badge>
                 </div>
               </div>
             </div>

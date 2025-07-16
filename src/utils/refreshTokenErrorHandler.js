@@ -105,12 +105,10 @@ export const handleRefreshTokenError = (error, options = {}) => {
     if (onError) {
       onError(error, errorType);
     }
-    
-    // Redirect to login
+
     if (redirectToLogin) {
       const currentPath = window.location.pathname;
       const redirectUrl = `${loginPath}?redirect=${encodeURIComponent(currentPath)}`;
-//       console.log("🔄 Redirecting to login:", redirectUrl);
       window.location.href = redirectUrl;
     }
   }

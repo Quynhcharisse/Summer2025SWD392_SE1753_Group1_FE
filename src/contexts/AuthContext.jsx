@@ -61,22 +61,23 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Handle auth failure events
-    useEffect(() => {
-        const handleAuthFailure = () => {
-            setAuth({
-                isAuthenticated: false,
-                user: null,
-                loading: false
-            });
-            navigate('/auth/login');
-        };
+    // Handle auth failure events - DISABLED for now to prevent unwanted redirects
+    // useEffect(() => {
+    //     const handleAuthFailure = () => {
+    //         console.log("🚨 AuthContext - authFailure event received, redirecting to login");
+    //         setAuth({
+    //             isAuthenticated: false,
+    //             user: null,
+    //             loading: false
+    //         });
+    //         navigate('/auth/login');
+    //     };
 
-        window.addEventListener('authFailure', handleAuthFailure);
-        return () => {
-            window.removeEventListener('authFailure', handleAuthFailure);
-        };
-    }, [navigate]);
+    //     window.addEventListener('authFailure', handleAuthFailure);
+    //     return () => {
+    //         window.removeEventListener('authFailure', handleAuthFailure);
+    //     };
+    // }, [navigate]);
 
     useEffect(() => {
         checkAuthStatus();

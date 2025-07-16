@@ -1,4 +1,3 @@
-import {handleRefreshTokenError} from "@/utils/refreshTokenErrorHandler";
 import apiClient from "@api/apiClient";
 import Cookies from "js-cookie";
 import {jwtDecode} from "jwt-decode";
@@ -6,7 +5,10 @@ import {jwtDecode} from "jwt-decode";
 /**
  * JWT Service for Cookie-based authentication
  * Access token is stored in regular cookie for role-based UI logic
- * Refresh token is stored in HttpOnly cookie (managed by server)
+ * Refresh token is stored in HttpOnly cookie (automatically managed by server)
+ * 
+ * IMPORTANT: Server handles all token refresh automatically via HttpOnly cookies
+ * FE only needs to read access token for role-based UI logic
  */
 
 /**
@@ -15,18 +17,8 @@ import {jwtDecode} from "jwt-decode";
  */
 export const decodeToken = (token) => {
     try {
-        const decoded = jwtDecode(token);
-
-        // Validate token expiration
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (decoded.exp < currentTime) {
-//             console.warn("Token has expired");
-            return null;
-        }
-
-        return decoded;
+        return jwtDecode(token);
     } catch (error) {
-//         console.error("Failed to decode token:", error);
         return null;
     }
 };
@@ -34,41 +26,42 @@ export const decodeToken = (token) => {
 /**
  * Get access token from cookie and decode it
  * Returns user info including role for UI logic
+ * Server automatically refreshes expired tokens via HttpOnly cookie
  */
 export const getCurrentTokenData = () => {
     let accessToken = Cookies.get("access");
 
-    // Debug logging
-//     // console.log("🔍 getCurrentTokenData - Cookie access token:", accessToken ? "exists" : "missing");
+    console.log("🔍 getCurrentTokenData - Cookie access token:", accessToken ? "exists" : "missing");
 
     if (!accessToken) {
-        // Fallback: try to get from localStorage
+        // Fallback: try to get from localStorage (for compatibility)
         const userStr = localStorage.getItem("user");
         if (userStr) {
             try {
                 const userObj = JSON.parse(userStr);
                 if (userObj?.token) {
                     accessToken = userObj.token;
-//                     // console.log("🔍 getCurrentTokenData - Found token in localStorage fallback");
+                    console.log("🔍 getCurrentTokenData - Found token in localStorage fallback");
                 }
             } catch (e) {
-//                 console.warn("🔍 getCurrentTokenData - Failed to parse localStorage user data:", e.message);
+                console.warn("🔍 getCurrentTokenData - Failed to parse localStorage user data:", e.message);
             }
         }
     }
 
     if (!accessToken) {
-//         // console.log("🔍 getCurrentTokenData - No access token found in cookies or localStorage");
+        console.log("🔍 getCurrentTokenData - No access token found");
         return null;
     }
 
     const decoded = decodeToken(accessToken);
-//     // console.log("🔍 getCurrentTokenData - Decoded token:", decoded ? "valid" : "invalid/expired");
+    console.log("🔍 getCurrentTokenData - Decoded token:", decoded ? "valid" : "invalid");
     return decoded;
 };
 
 /**
- * Check if there's an access token (even if expired)
+ * Check if there's an access token (for UI logic only)
+ * Server handles token validity automatically
  */
 export const hasAccessToken = () => {
     let accessToken = Cookies.get("access");
@@ -78,7 +71,7 @@ export const hasAccessToken = () => {
         if (userStr) {
             try {
                 const userObj = JSON.parse(userStr);
-                if (userObj && userObj.token) {
+                if (userObj?.token) {
                     accessToken = userObj.token;
                 }
             } catch (e) {
@@ -90,24 +83,14 @@ export const hasAccessToken = () => {
 };
 
 /**
- * Check if access token exists but is expired
- */
-export const isTokenExpired = () => {
-    const hasToken = hasAccessToken();
-    const tokenData = getCurrentTokenData();
-
-    // If we have a token but getCurrentTokenData returns null, it means token is expired
-    return hasToken && !tokenData;
-};
-
-/**
- * Check if user is authenticated by validating access token
+ * Check if user is authenticated (has valid access token for UI logic)
+ * Server handles actual authentication and token refresh
  */
 export const isAuthenticated = () => {
-//     // console.log("🔍 isAuthenticated - Starting check");
+    console.log("🔍 isAuthenticated - Starting check");
     const tokenData = getCurrentTokenData();
-//     // console.log("🔍 isAuthenticated - Token data:", tokenData ? "exists" : "null");
-//     // console.log("🔍 isAuthenticated - Result:", !!tokenData);
+    console.log("🔍 isAuthenticated - Token data:", tokenData ? "exists" : "null");
+    console.log("🔍 isAuthenticated - Result:", !!tokenData);
     return !!tokenData;
 };
 
@@ -140,36 +123,11 @@ export const hasAnyRole = (roles = []) => {
 /**
  * Refresh access token using HttpOnly refresh cookie
  * Server automatically reads refresh token from HttpOnly cookie
+ * This is mainly called by apiClient interceptor
  */
 export const refreshToken = async () => {
-    try {
-//         // console.log("🔄 Refreshing access token...");
-        const response = await apiClient.post("/auth/refresh");
-
-//         // console.log("📡 Refresh token response:", {
-        //   status: response.status,
-        //   statusText: response.statusText,
-        //   data: response.data ? "exists" : "null"
-        // });
-
-        if (response.status === 200 || response.status === 201) {
-//             // console.log("✅ Token refresh successful");
-            return response.data;
-        } else {
-//             // console.error("❌ Unexpected refresh response status:", response.status);
-            throw new Error(`Unexpected response status: ${response.status}`);
-        }
-    } catch (error) {
-//         // console.error("❌ Refresh token failed:", error);
-//         // console.error("❌ Error response:", error.response?.data);
-
-        // Use centralized error handler
-        handleRefreshTokenError(error, {
-            redirectToLogin: false, // Don't redirect here, let the caller decide
-        });
-
-        throw error;
-    }
+    const response = await apiClient.post("/auth/refresh");
+    return response || null
 };
 
 /**
@@ -178,18 +136,20 @@ export const refreshToken = async () => {
  */
 export const logout = async () => {
     try {
+        console.log("🚪 JWTService - Requesting logout from server...");
         const response = await apiClient.post("/auth/logout");
 
         // Clear client-side data
         localStorage.removeItem("user");
 
-        // Clear any manually set cookies (backup)
+        // Clear any manually set cookies (backup cleanup)
         Cookies.remove("access");
         Cookies.remove("refresh");
 
+        console.log("✅ JWTService - Logout successful");
         return response.data;
     } catch (error) {
-//         console.error("Logout failed:", error);
+        console.error("❌ JWTService - Logout failed:", error);
 
         // Even if server request fails, clear local data
         localStorage.removeItem("user");
@@ -198,26 +158,4 @@ export const logout = async () => {
 
         throw error;
     }
-};
-
-/**
- * Wait for token to be available in cookies after login
- * Sometimes there's a delay between server setting cookie and browser being able to read it
- */
-export const waitForTokenAvailability = async (maxAttempts = 5, delayMs = 200) => {
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-//         // console.log(`🔍 waitForTokenAvailability - Attempt ${attempt}/${maxAttempts}`);
-        const tokenData = getCurrentTokenData();
-        if (tokenData) {
-//             // console.log(`🔍 waitForTokenAvailability - Token found on attempt ${attempt}`);
-            return tokenData;
-        }
-
-        if (attempt < maxAttempts) {
-//             // console.log(`🔍 waitForTokenAvailability - Waiting ${delayMs}ms before next attempt`);
-            await new Promise(resolve => setTimeout(resolve, delayMs));
-        }
-    }
-//     // console.warn('🔍 waitForTokenAvailability - Token not available after all attempts');
-    return null;
 };
