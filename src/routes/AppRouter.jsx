@@ -16,6 +16,7 @@ import EducationClassManage from "@/components/shared/pages/EducationClassManage
 import ViewClassByEducation from "@/components/shared/pages/ViewClassByEducation";
 import ClassSchedule from "@/components/shared/pages/ClassSchedule";
 import ClassDetail from "@/components/shared/pages/ClassDetail";
+import EducationDashboard from "@pages/EducationDashboard.jsx";
 
 // Lazy import pages
 const Home = lazy(() => import("@pages/Home"));
@@ -530,15 +531,15 @@ const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            <AdmissionDashboard />
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
+            <EducationDashboard />
           </UserPageWrapper>
         ),
       },
       {
         path: "registrations",
         element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
             <ComingSoon
               title="Registrations List"
               description="View and manage all student registrations."
@@ -549,7 +550,7 @@ const router = createBrowserRouter([
       {
         path: "syllabus",
         element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
             <Syllabus />
           </UserPageWrapper>
         ),
