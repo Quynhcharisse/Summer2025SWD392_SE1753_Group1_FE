@@ -25,10 +25,12 @@ apiClient.interceptors.response.use(
 
         try {
           const refreshRes = await refreshToken();
-          if (refreshRes.success) {
+          // Check if refresh was successful (got a valid response)
+          if (refreshRes && refreshRes.status === 200) {
             return apiClient(originalRequest);
           } else {
-              window.location.href = "/auth/login";
+            console.error("Refresh token failed, redirecting to login");
+            window.location.href = "/auth/login";
           }
         } catch (refreshError) {
           console.error("Refresh token request failed", refreshError);

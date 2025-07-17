@@ -13,21 +13,6 @@ export const logout = async () => {
   const response = await apiClient.get("/auth/logout");
   return response ? response.data : null;
 };
-
-/**
- * Refresh access token using HttpOnly refresh cookie
- * This function is mainly called by the API interceptor
- */
-export const refreshToken = async () => {
-  try {
-    const response = await apiClient.post("/auth/refresh");
-    return response.data;
-  } catch (error) {
-//     console.error("Token refresh failed:", error);
-    throw error;
-  }
-};
-
 export const signUp = async (userData) => {
   try {
     const response = await apiClient.post("/auth/register", {
@@ -203,7 +188,6 @@ export const authService = {
   login,
   signUp,
   logout,
-  refreshToken,
   requestPasswordReset,
   confirmPasswordReset,
   register,

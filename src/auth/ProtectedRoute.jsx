@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
 import {jwtDecode} from "jwt-decode";
-import {refreshToken} from "@services/authService.js";
+import {refreshToken} from "@services/JWTService.jsx";
 
 async function RefreshToken() {
     const response = await refreshToken();
@@ -13,7 +13,6 @@ async function RefreshToken() {
         }
     }
 }
-
 export default function ProtectedRoute({children, requiredRoles}) {
     const accessToken = Cookies.get("access");
     if (accessToken) {

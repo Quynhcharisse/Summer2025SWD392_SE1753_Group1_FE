@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole } from '@services/JWTService.jsx';
-import { authService } from '@api/services/authService';
+import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole, refreshToken } from '@services/JWTService.jsx';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,7 +30,7 @@ export const AuthProvider = ({ children }) => {
             if (!isAuth && Cookies.get("refresh")) {
                 // Try to refresh the token
                 try {
-                    await authService.refreshToken();
+                    await refreshToken();
                     const newAccessToken = Cookies.get("access");
                     const newTokenData = newAccessToken ? parseJwt(newAccessToken) : null;
                     
