@@ -129,12 +129,6 @@ export default function LanguageSelector({
   const currentPositionConfig = positionConfig[position] || positionConfig["bottom-left"];
   const languages = [
     { 
-      code: 'vi', 
-      name: 'Tiếng Việt',
-      shortName: 'VI',
-      flag: <VietnamFlag size={size} />
-    },
-    { 
       code: 'en', 
       name: 'English',
       shortName: 'EN',
@@ -148,12 +142,16 @@ export default function LanguageSelector({
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
   
-  // Safety check - nếu vẫn không có currentLanguage thì tạo default
+  // Safety check - nếu vẫn không có currentLanguage thì fallback về English
   const safeCurrentLanguage = currentLanguage || {
-    code: 'vi',
-    name: 'Tiếng Việt',
-    shortName: 'VI',
-    flag: <VietnamFlag />
+    code: 'en',
+    name: 'English',
+    shortName: 'EN',
+    flag: (
+      <div className={`${currentSizeConfig.icon || "w-4 h-4"} bg-blue-500 border border-gray-300 flex items-center justify-center text-white text-xs rounded-sm`}>
+        EN
+      </div>
+    )
   };  const handleLanguageChange = (langCode) => {
     i18n.changeLanguage(langCode);
     setIsOpen(false);
