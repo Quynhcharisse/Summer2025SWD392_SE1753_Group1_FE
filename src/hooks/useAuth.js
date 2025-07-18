@@ -1,9 +1,10 @@
 /**
  * Custom hook for authentication state management
  * Provides easy access to authentication status and user data
+ * Server handles token refresh automatically via HttpOnly cookies
  */
 import { useState, useEffect } from 'react';
-import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole, isTokenExpired, refreshToken } from '@services/JWTService.jsx';
+import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole } from '@services/JWTService.jsx';
 
 export const useAuth = () => {
     const [user, setUser] = useState(null);
@@ -12,32 +13,25 @@ export const useAuth = () => {
 
     useEffect(() => {
         checkAuthStatus();
-    }, []);    const checkAuthStatus = async () => {
+    }, []);
+
+    const checkAuthStatus = async () => {
         try {
-            let tokenData = getCurrentTokenData();
-            let isAuth = isAuthenticated();
+            console.log("🔍 useAuth - Checking authentication status");
             
-            // If token is expired, try to refresh
-            if (!isAuth && isTokenExpired()) {
-//                 console.log("🔄 Token expired, attempting refresh...");
-                
-                try {
-                    await refreshToken();
-                    tokenData = getCurrentTokenData();
-                    isAuth = isAuthenticated();
-                    
-                    if (isAuth) {
-//                         console.log("✅ Token refresh successful in useAuth");
-                    }
-                } catch (refreshError) {
-//                     console.error("❌ Token refresh failed in useAuth:", refreshError);
-                }
-            }
+            // Simply check current token status (server handles refresh automatically)
+            const tokenData = getCurrentTokenData();
+            const isAuth = isAuthenticated();
+            
+            console.log("🔍 useAuth - Authentication check result:", {
+                hasToken: !!tokenData,
+                isAuthenticated: isAuth
+            });
             
             setAuthenticated(isAuth);
             setUser(tokenData);
         } catch (error) {
-//             console.error("Error checking auth status:", error);
+            console.error("❌ useAuth - Error checking auth status:", error);
             setAuthenticated(false);
             setUser(null);
         } finally {
@@ -59,7 +53,7 @@ export const useAuth = () => {
         authenticated,
         checkRole,
         checkAnyRole,
-        refreshAuthStatus,
+        refreshAuthStatus
     };
 };
 

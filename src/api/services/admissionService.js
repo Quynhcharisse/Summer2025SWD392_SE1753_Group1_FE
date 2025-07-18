@@ -14,7 +14,6 @@ export const processAdmissionForm = async (id, isApproved, reason) => {
     })
     return response ? response.data : null
 }
-
 export const getTermList = async () => {
     try {
         const response = await apiClient.get("/admission/term")
@@ -118,10 +117,16 @@ export const getDailyTotal = async () => {
             date: dayjs().format('YYYY-MM-DD'),
             totalAmount: 0
         });
-//         console.log('API Response:', response);
         return response.data;
     } catch (error) {
-//         console.error('Error in getDailyTotal:', error.response || error);
+        throw error;
+    }
+};
+export const getAdmissionFormStatusSummary = async () => {
+    try {
+        const response = await apiClient.get("/admission/forms/status/summary");
+        return response.data;
+    } catch (error) {
         throw error;
     }
 };

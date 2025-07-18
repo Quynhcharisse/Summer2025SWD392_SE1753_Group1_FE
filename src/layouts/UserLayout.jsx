@@ -205,12 +205,12 @@ const UserLayout = ({children}) => {
                         label: 'Class Management',
                         path: '/user/education/classes'
                     },
-                    {
-                        key: '/user/education/reports',
-                        icon: TrendingUp,
-                        label: 'Education Reports',
-                        path: '/user/education/reports'
-                    },
+                    // {
+                    //     key: '/user/education/reports',
+                    //     icon: TrendingUp,
+                    //     label: 'Education Reports',
+                    //     path: '/user/education/reports'
+                    // },
                     {
                         key: "/user/shared/profile",
                         icon: User,

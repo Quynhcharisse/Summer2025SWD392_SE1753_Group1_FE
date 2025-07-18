@@ -1,5 +1,5 @@
 import ChildList from "@/components/shared/pages/ChildList";
-import { AUTH_ROUTES, ROUTES } from "@/constants/routes.js";
+import {AUTH_ROUTES, ROUTES} from "@/constants/routes.js";
 import UserLayout from "@/layouts/UserLayout";
 import ProtectedRoute from '../auth/ProtectedRoute';
 import AddChildForm from "@pages/AddChildForm";
@@ -7,17 +7,16 @@ import EditChildForm from "@pages/EditChildForm";
 import EnrollmentApplicationList from "@pages/EnrollmentApplicationList";
 import Login from "@pages/Login";
 import SignUp from "@pages/SignUp";
-import { MainTemplate } from "@templates";
+import {MainTemplate} from "@templates";
 import PropTypes from "prop-types";
-import { lazy, Suspense } from "react";
-import { AuthProvider } from "@contexts/AuthContext";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {lazy, Suspense} from "react";
+import {AuthProvider} from "@contexts/AuthContext";
+import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import EducationClassManage from "@/components/shared/pages/EducationClassManage";
 import ViewClassByEducation from "@/components/shared/pages/ViewClassByEducation";
-import Unauthorized from "@pages/Unauthorized";
-import { Class } from "@mui/icons-material";
 import ClassSchedule from "@/components/shared/pages/ClassSchedule";
 import ClassDetail from "@/components/shared/pages/ClassDetail";
+import EducationDashboard from "@pages/EducationDashboard.jsx";
 
 // Lazy import pages
 const Home = lazy(() => import("@pages/Home"));
@@ -28,18 +27,16 @@ const Classes = lazy(() => import("@pages/Classes"));
 const AboutUs = lazy(() => import("@pages/AboutUs"));
 const Events = lazy(() => import("@pages/Events"));
 const NotFound = lazy(() => import("@pages/NotFound"));
-const BookStoryDemo = lazy(() => import("@pages/BookStoryDemo"));
-const ThemeTest = lazy(() => import("@pages/ThemeTest"));
+
 const EnrollmentApplication = lazy(() =>
   import("@pages/EnrollmentApplication")
 );
-const MyApplications = lazy(() => import("@pages/MyApplications"));
+
 const ParentDashboard = lazy(() => import("@pages/ParentDashboard"));
-const TeacherDashboard = lazy(() => import("@pages/TeacherDashboard"));
 const AdmissionDashboard = lazy(() => import("@pages/AdmissionDashboard"));
 const AdminDashboard = lazy(() => import("@pages/AdminDashboard"));
 const HRDashboard = lazy(() => import("@pages/HRDashboard"));
-const EducationDashboard = lazy(() => import("@pages/EducationDashboard"));
+
 const UserProfile = lazy(() => import("@pages/UserProfile"));
 const ComingSoon = lazy(() => import("@pages/ComingSoon"));
 const EventDetail = lazy(() => import("@pages/EventDetail"));
@@ -534,15 +531,15 @@ const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
-            <AdmissionDashboard />
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
+            <EducationDashboard />
           </UserPageWrapper>
         ),
       },
       {
         path: "registrations",
         element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
             <ComingSoon
               title="Registrations List"
               description="View and manage all student registrations."
@@ -553,7 +550,7 @@ const router = createBrowserRouter([
       {
         path: "syllabus",
         element: (
-          <UserPageWrapper requiredRoles={["ADMISSION"]}>
+          <UserPageWrapper requiredRoles={["EDUCATION"]}>
             <Syllabus />
           </UserPageWrapper>
         ),

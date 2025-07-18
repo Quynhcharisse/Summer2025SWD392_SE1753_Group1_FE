@@ -1,113 +1,94 @@
-/**
- * Protected Route Component - JWT + Cookie Implementation
- * Handles route protection based on user authentication and roles using:
- * - Access token in regular cookie (contains role for client-side logic)
- * - Refresh token in HttpOnly cookie (automatically managed by server)
- */
-import { Navigate } from "react-router-dom";
-import { getCurrentTokenData, hasAnyRole, isTokenExpired, hasAccessToken } from "@services/JWTService.jsx";
+import Cookies from "js-cookie";
+import {jwtDecode} from "jwt-decode";
+import {refreshToken} from "@services/JWTService.jsx";
 import { useState, useEffect } from "react";
-import PropTypes from 'prop-types';
 
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-    const [isLoading, setIsLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [hasPermission, setHasPermission] = useState(false);
+export default function ProtectedRoute({children, requiredRoles = []}) {
+    const [isChecking, setIsChecking] = useState(true);
+    const [hasAccess, setHasAccess] = useState(false);
 
     useEffect(() => {
-        checkAuthentication();
-    }, [allowedRoles]);    const attemptTokenRefresh = async () => {
-//         console.log("🔄 Access token expired, attempting refresh...");
-        
-        try {
-            const { refreshToken } = await import('@services/JWTService.jsx');
-            await refreshToken();
-            
-            const tokenData = getCurrentTokenData();
-            if (!tokenData) {
-//                 console.log("❌ Token refresh failed or returned invalid token");
-                return null;
-            }
-            
-//             console.log("✅ Token refresh successful");
-            return tokenData;
-        } catch (refreshError) {
-//             console.error("❌ Token refresh failed:", refreshError);
-            return null;
-        }
-    };
-
-    const checkAuthentication = async () => {
-        try {
-            let tokenData = getCurrentTokenData();
-            
-            // Handle missing or expired token
-            if (!tokenData) {
-                if (isTokenExpired()) {
-                    tokenData = await attemptTokenRefresh();
-                } else if (!hasAccessToken()) {
-//                     console.log("❌ No access token found");
-                } else {
-//                     console.log("❌ Invalid access token");
-                }
+        const checkAccess = async () => {
+            try {
+                const accessToken = Cookies.get("access");
                 
-                if (!tokenData) {
-                    setIsAuthenticated(false);
-                    setIsLoading(false);
-                    return;
+                if (accessToken) {
+                    try {
+                        const decoded = jwtDecode(accessToken);
+                        const userRole = decoded.role;
+                        
+                        // If no roles required, allow access
+                        if (requiredRoles.length === 0) {
+                            setHasAccess(true);
+                            setIsChecking(false);
+                            return;
+                        }
+                        
+                        // Check if user has required role
+                        if (requiredRoles.includes(userRole)) {
+                            setHasAccess(true);
+                        } else {
+                            setHasAccess(false);
+                        }
+                        setIsChecking(false);
+                        return;
+                    } catch (decodeError) {
+                        console.error("Token decode error:", decodeError);
+                        // Token is malformed, try refresh
+                    }
                 }
-            }
 
-            // User is authenticated
-            setIsAuthenticated(true);
-
-            // Check role permissions
-            if (allowedRoles.length > 0) {
-                const hasRequiredRole = hasAnyRole(allowedRoles);
-                setHasPermission(hasRequiredRole);
-                
-                if (!hasRequiredRole) {
-//                     console.warn(`Access denied. Required roles: ${allowedRoles.join(', ')}, User role: ${tokenData.role}`);
+                // No token or malformed token, try refresh
+                try {
+                    console.log("No valid token, attempting refresh...");
+                    const response = await refreshToken();
+                    
+                    if (response && response.status === 200) {
+                        // Check the new token
+                        const newAccessToken = Cookies.get("access");
+                        if (newAccessToken) {
+                            const decoded = jwtDecode(newAccessToken);
+                            const userRole = decoded.role;
+                            
+                            if (requiredRoles.length === 0 || requiredRoles.includes(userRole)) {
+                                setHasAccess(true);
+                            } else {
+                                setHasAccess(false);
+                            }
+                        } else {
+                            setHasAccess(false);
+                        }
+                    } else {
+                        setHasAccess(false);
+                    }
+                } catch (refreshError) {
+                    console.error("Refresh failed:", refreshError);
+                    setHasAccess(false);
                 }
-            } else {
-                setHasPermission(true);
+            } catch (error) {
+                console.error("ProtectedRoute error:", error);
+                setHasAccess(false);
+            } finally {
+                setIsChecking(false);
             }
+        };
 
-        } catch (error) {
-//             console.error("Authentication check failed:", error);
-            setIsAuthenticated(false);
-            setHasPermission(false);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+        checkAccess();
+    }, [requiredRoles]);
 
-    // Show loading state while checking authentication
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">Checking authentication...</span>
-            </div>
-        );
-    }    // Not authenticated - redirect to login with current path
-    if (!isAuthenticated) {
-        const currentPath = window.location.pathname;
-        const loginUrl = `/auth/login?redirect=${encodeURIComponent(currentPath)}`;
-//         console.log("🔐 ProtectedRoute - Redirecting to login:", loginUrl);
-        return <Navigate to={loginUrl} replace />;
+    // Show loading while checking
+    if (isChecking) {
+        return <div className="flex items-center justify-center min-h-screen">
+            <div>Loading...</div>
+        </div>;
     }
 
-    // Authenticated but no permission - redirect to unauthorized
-    if (!hasPermission) {
-        return <Navigate to="/unauthorized" replace />;
-    }    // Authenticated and has permission - render children
+    // Redirect to login if no access
+    if (!hasAccess) {
+        window.location.href = "/auth/login";
+        return null;
+    }
+
+    // Render children if has access
     return children;
-};
-
-ProtectedRoute.propTypes = {
-    children: PropTypes.node.isRequired,
-    allowedRoles: PropTypes.arrayOf(PropTypes.string)
-};
-
-export default ProtectedRoute;
+}

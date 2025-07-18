@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole } from '@services/JWTService.jsx';
-import { authService } from '@api/services/authService';
+import { getCurrentTokenData, isAuthenticated, hasRole, hasAnyRole, refreshToken } from '@services/JWTService.jsx';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,7 +30,7 @@ export const AuthProvider = ({ children }) => {
             if (!isAuth && Cookies.get("refresh")) {
                 // Try to refresh the token
                 try {
-                    await authService.refreshToken();
+                    await refreshToken();
                     const newAccessToken = Cookies.get("access");
                     const newTokenData = newAccessToken ? parseJwt(newAccessToken) : null;
                     
@@ -61,22 +60,23 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Handle auth failure events
-    useEffect(() => {
-        const handleAuthFailure = () => {
-            setAuth({
-                isAuthenticated: false,
-                user: null,
-                loading: false
-            });
-            navigate('/auth/login');
-        };
+    // Handle auth failure events - DISABLED for now to prevent unwanted redirects
+    // useEffect(() => {
+    //     const handleAuthFailure = () => {
+    //         console.log("🚨 AuthContext - authFailure event received, redirecting to login");
+    //         setAuth({
+    //             isAuthenticated: false,
+    //             user: null,
+    //             loading: false
+    //         });
+    //         navigate('/auth/login');
+    //     };
 
-        window.addEventListener('authFailure', handleAuthFailure);
-        return () => {
-            window.removeEventListener('authFailure', handleAuthFailure);
-        };
-    }, [navigate]);
+    //     window.addEventListener('authFailure', handleAuthFailure);
+    //     return () => {
+    //         window.removeEventListener('authFailure', handleAuthFailure);
+    //     };
+    // }, [navigate]);
 
     useEffect(() => {
         checkAuthStatus();

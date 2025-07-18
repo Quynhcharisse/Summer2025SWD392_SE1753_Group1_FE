@@ -72,8 +72,34 @@ const SignUpForm = ({ onSubmit, loading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmitHandler)} className="w-full max-w-md mx-auto space-y-6 bg-white rounded-lg shadow-md p-6">
-      <div className="space-y-4">
+    <div className="w-full max-w-md mx-auto space-y-6">
+      {/* Header with Logo and Title */}
+      <div className="text-center space-y-4">
+        <div className="flex justify-center">
+          <div className="relative">
+            {/* Glow effect background */}
+            <div className="absolute inset-0 bg-white/20 rounded-full blur-xl scale-110"></div>
+            {/* Logo with enhanced styling */}
+            <img
+              src="/SUNSHINE.png"
+              alt="Sunshine Preschool"
+              className="h-20 w-auto relative z-10 drop-shadow-2xl filter brightness-110 contrast-110 hover:scale-105 transition-all duration-300"
+            />
+          </div>
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            {t('register.title')}
+          </h2>
+          <p className="text-white/80 text-base">
+            {t('register.subtitle')}
+          </p>
+        </div>
+      </div>
+
+      {/* Form Card */}
+      <form onSubmit={handleSubmit(onSubmitHandler)} className="bg-white rounded-lg shadow-md p-6 space-y-4">
+        <div className="space-y-4">
         {/* Name Field */}
         <div>
           <Input
@@ -179,22 +205,23 @@ const SignUpForm = ({ onSubmit, loading }) => {
         </div>
       </div>
 
-      <Button
-        type="submit"
-        variant="primary"
-        className="w-full"
-        disabled={loading}
-      >
-        {loading ? (
-          <>
-            <Spinner size="sm" className="mr-2" />
-            {t('register.form.submitting')}
-          </>
-        ) : (
-          t('register.form.submit')
-        )}
-      </Button>
-    </form>
+        <Button
+          type="submit"
+          variant="primary"
+          className="w-full"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Spinner size="sm" className="mr-2" />
+              {t('register.form.submitting')}
+            </>
+          ) : (
+            t('register.form.submit')
+          )}
+        </Button>
+      </form>
+    </div>
   );
 };
 

@@ -15,7 +15,10 @@ const SuccessMessage = ({onContinue}) => {
 
     return (
         <div
-            className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 py-8 px-4">
+            className="min-h-screen flex items-center justify-center py-8 px-4"
+            style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            }}>
             <div className="w-full max-w-md mx-auto space-y-8">
                 {/* Logo and Header */}
                 <div className="text-center">
@@ -37,31 +40,34 @@ const SuccessMessage = ({onContinue}) => {
                 </div>
 
                 {/* Success Content */}
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 p-8 transform hover:scale-105 transition-all duration-300">
                     <div className="text-center space-y-6">
                         <div
-                            className="mx-auto w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-10 h-10 text-white"/>
+                            className="mx-auto w-24 h-24 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                            <CheckCircle className="w-12 h-12 text-white drop-shadow-lg"/>
                         </div>
 
-                        <div className="space-y-3">
-                            <p className="text-gray-600">
+                        <div className="space-y-4">
+                            <p className="text-gray-700 text-lg font-medium">
                                 {t("register.success")}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-gray-600">
                                 {t("login.redirectInfo.generic")}
                             </p>
                         </div>
 
                         <div className="flex justify-center">
-                            <Spinner size="md" className="text-green-500"/>
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full blur-md opacity-30 animate-ping"></div>
+                                <Spinner size="md" className="text-green-500 relative z-10"/>
+                            </div>
                         </div>
 
-                        <p className="text-sm text-gray-500">
+                        <p className="text-gray-600">
                             {t("register.backToLogin")}{" "}
                             <button
                                 onClick={onContinue}
-                                className="text-green-600 hover:underline font-medium"
+                                className="text-green-600 hover:text-green-700 hover:underline font-semibold transition-colors duration-200 hover:scale-105 transform inline-block"
                             >
                                 {t("register.signIn")}
                             </button>
@@ -88,12 +94,12 @@ const ErrorAlert = ({message, onDismiss}) => {
 
     return (
         <div
-            className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm flex items-center justify-between">
-            <span>{message}</span>
+            className="mb-4 p-4 bg-red-50/90 backdrop-blur-sm border border-red-200 text-red-700 rounded-xl text-sm flex items-center justify-between shadow-lg transform hover:scale-105 transition-all duration-200">
+            <span className="font-medium">{message}</span>
             {onDismiss && (
                 <button
                     onClick={onDismiss}
-                    className="ml-2 text-red-500 hover:text-red-700"
+                    className="ml-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full w-6 h-6 flex items-center justify-center transition-all duration-200"
                 >
                     ×
                 </button>
@@ -232,26 +238,13 @@ const SignUp = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-4 px-4">
+        <div 
+            className="min-h-screen flex items-center justify-center py-4 px-4"
+            style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            }}>
             <div className="w-full max-w-6xl mx-auto space-y-4">
-                {/* Logo and Header - Compact */}
-                <div className="text-center">
-                    <div className="flex justify-center mb-3">
-                        <img
-                            src="/SUNSHINE.png"
-                            alt="Sunshine Preschool"
-                            className="h-12 w-auto"
-                        />
-                    </div>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                        {isVerified ? t("register.title") : t("emailVerification.title")}
-                    </h2>
-
-                    <p className="text-sm text-gray-600">
-                        {isVerified ? t("register.subtitle") : t("emailVerification.description")}
-                    </p>
-                </div>
 
                 {/* Error Alert */}
                 <div className="flex justify-center">
@@ -271,17 +264,17 @@ const SignUp = () => {
                             loading={loading}
                         />
                         <div className="flex justify-center">
-                            <div className="w-full max-w-md text-center space-y-2">
+                            <div className="w-full max-w-md text-center space-y-3">
                                 <div className="flex items-center">
-                                    <div className="flex-1 border-t border-gray-200"></div>
-                                    <span className="px-3 text-gray-500 text-xs">or</span>
-                                    <div className="flex-1 border-t border-gray-200"></div>
+                                    <div className="flex-1 border-t border-white/30"></div>
+                                    <span className="px-4 text-white/70 text-sm font-medium">or</span>
+                                    <div className="flex-1 border-t border-white/30"></div>
                                 </div>
-                                <p className="text-gray-600 text-sm">
-                                    {t("register.alreadyHaveAccount")}{" "}
+                                <p className="text-white/90 text-base">
+                                    {t("register.haveAccount")}{" "}
                                     <Link
                                         to={ROUTES.LOGIN}
-                                        className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
+                                        className="text-white font-bold hover:text-white/80 hover:underline transition-all duration-200 hover:scale-105 transform inline-block drop-shadow-md"
                                     >
                                         {t("register.signIn")}
                                     </Link>
@@ -297,7 +290,7 @@ const SignUp = () => {
                 )}
 
                 {/* Copyright - Smaller */}
-                <div className="text-center text-xs text-gray-500">
+                <div className="text-center text-sm text-white/60 drop-shadow-md">
                     © 2025 Sunshine Preschool. All rights reserved.
                 </div>
             </div>
