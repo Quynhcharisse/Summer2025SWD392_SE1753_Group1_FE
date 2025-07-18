@@ -537,17 +537,6 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "registrations",
-        element: (
-          <UserPageWrapper requiredRoles={["EDUCATION"]}>
-            <ComingSoon
-              title="Registrations List"
-              description="View and manage all student registrations."
-            />
-          </UserPageWrapper>
-        ),
-      },
-      {
         path: "syllabus",
         element: (
           <UserPageWrapper requiredRoles={["EDUCATION"]}>
@@ -592,17 +581,6 @@ const router = createBrowserRouter([
         element: (
           <UserPageWrapper requiredRoles={["EDUCATION"]}>
             <EducationClassManage />
-          </UserPageWrapper>
-        ),
-      },
-      {
-        path: "",
-        element: (
-          <UserPageWrapper requiredRoles={["EDUCATION"]}>
-            <ComingSoon
-              title="Student Assessment"
-              description="Track and evaluate student progress."
-            />
           </UserPageWrapper>
         ),
       },

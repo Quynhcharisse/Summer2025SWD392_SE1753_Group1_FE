@@ -125,7 +125,7 @@ export default function EducationClassManage() {
   // State for confirmation modal when unassigning students
   const [confirmUnassignModal, setConfirmUnassignModal] = useState(false);
   const [pendingUnassignIds, setPendingUnassignIds] = useState([]);
-  
+
   // State for auto assign confirmation modal
   const [confirmAutoAssignModal, setConfirmAutoAssignModal] = useState(false);
 
@@ -138,10 +138,10 @@ export default function EducationClassManage() {
   };
 
   useEffect(() => {
-//     console.log("Fetching school years...");
+    //     console.log("Fetching school years...");
     getSchoolYears()
       .then((res) => {
-//         console.log("School years response:", res.data);
+        //         console.log("School years response:", res.data);
         const years = (res.data.data || []).map((y) => ({
           value: y,
           label: y,
@@ -152,16 +152,16 @@ export default function EducationClassManage() {
         }
       })
       .catch((error) => {
-//         console.error("Error fetching school years:", error);
+        //         console.error("Error fetching school years:", error);
       });
   }, []);
 
   useEffect(() => {
     if (selectedGrade) {
-//       console.log("Fetching syllabus for grade:", selectedGrade);
+      //       console.log("Fetching syllabus for grade:", selectedGrade);
       getSyllabusByGrade(selectedGrade)
         .then((res) => {
-//           console.log("Syllabus response:", res.data);
+          //           console.log("Syllabus response:", res.data);
           const syllabuses = (res.data.data || []).map((s) => ({
             value: s.id,
             label: s.subject,
@@ -172,7 +172,7 @@ export default function EducationClassManage() {
           }
         })
         .catch((error) => {
-//           console.error("Error fetching syllabus:", error);
+          //           console.error("Error fetching syllabus:", error);
         });
     }
   }, [selectedGrade]);
@@ -182,11 +182,11 @@ export default function EducationClassManage() {
       setLoading(true);
       getClassesByYearAndGrade(selectedYear, selectedGrade)
         .then((res) => {
-//           console.log("Classes response:", res.data);
+          //           console.log("Classes response:", res.data);
           setClasses(res.data.data || []);
         })
         .catch((error) => {
-//           console.error("Error fetching classes:", error);
+          //           console.error("Error fetching classes:", error);
         })
         .finally(() => setLoading(false));
     }
@@ -194,10 +194,10 @@ export default function EducationClassManage() {
 
   useEffect(() => {
     if (popupOpen && popupType === "lesson" && selectedSyllabus) {
-//       console.log("Fetching lessons for syllabus:", selectedSyllabus);
+      //       console.log("Fetching lessons for syllabus:", selectedSyllabus);
       getLessonsBySyllabus(selectedSyllabus)
         .then((res) => {
-//           console.log("Lessons response:", res.data);
+          //           console.log("Lessons response:", res.data);
           setLessonList(
             (res.data.data || []).map((l) => ({
               value: l.id,
@@ -207,7 +207,7 @@ export default function EducationClassManage() {
           );
         })
         .catch((error) => {
-//           console.error("Error fetching lessons:", error);
+          //           console.error("Error fetching lessons:", error);
         });
     }
   }, [popupOpen, popupType, selectedSyllabus]);
@@ -282,7 +282,7 @@ export default function EducationClassManage() {
           ? "Only classes with status 'ACTIVE' can be deleted"
           : "Delete failed!";
       enqueueSnackbar(msg, { variant: "error" });
-//       console.error("Delete class error:", error);
+      //       console.error("Delete class error:", error);
     } finally {
       setDeletingClassId(null);
     }
@@ -306,7 +306,7 @@ export default function EducationClassManage() {
 
   const handleCreateClass = async (e) => {
     e.preventDefault();
-//     console.log("Starting create class...");
+    //     console.log("Starting create class...");
 
     try {
       // Validate form
@@ -317,7 +317,7 @@ export default function EducationClassManage() {
 
       // Build activities list
       const activitiesNameByDay = buildActivitiesNameByDay();
-//       console.log("Activities list built:", activitiesNameByDay);
+      //       console.log("Activities list built:", activitiesNameByDay);
 
       // Prepare payload
       const payload = {
@@ -327,11 +327,11 @@ export default function EducationClassManage() {
         gradeName: selectedGrade.toLowerCase(),
         activitiesNameByDay,
       };
-//       console.log("Sending create class request with payload:", payload);
+      //       console.log("Sending create class request with payload:", payload);
 
       // Call API to create class
       const response = await createClass(payload);
-//       console.log("Create class response:", response);
+      //       console.log("Create class response:", response);
 
       // Success handling
       alert("Class created successfully!");
@@ -342,7 +342,7 @@ export default function EducationClassManage() {
         selectedYear,
         selectedGrade
       );
-//       console.log("Updated class list:", classListResponse.data);
+      //       console.log("Updated class list:", classListResponse.data);
       setClasses(classListResponse.data.data || []);
 
       // Refresh number of unassigned students
@@ -492,18 +492,18 @@ export default function EducationClassManage() {
   const refreshNumUnassigned = async () => {
     if (selectedYear && selectedGrade) {
       try {
-//         console.log("Refreshing number of unassigned students...");
+        //         console.log("Refreshing number of unassigned students...");
         const res = await getNumberOfAvailableChildren(
           selectedYear,
           selectedGrade
         );
-//         console.log("Number of unassigned students updated:", res.data.data);
+        //         console.log("Number of unassigned students updated:", res.data.data);
         setNumUnassigned(res.data.data ?? 0);
       } catch (error) {
-//         console.error(
-//           "Failed to refresh number of unassigned students:",
-//           error
-//         );
+        //         console.error(
+        //           "Failed to refresh number of unassigned students:",
+        //           error
+        //         );
         // Keep current value if there's an error
       }
     }
@@ -512,45 +512,55 @@ export default function EducationClassManage() {
   // Auto assign all available students to classes
   const handleAutoAssign = () => {
     if (!selectedYear || !selectedGrade) {
-      enqueueSnackbar("Please select year and grade first", { variant: "error" });
+      enqueueSnackbar("Please select year and grade first", {
+        variant: "error",
+      });
       return;
     }
 
     if (numUnassigned <= 0) {
-      enqueueSnackbar("There are no unassigned students to assign", { variant: "info" });
+      enqueueSnackbar("There are no unassigned students to assign", {
+        variant: "info",
+      });
       return;
     }
 
     // Show confirmation modal
     setConfirmAutoAssignModal(true);
   };
-  
+
   // Handle confirmation from auto assign modal
   const handleConfirmAutoAssign = async () => {
     setConfirmAutoAssignModal(false);
-    
+
     try {
       setLoading(true);
       await assignAvailableStudentsAuto(selectedYear, selectedGrade);
-      
+
       // Refresh classes to show updated student counts
-      const classListResponse = await getClassesByYearAndGrade(selectedYear, selectedGrade);
+      const classListResponse = await getClassesByYearAndGrade(
+        selectedYear,
+        selectedGrade
+      );
       setClasses(classListResponse.data.data || []);
-      
+
       // Refresh unassigned students count
       await refreshNumUnassigned();
-      
-      enqueueSnackbar(`Successfully auto-assigned students to classes`, { variant: "success" });
+
+      enqueueSnackbar(`Successfully auto-assigned students to classes`, {
+        variant: "success",
+      });
     } catch (error) {
       enqueueSnackbar(
-        error.response?.data?.message || "Failed to automatically assign students", 
+        error.response?.data?.message ||
+          "Failed to automatically assign students",
         { variant: "error" }
       );
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Cancel auto assignment
   const handleCancelAutoAssign = () => {
     setConfirmAutoAssignModal(false);
@@ -595,7 +605,9 @@ export default function EducationClassManage() {
       {/* Class list table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-md font-semibold">Number of unassigned students: {numUnassigned}</h1>
+          <h1 className="text-md font-semibold">
+            Number of unassigned students: {numUnassigned}
+          </h1>
           {numUnassigned > 0 && isCurrentYear(selectedYear) && (
             <Button
               variant="primary"
@@ -701,7 +713,7 @@ export default function EducationClassManage() {
                       </td>
                     </tr>
                   ))
-               ) }
+                )}
               </tbody>
             </table>
           </div>
@@ -1151,7 +1163,7 @@ export default function EducationClassManage() {
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Confirmation Modal for auto-assigning students */}
       <Dialog
         open={confirmAutoAssignModal}
@@ -1164,13 +1176,18 @@ export default function EducationClassManage() {
           <div className="my-4">
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-3">
               <p>
-                <span className="font-semibold">You are about to automatically assign:</span> {numUnassigned} students to available classes
+                <span className="font-semibold">
+                  You are about to automatically assign:
+                </span>{" "}
+                {numUnassigned} students to available classes
               </p>
               <p className="mt-2">
-                This will distribute all unassigned students to classes in this grade and year based on the system's algorithm.
+                Note: Students will only be assigned to active classes with
+                available slots (up to 20 students per class).
               </p>
               <p className="mt-2 text-yellow-700">
-                Note: Some classes may exceed the recommended size limit of 20 students.
+                If there are more students than available slots, not all
+                students will be assigned.{" "}
               </p>
             </div>
             <p>Do you want to proceed with automatic assignment?</p>

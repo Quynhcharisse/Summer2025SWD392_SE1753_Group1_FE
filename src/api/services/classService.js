@@ -60,13 +60,24 @@ export const assignAvailableStudentsAuto = (year, grade) =>
 
 // Delete activities for a specific day and schedule
 export const deleteActivitiesByDayAndSchedule = (scheduleId, date) =>
-  apiClient.delete('/education/activitiesByDayAndSchedule', { 
+  apiClient.delete('/education/activitiesByDayAndSchedule', {
     data: { scheduleId, date }
   });
 
 // Export students list for a class
 export const exportStudentsOfClass = (classId) =>
-  apiClient.get('/education/student/export', { 
+  apiClient.get('/education/student/export', {
     params: { classId },
     responseType: 'blob' // For file download
   });
+
+//Get ra danh sách các lớp của học sinh
+export const getClassesOfStudent = (childId) =>
+  apiClient.get('/education/assignedClassesOfChild/list', { params: { childId } });
+
+export const getClassReportByYear = (year) =>
+  apiClient.get('/education/classes/reportByYear', { params: { year } });
+
+// Lấy thống kê số lượng học sinh tham gia theo sự kiện (event)
+export const getEventParticipantsStats = (params) =>
+  apiClient.put('/education/event/numberOfParticipants/stats', params);
