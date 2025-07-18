@@ -1,6 +1,31 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { PageTemplate } from "@templates";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Box,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  CircularProgress,
+  Container,
+  Stack,
+  Avatar,
+  Fade,
+  Zoom,
+  IconButton,
+  Divider
+} from "@mui/material";
+import {
+  Email,
+  Lock,
+  ArrowBack,
+  CheckCircle,
+  Send,
+  Refresh
+} from "@mui/icons-material";
+import { useSnackbar } from 'notistack';
 import authService from "@services/authService";
 import { AUTH_ROUTES } from "@/constants/routes";
 
@@ -9,6 +34,8 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate();
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -20,12 +47,12 @@ const ForgotPassword = () => {
     setError("");
 
     if (!email.trim()) {
-      setError("Vui lòng nhập email");
+      setError("Please enter your email");
       return;
     }
 
     if (!validateEmail(email)) {
-      setError("Email không hợp lệ");
+      setError("Invalid email format");
       return;
     }
 
@@ -34,178 +61,327 @@ const ForgotPassword = () => {
     try {
       await authService.requestPasswordReset(email);
       setSuccess(true);
+      enqueueSnackbar("Password reset email sent successfully!", { variant: "success" });
     } catch (error) {
-      console.error("Password reset error:", error);
-      setError(
-        error.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại sau."
-      );
+      const errorMessage = error.response?.data?.message || "Something went wrong. Please try again later.";
+      setError(errorMessage);
+      enqueueSnackbar(errorMessage, { variant: "error" });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleResendEmail = () => {
+    setSuccess(false);
+    setEmail("");
+    setError("");
+  };
+
+  const handleBackToLogin = () => {
+    navigate(AUTH_ROUTES.LOGIN);
+  };
+
   // Success state
   if (success) {
     return (
-      <PageTemplate
-        title="Kiểm tra email của bạn"
-        showHeader={false}
-        showFooter={false}
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          padding: 2
+        }}
       >
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <svg
-                className="w-8 h-8 text-blue-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 8l7.89 7.89c.39.39 1.02.39 1.41 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
+        <Container maxWidth="xs">
+          <Zoom in={success} timeout={600}>
+            <Card
+              elevation={12}
+              sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Stack spacing={2.5} alignItems="center" textAlign="center">
+                  <Avatar
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: 'success.main',
+                      mb: 1
+                    }}
+                  >
+                    <CheckCircle sx={{ fontSize: 28 }} />
+                  </Avatar>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Email đã được gửi!
-            </h2>
+                  <Typography
+                    variant="h5"
+                    fontWeight="600"
+                    sx={{
+                      color: '#07663a',
+                      mb: 0.5
+                    }}
+                  >
+                    Email Sent Successfully!
+                  </Typography>
 
-            <p className="text-gray-600 mb-6">
-              Chúng tôi đã gửi liên kết đặt lại mật khẩu đến email:
-            </p>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    We've sent a password reset link to:
+                  </Typography>
 
-            <div className="bg-gray-50 rounded-lg p-3 mb-6">
-              <p className="font-medium text-gray-900">{email}</p>
-            </div>
+                  <Box
+                    sx={{
+                      bgcolor: 'grey.50',
+                      borderRadius: 2,
+                      p: 1.5,
+                      border: '1px solid',
+                      borderColor: 'success.main',
+                      width: '100%'
+                    }}
+                  >
+                    <Typography variant="body2" color="success.main" fontWeight="600">
+                      {email}
+                    </Typography>
+                  </Box>
 
-            <p className="text-sm text-gray-500 mb-6">
-              Vui lòng kiểm tra hộp thư của bạn và làm theo hướng dẫn để đặt lại
-              mật khẩu. Email có thể ở trong thư mục spam.
-            </p>
+                  <Alert
+                    severity="info"
+                    sx={{
+                      width: '100%',
+                      borderRadius: 2,
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    Please check your inbox and spam folder for the reset link.
+                  </Alert>
 
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  setSuccess(false);
-                  setEmail("");
-                }}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Gửi lại email
-              </button>
+                  <Stack direction="row" spacing={1.5} width="100%">
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={handleResendEmail}
+                      startIcon={<Refresh />}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1,
+                        fontSize: '0.875rem',
+                        borderColor: 'primary.main',
+                        color: 'primary.main',
+                        '&:hover': {
+                          borderColor: 'primary.dark',
+                          bgcolor: 'primary.50'
+                        }
+                      }}
+                >
+                      Resend
+                    </Button>
 
-              <Link
-                to={AUTH_ROUTES.LOGIN}
-                className="block w-full text-center text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                Quay lại đăng nhập
-              </Link>
-            </div>
-          </div>
-        </div>
-      </PageTemplate>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      onClick={handleBackToLogin}
+                      startIcon={<ArrowBack />}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1,
+                        fontSize: '0.875rem',
+                        bgcolor: '#07663a',
+                        '&:hover': {
+                          bgcolor: '#05512e'
+                        }
+                      }}
+                >
+                  Back to Login
+                    </Button>
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Zoom>
+        </Container>
+      </Box>
     );
   }
 
   // Form state
   return (
-    <PageTemplate
-      title="Quên mật khẩu"
-      subtitle="Đặt lại mật khẩu của bạn"
-      showHeader={false}
-      showFooter={false}
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: 2
+      }}
     >
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg">
-        <div className="px-8 py-6">
-          <div className="text-center mb-6">
-            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <svg
-                className="w-6 h-6 text-blue-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
+      <Container maxWidth="xs">
+        <Fade in={!success} timeout={500}>
+          <Card
+            elevation={12}
+            sx={{
+              borderRadius: 3,
+              overflow: 'hidden',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Stack spacing={2.5}>
+                {/* Header */}
+                <Box textAlign="center">
+                  <Avatar
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      bgcolor: '#07663a',
+                      mx: 'auto',
+                      mb: 1.5
+                    }}
+                  >
+                    <Lock sx={{ fontSize: 24 }} />
+                  </Avatar>
 
-            <p className="text-gray-600">
-              Nhập email của bạn và chúng tôi sẽ gửi liên kết đặt lại mật khẩu
-            </p>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Email *
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  error ? "border-red-500" : "border-gray-300"
-                }`}
-                placeholder="Nhập email của bạn"
-                disabled={loading}
-              />
-            </div>
+                  <Typography
+                    variant="h5"
+                    fontWeight="600"
+                    sx={{
+                      color: '#07663a',
+                      mb: 0.5
+                    }}
+                  >
+                    Forgot Password?
+                  </Typography>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            )}
+                  <Typography variant="body2" color="text.secondary">
+                    Enter your email and we'll send you a reset link
+                  </Typography>
+                </Box>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Đang gửi...
-                </div>
-              ) : (
-                "Gửi liên kết đặt lại"
+                {/* Form */}
+                <Box component="form" onSubmit={handleSubmit}>
+                  <Stack spacing={2}>
+                    <TextField
+                      fullWidth
+                    type="email"
+                      label="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                      error={!!error}
+                    disabled={loading}
+                      size="medium"
+                      InputProps={{
+                        startAdornment: (
+                          <Email sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />
+                        )
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          '& fieldset': {
+                            borderColor: 'rgba(0, 0, 0, 0.23)'
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07663a'
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07663a'
+                          }
+                        },
+                        '& .MuiInputLabel-root': {
+                          '&.Mui-focused': {
+                            color: '#07663a'
+                          }
+                        }
+                      }}
+                      placeholder="Enter your email address"
+                    />
+
+              {error && (
+                      <Fade in={!!error}>
+                        <Alert
+                          severity="error"
+                          sx={{
+                            borderRadius: 2,
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          {error}
+                        </Alert>
+                      </Fade>
               )}
-            </button>
-          </form>{" "}
-          <div className="mt-6 text-center space-y-2">
-            <Link
-              to={AUTH_ROUTES.LOGIN}
-              className="text-sm text-gray-600 hover:text-gray-800 block"
-            >
-              ← Quay lại đăng nhập
-            </Link>
 
-            <p className="text-sm text-gray-500">
-              Chưa có tài khoản?{" "}
-              <Link
-                to="/auth/register"
-                className="text-blue-600 hover:underline"
-              >
-                Đăng ký ngay
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    </PageTemplate>
+                    <Button
+                  type="submit"
+                      variant="contained"
+                      fullWidth
+                  disabled={loading}
+                      startIcon={loading ? <CircularProgress size={18} /> : <Send />}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.2,
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        bgcolor: '#07663a',
+                        '&:hover': {
+                          bgcolor: '#05512e'
+                        },
+                        '&.Mui-disabled': {
+                          bgcolor: 'grey.300'
+                        }
+                      }}
+                    >
+                      {loading ? 'Sending...' : 'Send Reset Link'}
+                    </Button>
+                  </Stack>
+                </Box>
+
+                <Divider sx={{ my: 1 }} />
+
+                {/* Footer */}
+                <Stack spacing={1.5} alignItems="center">
+                  <Button
+                    variant="text"
+                    onClick={handleBackToLogin}
+                    startIcon={<ArrowBack />}
+                    sx={{
+                      color: 'text.secondary',
+                      fontSize: '0.875rem',
+                      '&:hover': {
+                        color: '#07663a',
+                        bgcolor: 'transparent'
+                      }
+                    }}
+                  >
+                    Back to Login
+                  </Button>
+
+                  <Typography variant="body2" color="text.secondary" textAlign="center">
+                    Don't have an account?{' '}
+                    <Link
+                      to="/auth/register"
+                      style={{
+                        color: '#07663a',
+                        textDecoration: 'none',
+                        fontWeight: 600
+                      }}
+                    >
+                  Register now
+                </Link>
+                  </Typography>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Fade>
+      </Container>
+    </Box>
   );
 };
 

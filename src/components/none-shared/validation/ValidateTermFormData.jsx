@@ -1,45 +1,59 @@
-
-export function ValidateTermFormData(formData, existingTerms = []) {
-    const now = new Date();
-
-    if (!formData.grade) return "Grade is required";
-    if (!formData.startDate || !formData.endDate) return "Start and end dates are required";
-
-    const start = new Date(formData.startDate);
-    const end = new Date(formData.endDate);
-
-    if (start >= end) return "Start date must be before end date";
-    // if (start < now) return "Start date must not be in the past";
-
-    if (
-        formData.maxNumberRegistration <= 0 ||
-        formData.maxNumberRegistration > 1000
-    ) {
-        return "Max registrations must be between 1 and 1000";
+export const ValidateTermFormData = (formData, existingTerms) => {
+    // Validate Grade
+    if (!formData.grade || formData.grade.trim() === '') {
+        return "Grade is required";
     }
 
-    const fees = [
-        formData.reservationFee,
-        formData.serviceFee,
-        formData.uniformFee,
-        formData.learningMaterialFee,
-        formData.facilityFee,
-    ];
-    if (fees.some(fee => fee < 0)) return "Fees must be non-negative";
+    // Validate Start Date
+    if (!formData.startDate) {
+        return "Start date is required";
+    }
 
-    // Rule: Trùng thời gian cùng grade
-    const overlaps = existingTerms.some(term => {
-        if (term.grade !== formData.grade) return false;
+    // Validate End Date
+    if (!formData.endDate) {
+        return "End date is required";
+    }
+
+    // Validate Start Date must be before End Date
+    const startDate = new Date(formData.startDate);
+    const endDate = new Date(formData.endDate);
+    if (startDate >= endDate) {
+        return "Start date must be before end date";
+    }
+
+    // Validate Expected Classes
+    if (!formData.expectedClasses || formData.expectedClasses === '') {
+        return "Expected classes is required";
+    }
+    if (parseInt(formData.expectedClasses) <= 0) {
+        return "Expected classes must be greater than 0";
+    }
+
+    // Check for overlapping terms
+    for (const term of existingTerms) {
+        if (term.grade.toLowerCase() !== formData.grade.toLowerCase()) {
+            continue;
+        }
+
         const termStart = new Date(term.startDate);
         const termEnd = new Date(term.endDate);
-        return !(end < termStart || start > termEnd);
-    });
-    if (overlaps) return "Time period overlaps with another term of the same grade";
 
-    // Rule: Tối đa 3 term/năm
-    const currentYear = new Date().getFullYear();
-    const termsThisYear = existingTerms.filter(term => term.year === currentYear);
-    if (termsThisYear.length >= 3) return `Cannot create more than 3 terms in year ${currentYear}`;
+        // Check for overlap
+        if (!(endDate <= termStart || startDate >= termEnd)) {
+            return `Time period overlaps with existing term "${term.name}"`;
+        }
+    }
+
+    // Check if term already exists for this grade and year
+    const year = new Date(formData.startDate).getFullYear();
+    const termExists = existingTerms.some(term => 
+        term.grade.toLowerCase() === formData.grade.toLowerCase() && 
+        term.year === year
+    );
+
+    if (termExists) {
+        return `A term for grade ${formData.grade.toUpperCase()} in year ${year} already exists`;
+    }
 
     return null;
-}
+};

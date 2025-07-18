@@ -71,7 +71,7 @@ const TeacherDashboard = () => {
         ]);
 
       } catch (error) {
-        console.error('Failed to load teacher dashboard data:', error);
+//         console.error('Failed to load teacher dashboard data:', error);
       } finally {
         setLoading(false);
       }

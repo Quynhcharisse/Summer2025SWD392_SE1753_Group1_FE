@@ -1,4 +1,5 @@
 import apiClient from "@api/apiClient.js";
+import dayjs from "dayjs";
 
 export const getFormTracking = async () => {
     const response = await apiClient.get("/admission/form/list")
@@ -13,109 +14,121 @@ export const processAdmissionForm = async (id, isApproved, reason) => {
     })
     return response ? response.data : null
 }
-
 export const getTermList = async () => {
     try {
-        const response = await
-           apiClient.get("/admission/term")
+        const response = await apiClient.get("/admission/term")
         return response.data
     } catch (error) {
-        console.error("Get term list error:", error);
         throw error;
     }
 }
 
 export const createTerm = async (
-    grade,
     startDate,
     endDate,
-    maxNumberRegistration,
-    reservationFee,
-    serviceFee,
-    uniformFee,
-    learningMaterialFee,
-    facilityFee
+    termItemList
 ) => {
-
     try {
-        const response = await
-            apiClient.post("/admission/term", {
-                grade: grade,
-                startDate: startDate,
-                endDate: endDate,
-                maxNumberRegistration: maxNumberRegistration,
-                reservationFee: reservationFee,
-                serviceFee: serviceFee,
-                uniformFee: uniformFee,
-                learningMaterialFee: learningMaterialFee,
-                facilityFee: facilityFee
-            }
-        );
-        return response.data;
-    } catch (error) {
-        console.error("Create term error:", error);
-        throw error;
-    }
-}
-
-
-export const updateTerm = async (
-    id,
-    grade,
-    startDate,
-    endDate,
-    maxNumberRegistration,
-    reservationFee,
-    serviceFee,
-    uniformFee,
-    learningMaterialFee,
-    facilityFee
-) => {
-
-    try {
-        const response = await
-            apiClient.put("/admission/term", {
-                id: id,
-                grade: grade,
-                startDate: startDate,
-                endDate: endDate,
-                maxNumberRegistration: maxNumberRegistration,
-                reservationFee: reservationFee,
-                serviceFee: serviceFee,
-                uniformFee: uniformFee,
-                learningMaterialFee: learningMaterialFee,
-                facilityFee: facilityFee
-            }
-        );
-        return response.data;
-    } catch (error) {
-        console.error("Update term error:", error);
-        throw error;
-    }
-}
-
-export const getDefaultGrade = async (grade) => {
-    try {
-        const response = await apiClient.get(`/admission/default/fee`, {
-            params: { grade } //Gửi grade vào query
+        const response = await apiClient.post('/admission/term', {
+            startDate: startDate,
+            endDate: endDate,
+            termItemList: termItemList
         });
         return response.data;
     } catch (error) {
-        console.error("Error fetching default fee for grade:", grade, error);
         throw error;
     }
 };
 
-export const cancelAdmission = async (id, reason) => {
+export const getDefaultGrade = async (grade) => {
     try {
-        const response = await apiClient.put("/admission/form/cancel", {
-            id: id,
-            reason: reason
+        const response = await apiClient.get('/admission/default/fee', {
+            params: {grade}
         });
-        return response ? response.data : null;
+        return response.data;
     } catch (error) {
-        console.error("Cancel admission error:", error);
         throw error;
     }
-}
+};
+
+// Extra Term APIs
+export const createExtraTerm = async (formData) => {
+    try {
+        const response = await apiClient.post('/admission/extra/term', {
+            parentTermId: formData.parentTermId,
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            maxNumberRegistration: formData.maxNumberRegistration,
+            expectedClasses: formData.expectedClasses
+        });
+        return response.data;
+    } catch (error) {
+//         console.error('Error creating extra term:', error);
+        throw error;
+    }
+};
+
+export const getTermYears = async () => {
+    try {
+        const response = await apiClient.get('/admission/years');
+        if (!response.data.success) {
+            throw new Error(response.data.message || 'Failed to fetch years');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const updateTermStatus = async (termId) => {
+    try {
+        const response = await apiClient.put('/admission/term', {
+            termId: termId,
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getTransactionList = async () => {
+    try {
+        const response = await apiClient.get('/admission/transactions');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const exportTransactions = async () => {
+    try {
+        const response = await apiClient.get('/admission/export', {
+            responseType: 'blob'
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getDailyTotal = async () => {
+    try {
+        const response = await apiClient.post('/admission/daily/total/transaction', {
+            date: dayjs().format('YYYY-MM-DD'),
+            totalAmount: 0
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+export const getAdmissionFormStatusSummary = async () => {
+    try {
+        const response = await apiClient.get("/admission/forms/status/summary");
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 

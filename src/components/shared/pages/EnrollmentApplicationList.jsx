@@ -23,7 +23,7 @@ const EnrollmentApplicationList = () => {
           setApplications([]);
         }
       } catch (err) {
-        console.error("Failed to fetch enrollment applications:", err);
+//         console.error("Failed to fetch enrollment applications:", err);
         setError("Error loading application list");
       } finally {
         setLoading(false);
@@ -46,7 +46,7 @@ const EnrollmentApplicationList = () => {
   };
 
   const handleViewApplication = (applicationId) => {
-    navigate(`/user/parent/enrollment/application/${applicationId}`);
+    navigate(`/user/parent/forms/${applicationId}`);
   };
 
   const handleNewApplication = () => {

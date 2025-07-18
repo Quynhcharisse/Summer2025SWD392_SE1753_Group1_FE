@@ -11,10 +11,12 @@ import {
   Eye,
   UserCheck,
   AlertCircle,
-  TrendingUp
+  TrendingUp,
+  CreditCard
 } from "lucide-react";
 import { isAuthenticated, getCurrentTokenData } from "@services/JWTService.jsx";
 import { authService } from "@services/authService.js";
+import { getAdmissionFormStatusSummary } from "@services/admissionService.js";
 
 const AdmissionDashboard = () => {
   const navigate = useNavigate();
@@ -40,6 +42,53 @@ const AdmissionDashboard = () => {
         const tokenData = getCurrentTokenData();
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser || tokenData);
+
+        // Get real admission form status summary
+        try {
+          const statusSummary = await getAdmissionFormStatusSummary();
+          if (statusSummary && statusSummary.success) {
+            const data = statusSummary.data;
+            // Map backend status to frontend stats
+            setStats({
+              total:
+                  (data.pendingApprovalCount || 0) +
+                  (data.refilledCount || 0) +
+                  (data.approvedCount || 0) +
+                  (data.rejectedCount || 0) +
+                  (data.paymentCount || 0),
+              pending: data.pendingApprovalCount || 0,
+              underReview: data.refilledCount || 0, // giả sử đang xem xét là refilled
+              approved: data.approvedCount || 0,
+              rejected: data.rejectedCount || 0,
+              payment: data.paymentCount || 0, // Thêm payment count
+              // waitlisted: 0, // không có trường này trong BE
+              // thisWeek: 0,   // chưa có trong BE
+              // thisMonth: 0   // chưa có trong BE
+            });
+
+          } else {
+            // Fallback to empty stats if API fails
+            setStats({
+              total: 0,
+              pending: 0,
+              underReview: 0,
+              approved: 0,
+              rejected: 0,
+              payment: 0
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch admission form status summary:', error);
+          // Fallback to empty stats if API fails
+          setStats({
+            total: 0,
+            pending: 0,
+            underReview: 0,
+            approved: 0,
+            rejected: 0,
+            payment: 0
+          });
+        }
 
         // Mock registration data for now
         setRegistrations([
@@ -75,18 +124,8 @@ const AdmissionDashboard = () => {
           }
         ]);
 
-        setStats({
-          total: 45,
-          pending: 12,
-          underReview: 8,
-          approved: 20,
-          rejected: 5,
-          thisWeek: 7,
-          thisMonth: 28
-        });
-
       } catch (error) {
-        console.error('Failed to load admission dashboard data:', error);
+//         console.error('Failed to load admission dashboard data:', error);
       } finally {
         setLoading(false);
       }
@@ -138,8 +177,8 @@ const AdmissionDashboard = () => {
 
   return (
     <PageTemplate
-      title={`Chào mừng, ${user?.name || 'Nhân viên tuyển sinh'}`}
-      subtitle="Quản lý hồ sơ tuyển sinh và xét duyệt đăng ký"
+      title={`Welcome, ${user.data?.name || user?.fullName || 'User'}`}
+      subtitle="Manage admission applications and registration approvals"
       actions={
         <div className="flex gap-4">
           <Button 
@@ -148,7 +187,7 @@ const AdmissionDashboard = () => {
             onClick={() => navigate('/user/admission/registrations')}
           >
             <FileText className="w-4 h-4 mr-2" />
-            Tất cả hồ sơ
+            All Applications
           </Button>
           <Button 
             variant="primary" 
@@ -156,7 +195,7 @@ const AdmissionDashboard = () => {
             onClick={() => navigate('/user/admission/reports')}
           >
             <TrendingUp className="w-4 h-4 mr-2" />
-            Báo cáo
+            Reports
           </Button>
         </div>
       }
@@ -165,32 +204,32 @@ const AdmissionDashboard = () => {
         {/* Quick Stats */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Tổng hồ sơ"
+            title="Total Applications"
             value={stats.total}
-            description="Tất cả đăng ký"
+            description="All registrations"
             icon={FileText}
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="Chờ xem xét"
+            title="Pending Review"
             value={stats.pending}
-            description="Cần xử lý"
+            description="Need processing"
             icon={Clock}
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="Đang xem xét"
+            title="Under Review"
             value={stats.underReview}
-            description="Trong quá trình"
+            description="In progress"
             icon={UserCheck}
             trend={{ value: 0, isPositive: true }}
           />
           <StatCard
-            title="Tuần này"
-            value={stats.thisWeek}
-            description="Hồ sơ mới"
-            icon={TrendingUp}
-            trend={{ value: 12, isPositive: true }}
+            title="Payment Required"
+            value={stats.payment}
+            description="Awaiting payment"
+            icon={CreditCard}
+            trend={{ value: 0, isPositive: true }}
           />
         </section>
 
@@ -201,13 +240,13 @@ const AdmissionDashboard = () => {
             {/* Pending Review Applications */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Hồ sơ cần xem xét</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Applications Needing Review</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/user/admission/registrations?status=pending')}
                 >
-                  Xem tất cả
+                  View all
                 </Button>
               </div>
               
@@ -227,13 +266,13 @@ const AdmissionDashboard = () => {
                             )}
                           </div>
                           <p className="text-sm text-gray-600 mb-1">
-                            Chương trình: {registration.program}
+                            Program: {registration.program}
                           </p>
                           <p className="text-sm text-gray-600 mb-1">
-                            Phụ huynh: {registration.parentName}
+                            Parent: {registration.parentName}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Nộp ngày: {new Date(registration.submittedDate).toLocaleDateString('vi-VN')}
+                            Submitted on: {new Date(registration.submittedDate).toLocaleDateString('en-US')}
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -249,7 +288,7 @@ const AdmissionDashboard = () => {
                             size="sm"
                             onClick={() => handleReviewRegistration(registration.id)}
                           >
-                            Xem xét
+                            Review
                           </Button>
                         </div>
                       </div>
@@ -257,13 +296,13 @@ const AdmissionDashboard = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">Không có hồ sơ nào cần xem xét</p>
+                <p className="text-gray-500 text-center py-4">No applications need review</p>
               )}
             </div>
 
             {/* Recent Activities */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Hoạt động gần đây</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Activities</h3>
               <div className="space-y-3">
                 {registrations.slice(0, 3).map((registration) => (
                   <div key={registration.id} className="flex items-center gap-4 p-3 border rounded-lg">
@@ -272,9 +311,9 @@ const AdmissionDashboard = () => {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-800">{registration.childName}</h4>
-                      <p className="text-sm text-gray-600">Hồ sơ {registration.status.toLowerCase()}</p>
+                      <p className="text-sm text-gray-600">Application {registration.status.toLowerCase()}</p>
                       <p className="text-xs text-gray-500">
-                        {new Date(registration.submittedDate).toLocaleDateString('vi-VN')}
+                        {new Date(registration.submittedDate).toLocaleDateString('en-US')}
                       </p>
                     </div>
                     {getStatusBadge(registration.status)}
@@ -288,30 +327,34 @@ const AdmissionDashboard = () => {
           <div className="space-y-6">
             {/* Status Summary */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Tổng quan trạng thái</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Status Overview</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Chờ xem xét:</span>
+                  <span className="text-gray-600">Pending Review:</span>
                   <Badge variant="warning">{stats.pending}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Đang xem xét:</span>
+                  <span className="text-gray-600">Under Review:</span>
                   <Badge variant="default">{stats.underReview}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Đã duyệt:</span>
+                  <span className="text-gray-600">Approved:</span>
                   <Badge variant="success">{stats.approved}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Từ chối:</span>
+                  <span className="text-gray-600">Rejected:</span>
                   <Badge variant="destructive">{stats.rejected}</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Payment Required:</span>
+                  <Badge variant="secondary">{stats.payment}</Badge>
                 </div>
               </div>
             </div>
 
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Thao tác nhanh</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Button 
                   variant="outline" 
@@ -319,7 +362,7 @@ const AdmissionDashboard = () => {
                   onClick={() => navigate('/user/admission/registrations?status=pending')}
                 >
                   <Clock className="w-4 h-4 mr-3" />
-                  Hồ sơ chờ xét
+                  Pending Applications
                 </Button>
                 <Button 
                   variant="outline" 
@@ -327,7 +370,7 @@ const AdmissionDashboard = () => {
                   onClick={() => navigate('/user/admission/registrations')}
                 >
                   <FileText className="w-4 h-4 mr-3" />
-                  Tất cả hồ sơ
+                  All Applications
                 </Button>
                 <Button 
                   variant="outline" 
@@ -335,7 +378,7 @@ const AdmissionDashboard = () => {
                   onClick={() => navigate('/user/admission/reports')}
                 >
                   <TrendingUp className="w-4 h-4 mr-3" />
-                  Báo cáo thống kê
+                  Statistical Reports
                 </Button>
                 <Button 
                   variant="outline" 
@@ -343,7 +386,7 @@ const AdmissionDashboard = () => {
                   onClick={() => navigate('/user/shared/notifications')}
                 >
                   <AlertCircle className="w-4 h-4 mr-3" />
-                  Thông báo
+                  Notifications
                 </Button>
               </div>
             </div>

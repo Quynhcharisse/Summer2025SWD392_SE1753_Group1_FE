@@ -148,7 +148,7 @@ const EnrollmentApplication = () => {
           
         }
       } catch (error) {
-        console.error('Authentication check failed:', error);
+//         console.error('Authentication check failed:', error);
         setIsUserAuthenticated(false);
       } finally {
         setCheckingAuth(false);
@@ -159,13 +159,13 @@ const EnrollmentApplication = () => {
   }, []);
 
   const handleSubmit = async (formData) => {
-    console.log("🚀 EnrollmentApplication handleSubmit called with:", formData);
+//     console.log("🚀 EnrollmentApplication handleSubmit called with:", formData);
     
     setSubmitError("");
     setLoading(true);
 
     try {
-      console.log("📡 Calling enrollmentService.submitEnrollmentApplication...");
+//       console.log("📡 Calling enrollmentService.submitEnrollmentApplication...");
       
       // Prepare enrollment data
       const enrollmentData = {
@@ -196,7 +196,7 @@ const EnrollmentApplication = () => {
 
       const response = await enrollmentService.submitEnrollmentApplication(enrollmentData);
       
-      console.log("✅ Enrollment application submitted successfully:", response);
+//       console.log("✅ Enrollment application submitted successfully:", response);
 
       // Set success data
       setApplicationData({
@@ -209,7 +209,7 @@ const EnrollmentApplication = () => {
       setShowSuccess(true);
 
     } catch (error) {
-      console.error("❌ Enrollment application submission failed:", error);
+//       console.error("❌ Enrollment application submission failed:", error);
       
       if (error.response?.data?.message) {
         setSubmitError(error.response.data.message);
@@ -227,14 +227,14 @@ const EnrollmentApplication = () => {
     // Redirect to login with return URL
     navigate('/auth/login', { 
       state: { 
-        returnUrl: '/user/parent/enrollment',
+        returnUrl: '/user/parent/add-child',
         message: 'Vui lòng đăng nhập để tiếp tục đăng ký nhập học.'
       }
     });
   };
 
   const handleManageApplications = () => {
-    navigate('/user/parent/enrollment/my-applications');
+    navigate('/user/parent/forms');
   };
 
   // Show loading while checking authentication

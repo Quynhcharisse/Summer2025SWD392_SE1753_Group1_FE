@@ -5,7 +5,7 @@ export const getUserProfile = async () => {
     const response = await apiClient.get("/user/profile");
     return response.data;
   } catch (error) {
-    console.error("Get user profile error:", error);
+//     console.error("Get user profile error:", error);
     throw error;
   }
 };

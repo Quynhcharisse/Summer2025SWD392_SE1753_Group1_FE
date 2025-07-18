@@ -4,6 +4,19 @@
   "admission_link": "Admission Registration",
   "discover_programs": "Discover our educational programs and services",
   "search_placeholder": "Search for programs, news, admission info...",
+  "navigation": {
+    "home": "HOME",
+    "admission": "ADMISSION",
+    "events": "EVENTS",
+    "classes": "CLASSES",
+    "about": "ABOUT US",
+    "contact": "CONTACT"
+  },
+  "auth": {
+    "sign_in": "Sign In",
+    "sign_up": "Sign Up",
+    "my_profile": "My Sunshine Profile"
+  },
   "search_results": "Search Results:",
   "type_page": "Page",
   "type_program": "Program",

@@ -54,23 +54,20 @@ export const useCreateEvent = () => {
   });
 };
 
-export const useUpdateEvent = () => {
+export const useCancelEvent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: eventKeys.update(),
-    mutationFn: async ({ id, data }) => {
-      const response = await eventService.updateEvent(id, data);
+    mutationKey: ['cancelEvent'],
+    mutationFn: async ({ id, reason }) => {
+      const response = await eventService.cancelEvent({ id, reason });
       return response.data;
     },
     onSuccess: (data, { id }) => {
-      // Invalidate and refetch affected queries
       queryClient.invalidateQueries({ queryKey: eventKeys.lists() });
       queryClient.invalidateQueries({ 
         queryKey: eventKeys.detail(id)
       });
-
-      // Optionally update the cache directly
       queryClient.setQueryData(eventKeys.lists(), (old) => {
         if (!old?.data?.data) return old;
         const updatedData = old.data.data.map((event) => 
@@ -85,5 +82,59 @@ export const useUpdateEvent = () => {
         };
       });
     },
+  });
+};
+
+export const useEventTeachers = (eventId) => {
+  return useQuery({
+    queryKey: [...eventKeys.detail(eventId), 'teachers'],
+    queryFn: () => eventService.getEventTeachers(eventId),
+    enabled: !!eventId,
+  });
+};
+
+export const useEventActive = () => {
+  return useQuery({
+    queryKey: [...eventKeys.all, 'getEventActive'],
+    queryFn: eventService.getEventActive,
+  });
+};
+
+export const useEventActiveDetail = (id) => {
+  return useQuery({
+    queryKey: [...eventKeys.all, 'getEventActiveDetail', id],
+    queryFn: () => eventService.getEventActiveDetail(id),
+    enabled: !!id,
+  });
+};
+
+export const useRegisterEvent = () => {
+  return useMutation({
+    mutationFn: ({ eventId, studentIds }) => eventService.registerEvent({ eventId, studentIds }),
+  });
+};
+
+export const useChildren = () => {
+  return useQuery({
+    queryKey: ['children'],
+    queryFn: eventService.getChildren,
+  });
+};
+
+// Sửa: Không tự động fetch registered events khi mount, cho phép truyền options để override
+export const useRegisteredEvents = (options = {}) => {
+  return useQuery({
+    queryKey: ['registeredEvents'],
+    queryFn: eventService.getRegisteredEvents,
+    enabled: false, // Mặc định không fetch tự động
+    ...options, // Cho phép override enabled nếu cần
+  });
+};
+
+export const useEventStudents = (eventId) => {
+  return useQuery({
+    queryKey: ['eventStudents', eventId],
+    queryFn: () => eventService.getEventStudents(eventId),
+    enabled: !!eventId,
   });
 };

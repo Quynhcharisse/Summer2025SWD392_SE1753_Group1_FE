@@ -23,10 +23,6 @@ export const PUBLIC_ROUTES = {
   ABOUT: "/about-us",
   CLASSES: "/classes",
   EVENTS: "/events",
-
-  // Demo routes
-  DEMO_BOOK_STORY: "/demo/book-story",
-  DEMO_THEME_TEST: "/demo/theme-test",
 };
 
 // =====================================================
@@ -36,14 +32,14 @@ export const AUTH_ROUTES = {
   LOGIN: "/auth/login",
   REGISTER: "/auth/register", // Primary route for registration
   FORGOT_PASSWORD: "/auth/forgot-password",
-  RESET_PASSWORD: "/auth/reset-password",
+  RESET_PASSWORD: "/auth/reset-pass", // Updated to match the link format
 
   // Legacy routes for compatibility
-  LEGACY_LOGIN: "/login",
-  LEGACY_SIGNUP: "/signup",
-  LEGACY_REGISTER: "/register",
-  LEGACY_FORGOT_PASSWORD: "/forgot-password",
-  LEGACY_RESET_PASSWORD: "/reset-password",
+  // LEGACY_LOGIN: "/login",
+  // LEGACY_SIGNUP: "/signup",
+  // LEGACY_REGISTER: "/register",
+  // LEGACY_FORGOT_PASSWORD: "/forgot-password",
+  // LEGACY_RESET_PASSWORD: "/reset-password",
 };
 
 // =====================================================
@@ -63,9 +59,9 @@ export const TEACHER_ROUTES = {
 export const PARENT_ROUTES = {
   DASHBOARD: "/user/parent/dashboard",
   ADMISSION: "/user/parent/admission",
-  ENROLLMENT: "/user/parent/enrollment",
-  ENROLLMENT_APPLICATION: "/user/parent/enrollment/application",
-  MY_APPLICATIONS: "/user/parent/enrollment/my-applications",
+  ENROLLMENT: "/user/parent/add-child",
+  ENROLLMENT_APPLICATION: "/user/parent/forms",
+  MY_APPLICATIONS: "/user/parent/forms",
   CHILD_PROFILE: "/user/parent/child/:id/profile",
   CALENDAR: "/user/parent/calendar",  MEALS: "/user/parent/meals",
   GALLERY: "/user/parent/gallery",
@@ -144,9 +140,9 @@ export const SHARED_ROUTES = {
 // ENROLLMENT ROUTES - For application process
 // =====================================================
 export const ENROLLMENT_ROUTES = {
-  INDEX: "/user/parent/enrollment",
-  APPLICATION: "/user/parent/enrollment/application",
-  MY_APPLICATIONS: "/user/parent/enrollment/my-applications",
+  INDEX: "/user/parent/forms",
+  APPLICATION: "/user/parent/forms",
+  MY_APPLICATIONS: "/user/parent/forms",
 };
 
 // =====================================================

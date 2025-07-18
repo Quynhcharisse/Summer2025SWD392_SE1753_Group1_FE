@@ -1,15 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { PageTemplate } from "@templates";
+import {
+  Box,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  CircularProgress,
+  Container,
+  Stack,
+  Avatar,
+  Fade,
+  Zoom,
+  Divider,
+  IconButton
+} from "@mui/material";
+import {
+  Lock,
+  LockReset,
+  CheckCircle,
+  Warning,
+  ArrowBack,
+  Visibility,
+  VisibilityOff
+} from "@mui/icons-material";
+import { useSnackbar } from 'notistack';
 import authService from "@services/authService";
 import { AUTH_ROUTES } from "@/constants/routes";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const code = searchParams.get('code');
+  const { enqueueSnackbar } = useSnackbar();
+  
   const [formData, setFormData] = useState({
-    email: "",
     password: "",
     confirmPassword: ""
   });
@@ -17,13 +44,16 @@ const ResetPassword = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Check if token exists
+  // Check if code exists
   useEffect(() => {
-    if (!token) {
+    if (!code) {
       navigate('/forgot-password');
+      return;
     }
-  }, [token, navigate]);
+  }, [code, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,25 +70,20 @@ const ResetPassword = () => {
       }));
     }
   };
+
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email không được để trống';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email không hợp lệ';
-    }
-    
     if (!formData.password) {
-      newErrors.password = 'Mật khẩu mới không được để trống';
+      newErrors.password = 'New password cannot be empty';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+      newErrors.password = 'Password must be at least 6 characters';
     }
     
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
+      newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+      newErrors.confirmPassword = 'Passwords do not match';
     }
     
     return newErrors;
@@ -72,262 +97,482 @@ const ResetPassword = () => {
       setErrors(newErrors);
       return;
     }
-    
+
     setLoading(true);
     setErrors({});
-      try {
-      await authService.confirmPasswordReset(
-        token, 
-        formData.email,
-        formData.password, 
-        formData.confirmPassword
-      );
+
+    try {
+      const response = await authService.resetPasswordWithCode({
+        code: code,
+        newPassword: formData.password,
+        confirmPassword: formData.confirmPassword
+      });
       
       setSuccess(true);
+      enqueueSnackbar('Password reset successfully!', { variant: 'success' });
       
       // Auto redirect to login after 3 seconds
       setTimeout(() => {
         navigate(AUTH_ROUTES.LOGIN, {
           state: {
-            message: 'Mật khẩu đã được đặt lại thành công! Vui lòng đăng nhập với mật khẩu mới.'
+            message: 'Password has been reset successfully! Please login with your new password.'
           }
         });
       }, 3000);
       
     } catch (error) {
-      console.error('Password reset error:', error);
-      
       const errorMessage = error.response?.data?.message;
       
-      if (errorMessage?.includes('token') || errorMessage?.includes('expired')) {
+      if (errorMessage?.includes('code') || errorMessage?.includes('expired') || errorMessage?.includes('invalid')) {
         setErrors({
-          submit: 'Liên kết đặt lại mật khẩu đã hết hạn hoặc không hợp lệ. Vui lòng yêu cầu liên kết mới.'
+          submit: 'Password reset code has expired or is invalid. Please request a new code.'
         });
       } else {
         setErrors({
-          submit: errorMessage || 'Có lỗi xảy ra. Vui lòng thử lại.'
+          submit: errorMessage || 'An error occurred. Please try again.'
         });
       }
+      enqueueSnackbar(errors.submit || 'Password reset failed', { variant: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleToggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   // Success state
   if (success) {
     return (
-      <PageTemplate
-        title="Đặt lại mật khẩu thành công"
-        showHeader={false}
-        showFooter={false}
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          padding: 2
+        }}
       >
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Thành công!
-            </h2>
-            
-            <p className="text-gray-600 mb-6">
-              Mật khẩu của bạn đã được đặt lại thành công. 
-              Đang chuyển hướng đến trang đăng nhập...
-            </p>
-            
-            <div className="flex justify-center mb-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-            
-            <p className="text-sm text-gray-500">
-              Nếu không tự động chuyển hướng, 
-              <Link to={AUTH_ROUTES.LOGIN} className="text-blue-600 hover:underline ml-1">
-                nhấn vào đây
-              </Link>
-            </p>
-          </div>
-        </div>
-      </PageTemplate>
+        <Container maxWidth="xs">
+          <Zoom in={success} timeout={600}>
+            <Card
+              elevation={12}
+              sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Stack spacing={2.5} alignItems="center" textAlign="center">
+                  <Avatar
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: 'success.main',
+                      mb: 1
+                    }}
+                  >
+                    <CheckCircle sx={{ fontSize: 28 }} />
+                  </Avatar>
+
+                  <Typography
+                    variant="h5"
+                    fontWeight="600"
+                    sx={{
+                      color: '#07663a',
+                      mb: 0.5
+                    }}
+                  >
+                    Success!
+                  </Typography>
+
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Your password has been reset successfully.
+                  </Typography>
+
+                  <Box sx={{ my: 2 }}>
+                    <CircularProgress 
+                      size={32} 
+                      sx={{ 
+                        color: '#07663a',
+                        mb: 1
+                      }} 
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      Redirecting to login page...
+                    </Typography>
+                  </Box>
+
+                  <Alert
+                    severity="success"
+                    sx={{
+                      width: '100%',
+                      borderRadius: 2,
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    If you are not redirected automatically,{' '}
+                    <Link
+                      to={AUTH_ROUTES.LOGIN}
+                      style={{
+                        color: '#07663a',
+                        textDecoration: 'none',
+                        fontWeight: 600
+                      }}
+                    >
+                      click here
+                    </Link>
+                  </Alert>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Zoom>
+        </Container>
+      </Box>
     );
   }
 
-  // Invalid token state
-  if (!token) {
+  // Invalid code state
+  if (!code) {
     return (
-      <PageTemplate
-        title="Liên kết không hợp lệ"
-        showHeader={false}
-        showFooter={false}
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          padding: 2
+        }}
       >
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Liên kết không hợp lệ
-            </h2>
-            
-            <p className="text-gray-600 mb-6">
-              Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.
-            </p>
-            
-            <div className="space-y-3">
-              <Link
-                to="/forgot-password"
-                className="block w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-center transition-colors"
-              >
-                Yêu cầu liên kết mới
-              </Link>
-              
-              <Link
-                to={AUTH_ROUTES.LOGIN}
-                className="block w-full text-center text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                Quay lại đăng nhập
-              </Link>
-            </div>
-          </div>
-        </div>
-      </PageTemplate>
+        <Container maxWidth="xs">
+          <Fade in={true} timeout={500}>
+            <Card
+              elevation={12}
+              sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Stack spacing={2.5} alignItems="center" textAlign="center">
+                  <Avatar
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: 'error.main',
+                      mb: 1
+                    }}
+                  >
+                    <Warning sx={{ fontSize: 28 }} />
+                  </Avatar>
+
+                  <Typography
+                    variant="h5"
+                    fontWeight="600"
+                    sx={{
+                      color: '#d32f2f',
+                      mb: 0.5
+                    }}
+                  >
+                    Invalid Link
+                  </Typography>
+
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    The password reset link is invalid or has expired.
+                  </Typography>
+
+                  <Stack direction="row" spacing={1.5} width="100%">
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      component={Link}
+                      to="/forgot-password"
+                      sx={{
+                        borderRadius: 2,
+                        py: 1,
+                        fontSize: '0.875rem',
+                        bgcolor: '#07663a',
+                        '&:hover': {
+                          bgcolor: '#05512e'
+                        }
+                      }}
+                    >
+                      Request New Link
+                    </Button>
+
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      component={Link}
+                      to={AUTH_ROUTES.LOGIN}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1,
+                        fontSize: '0.875rem',
+                        borderColor: '#07663a',
+                        color: '#07663a',
+                        '&:hover': {
+                          borderColor: '#05512e',
+                          bgcolor: 'rgba(7, 102, 58, 0.04)'
+                        }
+                      }}
+                    >
+                      Back to Login
+                    </Button>
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Fade>
+        </Container>
+      </Box>
     );
   }
 
   // Form state
   return (
-    <PageTemplate
-      title="Đặt lại mật khẩu"
-      subtitle="Nhập mật khẩu mới của bạn"
-      showHeader={false}
-      showFooter={false}
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: 2
+      }}
     >
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg">
-        <div className="px-8 py-6">
-          <div className="text-center mb-6">
-            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
-            </div>
-            
-            <p className="text-gray-600">
-              Vui lòng nhập mật khẩu mới cho tài khoản của bạn
-            </p>
-          </div>          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email *
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Nhập email của bạn"
-                disabled={loading}
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
-
-            {/* New Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Mật khẩu mới *
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Nhập mật khẩu mới"
-                disabled={loading}
-              />
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-              )}
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Xác nhận mật khẩu *
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Nhập lại mật khẩu mới"
-                disabled={loading}
-              />
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
-              )}
-            </div>
-
-            {/* Submit Error */}
-            {errors.submit && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-red-600 text-sm">{errors.submit}</p>
-                {errors.submit.includes('hết hạn') && (
-                  <Link 
-                    to="/forgot-password"
-                    className="text-blue-600 hover:underline text-sm mt-2 block"
+      <Container maxWidth="xs">
+        <Fade in={true} timeout={500}>
+          <Card
+            elevation={12}
+            sx={{
+              borderRadius: 3,
+              overflow: 'hidden',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Stack spacing={2.5}>
+                {/* Header */}
+                <Box textAlign="center">
+                  <Avatar
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      bgcolor: '#07663a',
+                      mx: 'auto',
+                      mb: 1.5
+                    }}
                   >
-                    Yêu cầu liên kết mới →
-                  </Link>
-                )}
-              </div>
-            )}
+                    <LockReset sx={{ fontSize: 24 }} />
+                  </Avatar>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Đang cập nhật...
-                </div>
-              ) : (
-                'Đặt lại mật khẩu'
-              )}
-            </button>
-          </form>
+                  <Typography
+                    variant="h5"
+                    fontWeight="600"
+                    sx={{
+                      color: '#07663a',
+                      mb: 0.5
+                    }}
+                  >
+                    Reset Password
+                  </Typography>
 
-          <div className="mt-6 text-center">
-            <Link 
-              to={AUTH_ROUTES.LOGIN} 
-              className="text-sm text-gray-600 hover:text-gray-800"
-            >
-              ← Quay lại đăng nhập
-            </Link>
-          </div>
-        </div>
-      </div>
-    </PageTemplate>
+                  <Typography variant="body2" color="text.secondary">
+                    Please enter a new password for your account
+                  </Typography>
+                </Box>
+
+                {/* Form */}
+                <Box component="form" onSubmit={handleSubmit}>
+                  <Stack spacing={2}>
+                    <TextField
+                      fullWidth
+                      type={showPassword ? 'text' : 'password'}
+                      label="New Password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      error={!!errors.password}
+                      helperText={errors.password}
+                      disabled={loading}
+                      size="medium"
+                      InputProps={{
+                        startAdornment: (
+                          <Lock sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />
+                        ),
+                        endAdornment: (
+                          <IconButton
+                            onClick={handleTogglePasswordVisibility}
+                            edge="end"
+                            size="small"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        )
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          '& fieldset': {
+                            borderColor: 'rgba(0, 0, 0, 0.23)'
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07663a'
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07663a'
+                          }
+                        },
+                        '& .MuiInputLabel-root': {
+                          '&.Mui-focused': {
+                            color: '#07663a'
+                          }
+                        }
+                      }}
+                      placeholder="Enter new password"
+                    />
+
+                    <TextField
+                      fullWidth
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      label="Confirm Password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      error={!!errors.confirmPassword}
+                      helperText={errors.confirmPassword}
+                      disabled={loading}
+                      size="medium"
+                      InputProps={{
+                        startAdornment: (
+                          <Lock sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />
+                        ),
+                        endAdornment: (
+                          <IconButton
+                            onClick={handleToggleConfirmPasswordVisibility}
+                            edge="end"
+                            size="small"
+                          >
+                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        )
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          '& fieldset': {
+                            borderColor: 'rgba(0, 0, 0, 0.23)'
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07663a'
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07663a'
+                          }
+                        },
+                        '& .MuiInputLabel-root': {
+                          '&.Mui-focused': {
+                            color: '#07663a'
+                          }
+                        }
+                      }}
+                      placeholder="Re-enter new password"
+                    />
+
+                    {errors.submit && (
+                      <Fade in={!!errors.submit}>
+                        <Alert
+                          severity="error"
+                          sx={{
+                            borderRadius: 2,
+                            fontSize: '0.875rem'
+                          }}
+                          action={
+                            errors.submit.includes('expired') && (
+                              <Button
+                                component={Link}
+                                to="/forgot-password"
+                                size="small"
+                                sx={{ color: '#07663a' }}
+                              >
+                                Request New Code
+                              </Button>
+                            )
+                          }
+                        >
+                          {errors.submit}
+                        </Alert>
+                      </Fade>
+                    )}
+
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      fullWidth
+                      disabled={loading}
+                      startIcon={loading ? <CircularProgress size={18} /> : <LockReset />}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.2,
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        bgcolor: '#07663a',
+                        '&:hover': {
+                          bgcolor: '#05512e'
+                        },
+                        '&.Mui-disabled': {
+                          bgcolor: 'grey.300'
+                        }
+                      }}
+                    >
+                      {loading ? 'Processing...' : 'Reset Password'}
+                    </Button>
+                  </Stack>
+                </Box>
+
+                <Divider sx={{ my: 1 }} />
+
+                {/* Footer */}
+                <Stack spacing={1.5} alignItems="center">
+                  <Button
+                    variant="text"
+                    component={Link}
+                    to={AUTH_ROUTES.LOGIN}
+                    startIcon={<ArrowBack />}
+                    sx={{
+                      color: 'text.secondary',
+                      fontSize: '0.875rem',
+                      '&:hover': {
+                        color: '#07663a',
+                        bgcolor: 'transparent'
+                      }
+                    }}
+                  >
+                    Back to Login
+                  </Button>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Fade>
+      </Container>
+    </Box>
   );
 };
 

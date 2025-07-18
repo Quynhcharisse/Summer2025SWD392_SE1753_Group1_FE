@@ -31,7 +31,7 @@ const AdminDashboard = () => {
           navigate('/auth/login', { 
             state: { 
               returnUrl: '/user/admin/dashboard',
-              message: 'Vui lòng đăng nhập để truy cập dashboard quản trị.'
+              message: 'Please login to access the admin dashboard.'
             }
           });
           return;
@@ -58,7 +58,7 @@ const AdminDashboard = () => {
           {
             id: 1,
             type: 'user_registration',
-            message: 'Phụ huynh mới đăng ký tài khoản',
+            message: 'New parent registered an account',
             user: 'Sarah Johnson',
             timestamp: '2025-06-05 14:30',
             status: 'success'
@@ -66,7 +66,7 @@ const AdminDashboard = () => {
           {
             id: 2,
             type: 'application_submitted',
-            message: 'Đơn đăng ký nhập học mới',
+            message: 'New enrollment application',
             user: 'Mike Smith',
             timestamp: '2025-06-05 13:15',
             status: 'info'
@@ -74,7 +74,7 @@ const AdminDashboard = () => {
           {
             id: 3,
             type: 'class_created',
-            message: 'Lớp học mới được tạo',
+            message: 'New class created',
             user: 'Admin',
             timestamp: '2025-06-05 10:45',
             status: 'success'
@@ -85,21 +85,21 @@ const AdminDashboard = () => {
           {
             id: 1,
             type: 'warning',
-            title: 'Cập nhật hệ thống',
-            message: 'Hệ thống sẽ được bảo trì vào 23:00 ngày 10/06/2025',
+            title: 'System Update',
+            message: 'System maintenance scheduled for 23:00 on 10/06/2025',
             priority: 'medium'
           },
           {
             id: 2,
             type: 'info',
-            title: 'Báo cáo tháng',
-            message: 'Báo cáo tháng 5 đã sẵn sàng để xem',
+            title: 'Monthly Report',
+            message: 'May report is ready to view',
             priority: 'low'
           }
         ]);
 
       } catch (error) {
-        console.error('Failed to load admin dashboard data:', error);
+//         console.error('Failed to load admin dashboard data:', error);
       } finally {
         setLoading(false);
       }
@@ -119,20 +119,20 @@ const AdminDashboard = () => {
 
   const getAlertBadge = (type) => {
     switch (type) {
-      case 'warning': return <Badge variant="warning">Cảnh báo</Badge>;
-      case 'error': return <Badge variant="destructive">Lỗi</Badge>;
-      case 'info': return <Badge variant="default">Thông tin</Badge>;
-      case 'success': return <Badge variant="success">Thành công</Badge>;
-      default: return <Badge variant="default">Khác</Badge>;
+      case 'warning': return <Badge variant="warning">Warning</Badge>;
+      case 'error': return <Badge variant="destructive">Error</Badge>;
+      case 'info': return <Badge variant="default">Info</Badge>;
+      case 'success': return <Badge variant="success">Success</Badge>;
+      default: return <Badge variant="default">Other</Badge>;
     }
   };
 
   if (loading) {
     return (
-      <PageTemplate title="Dashboard quản trị">
+      <PageTemplate title="Admin Dashboard">
         <div className="text-center py-8">
           <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải thông tin...</p>
+          <p className="text-gray-600">Loading information...</p>
         </div>
       </PageTemplate>
     );
@@ -140,8 +140,8 @@ const AdminDashboard = () => {
 
   return (
     <PageTemplate
-      title={`Chào mừng, ${user?.name || 'Quản trị viên'}`}
-      subtitle="Tổng quan hệ thống và quản lý toàn bộ hoạt động"
+      title={`Welcome, ${user?.name || 'Administrator'}`}
+      subtitle="System overview and management of all activities"
       actions={
         <div className="flex gap-4">
           <Button 
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
             onClick={() => navigate('/user/admin/statistics')}
           >
             <TrendingUp className="w-4 h-4 mr-2" />
-            Thống kê
+            Statistics
           </Button>
           <Button 
             variant="primary" 
@@ -158,7 +158,7 @@ const AdminDashboard = () => {
             onClick={() => navigate('/user/admin/settings')}
           >
             <Settings className="w-4 h-4 mr-2" />
-            Cài đặt
+            Settings
           </Button>
         </div>
       }
@@ -167,30 +167,30 @@ const AdminDashboard = () => {
         {/* Quick Stats */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Tổng người dùng"
+            title="Total Users"
             value={systemStats.totalUsers}
-            description="Trong hệ thống"
+            description="In the system"
             icon={Users}
             trend={{ value: systemStats.monthlyGrowth, isPositive: true }}
           />
           <StatCard
-            title="Học sinh"
+            title="Students"
             value={systemStats.totalStudents}
-            description="Đang theo học"
+            description="Currently enrolled"
             icon={UserCheck}
             trend={{ value: 5, isPositive: true }}
           />
           <StatCard
-            title="Giáo viên"
+            title="Teachers"
             value={systemStats.totalTeachers}
-            description="Đang hoạt động"
+            description="Currently active"
             icon={BookOpen}
             trend={{ value: 2, isPositive: true }}
           />
           <StatCard
-            title="Lớp học"
+            title="Classes"
             value={systemStats.totalClasses}
-            description="Đang vận hành"
+            description="In operation"
             icon={Calendar}
             trend={{ value: 1, isPositive: true }}
           />
@@ -201,7 +201,7 @@ const AdminDashboard = () => {
           <section className="bg-amber-50 border border-amber-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-amber-800 mb-4 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
-              Cảnh báo hệ thống
+              System Alerts
             </h3>
             <div className="space-y-3">
               {alerts.map((alert) => (
@@ -228,13 +228,13 @@ const AdminDashboard = () => {
             {/* Recent System Activities */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Hoạt động gần đây</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Recent Activities</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/user/admin/logs')}
                 >
-                  Xem tất cả
+                  View all
                 </Button>
               </div>
               
@@ -246,7 +246,7 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-800">{activity.message}</h4>
-                      <p className="text-sm text-gray-600">Bởi: {activity.user}</p>
+                      <p className="text-sm text-gray-600">By: {activity.user}</p>
                       <p className="text-xs text-gray-500">{activity.timestamp}</p>
                     </div>
                     <Badge variant={activity.status === 'success' ? 'success' : 'default'}>
@@ -259,12 +259,12 @@ const AdminDashboard = () => {
 
             {/* Quick Stats Overview */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Tổng quan hệ thống</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">System Overview</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-blue-600 font-medium">Đơn đăng ký</p>
+                      <p className="text-sm text-blue-600 font-medium">Applications</p>
                       <p className="text-2xl font-bold text-blue-700">{systemStats.activeApplications}</p>
                     </div>
                     <FileText className="w-8 h-8 text-blue-600" />
@@ -273,7 +273,7 @@ const AdminDashboard = () => {
                 <div className="bg-yellow-50 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-yellow-600 font-medium">Chờ duyệt</p>
+                      <p className="text-sm text-yellow-600 font-medium">Pending Approvals</p>
                       <p className="text-2xl font-bold text-yellow-700">{systemStats.pendingApprovals}</p>
                     </div>
                     <UserCheck className="w-8 h-8 text-yellow-600" />
@@ -287,22 +287,22 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             {/* System Status */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Trạng thái hệ thống</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">System Status</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Uptime:</span>
                   <Badge variant="success">{systemStats.systemUptime}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Người dùng online:</span>
+                  <span className="text-gray-600">Online users:</span>
                   <span className="font-medium">{Math.floor(systemStats.totalUsers * 0.15)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Cơ sở dữ liệu:</span>
-                  <Badge variant="success">Hoạt động tốt</Badge>
+                  <span className="text-gray-600">Database:</span>
+                  <Badge variant="success">Healthy</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Phiên bản:</span>
+                  <span className="text-gray-600">Version:</span>
                   <span className="font-medium">v2.1.0</span>
                 </div>
               </div>
@@ -310,7 +310,7 @@ const AdminDashboard = () => {
 
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Thao tác nhanh</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Button 
                   variant="outline" 
@@ -318,7 +318,7 @@ const AdminDashboard = () => {
                   onClick={() => navigate('/user/admin/users')}
                 >
                   <Users className="w-4 h-4 mr-3" />
-                  Quản lý người dùng
+                  Manage Users
                 </Button>
                 <Button 
                   variant="outline" 
@@ -326,7 +326,7 @@ const AdminDashboard = () => {
                   onClick={() => navigate('/user/admin/classes')}
                 >
                   <BookOpen className="w-4 h-4 mr-3" />
-                  Quản lý lớp học
+                  Manage Classes
                 </Button>
                 <Button 
                   variant="outline" 
@@ -334,7 +334,7 @@ const AdminDashboard = () => {
                   onClick={() => navigate('/user/admin/admissions')}
                 >
                   <FileText className="w-4 h-4 mr-3" />
-                  Quản lý tuyển sinh
+                  Manage Admissions
                 </Button>
                 <Button 
                   variant="outline" 
@@ -342,7 +342,7 @@ const AdminDashboard = () => {
                   onClick={() => navigate('/user/admin/statistics')}
                 >
                   <TrendingUp className="w-4 h-4 mr-3" />
-                  Thống kê báo cáo
+                  Statistics & Reports
                 </Button>
                 <Button 
                   variant="outline" 
@@ -350,7 +350,7 @@ const AdminDashboard = () => {
                   onClick={() => navigate('/user/admin/settings')}
                 >
                   <Settings className="w-4 h-4 mr-3" />
-                  Cài đặt hệ thống
+                  System Settings
                 </Button>
               </div>
             </div>

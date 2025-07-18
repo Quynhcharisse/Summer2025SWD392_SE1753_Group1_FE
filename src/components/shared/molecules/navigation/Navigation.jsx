@@ -46,24 +46,6 @@ const Navigation = ({
       label: 'ABOUT US',
       path: '/homepage/about-us',
       icon: Info
-    },
-    {
-      id: 'contact',
-      label: 'CONTACT',
-      path: '/homepage/contact',
-      icon: Info
-    },
-    {
-      id: 'book-story-demo',
-      label: 'BOOK STORY DEMO',
-      path: '/demo/book-story',
-      icon: Info // hoặc chọn icon phù hợp hơn nếu có
-    },
-    {
-      id: 'theme-test',
-      label: 'THEME TEST',
-      path: '/demo/theme-test',
-      icon: Info
     }
   ];
 
