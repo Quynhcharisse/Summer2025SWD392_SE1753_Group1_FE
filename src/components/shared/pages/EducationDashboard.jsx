@@ -1,244 +1,286 @@
-import React from 'react';
-import { BookOpen, Users, TrendingUp, Calendar, FileText, Award, Clock, Target } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { PieChart } from "@mui/x-charts/PieChart";
+import { BarChart } from "@mui/x-charts/BarChart";
+import {
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Box,
+  Stack,
+  Alert,
+} from "@mui/material";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import {
+  getClassReportByYear,
+  getEventParticipantsStats,
+  getSchoolYears,
+} from "@/api/services/classService";
 
-const EducationDashboard = () => {
+const COLORS = ["#3b82f6", "#fbbf24", "#ef4444"]; // SEED, BUD, LEAF
+
+export default function EducationDashboard() {
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [year, setYear] = useState("");
+  const [years, setYears] = useState([]);
+  const [barData, setBarData] = useState([]);
+  const [loadingBar, setLoadingBar] = useState(false);
+
+  // Ngày mặc định (ISO format)
+  const [startDate, setStartDate] = useState(dayjs().subtract(7, "day"));
+  const [endDate, setEndDate] = useState(dayjs());
+  const [dateError, setDateError] = useState("");
+
+  useEffect(() => {
+    getSchoolYears().then((res) => {
+      const yearArr = (res.data?.data || []).sort((a, b) => b - a);
+      setYears(yearArr);
+      if (yearArr.length > 0) setYear(yearArr[0]);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!year) return;
+    setLoading(true);
+    getClassReportByYear(year)
+      .then((res) => setReport(res.data?.data))
+      .finally(() => setLoading(false));
+  }, [year]);
+
+  // Validate ngày và fetch lại dữ liệu khi ngày hợp lệ
+  useEffect(() => {
+    if (!startDate || !endDate) return;
+    if (startDate.isSame(endDate) || startDate.isAfter(endDate)) {
+      setDateError("Start Date must be before End Date");
+      return;
+    }
+    setDateError("");
+    setLoadingBar(true);
+    getEventParticipantsStats({
+      startDate: startDate.format("YYYY-MM-DD"),
+      endDate: endDate.format("YYYY-MM-DD"),
+    })
+      .then((res) => setBarData(res.data?.data || []))
+      .finally(() => setLoadingBar(false));
+  }, [startDate, endDate]);
+
+  // PieChart data
+  let chartData = [];
+  if (report?.byGrade) {
+    chartData = Object.entries(report.byGrade)
+      .filter(([_, value]) => value > 0)
+      .map(([key, value], idx) => ({
+        id: key,
+        value,
+        label: key,
+        color: COLORS[idx] || COLORS[0],
+      }));
+  }
+  const total = chartData.reduce((sum, d) => sum + d.value, 0);
+
+  // BarChart data
+  const hasBarData = barData && barData.length > 0;
+  const eventNames = barData.map((d) => d.eventName);
+  const studentCounts = barData.map((d) => d.studentCount);
+  const maxStudent = Math.max(...studentCounts, 5);
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-6 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold mb-2">Education Dashboard</h1>
-        <p className="text-green-100">Quản lý chương trình giáo dục và học tập</p>
+    <div>
+      <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-8 rounded-2xl shadow-lg mb-6">
+        <h1 className="text-2xl font-bold">Education Dashboard</h1>
       </div>
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        gap={4}
+        sx={{
+          maxWidth: 1100,
+          mx: "auto",
+          alignItems: "stretch",
+        }}
+      >
+        {/* Pie Chart Card */}
+        <Card
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            minHeight: 420,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <CardContent
+            sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+          >
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <Typography variant="h6" component="span">
+                Number of Classes by Grade
+              </Typography>
+              <FormControl size="small" sx={{ minWidth: 100 }}>
+                <InputLabel id="school-year-label">Year</InputLabel>
+                <Select
+                  labelId="school-year-label"
+                  value={year}
+                  label="Year"
+                  onChange={(e) => setYear(e.target.value)}
+                >
+                  {years.map((y) => (
+                    <MenuItem key={y} value={y}>
+                      {y}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            {loading ? (
+              <Box display="flex" justifyContent="center" py={5}>
+                <CircularProgress color="success" />
+              </Box>
+            ) : total === 0 ? (
+              <Typography color="text.secondary" align="center">
+                No classes created in this year.
+              </Typography>
+            ) : (
+              <Box sx={{ width: "100%", height: 320 }}>
+                <PieChart
+                  series={[
+                    {
+                      data: chartData,
+                      innerRadius: 50,
+                      outerRadius: 100,
+                      paddingAngle: 3,
+                      cornerRadius: 5,
+                      colors: chartData.map((d) => d.color),
+                    },
+                  ]}
+                  width={undefined}
+                  height={300}
+                  slotProps={{
+                    legend: {
+                      direction: "row",
+                      position: { vertical: "bottom", horizontal: "middle" },
+                    },
+                  }}
+                />
+              </Box>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Tổng số lớp</p>
-              <p className="text-2xl font-bold text-gray-900">12</p>
-              <p className="text-xs text-green-600">Hoạt động tốt</p>
-            </div>
-            <Users className="w-12 h-12 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Chương trình học</p>
-              <p className="text-2xl font-bold text-gray-900">8</p>
-              <p className="text-xs text-blue-600">Đang triển khai</p>
-            </div>
-            <BookOpen className="w-12 h-12 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Tiến độ học tập</p>
-              <p className="text-2xl font-bold text-gray-900">87%</p>
-              <p className="text-xs text-yellow-600">Trên mục tiêu</p>
-            </div>
-            <Target className="w-12 h-12 text-yellow-500" />
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Đánh giá tháng</p>
-              <p className="text-2xl font-bold text-gray-900">95</p>
-              <p className="text-xs text-purple-600">Điểm trung bình</p>
-            </div>
-            <Award className="w-12 h-12 text-purple-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions & Recent Activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-green-600" />
-            Hành động nhanh
-          </h3>
-          <div className="space-y-3">
-            <button className="w-full text-left p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-              <p className="font-medium text-green-900">Cập nhật chương trình học</p>
-              <p className="text-sm text-green-600">Chỉnh sửa và phê duyệt curriculum</p>
-            </button>
-            <button className="w-full text-left p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
-              <p className="font-medium text-blue-900">Xem báo cáo học tập</p>
-              <p className="text-sm text-blue-600">Phân tích tiến độ các lớp học</p>
-            </button>
-            <button className="w-full text-left p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
-              <p className="font-medium text-purple-900">Quản lý đánh giá</p>
-              <p className="text-sm text-purple-600">Thiết lập tiêu chí đánh giá học sinh</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Recent Activities */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <FileText className="w-5 h-5 mr-2 text-gray-600" />
-            Hoạt động gần đây
-          </h3>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium">Cập nhật chương trình Toán học</p>
-                <p className="text-xs text-gray-500">1 giờ trước</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium">Báo cáo tiến độ lớp Mầm 1A</p>
-                <p className="text-xs text-gray-500">3 giờ trước</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium">Phê duyệt tài liệu học tập mới</p>
-                <p className="text-xs text-gray-500">5 giờ trước</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium">Đánh giá định kỳ học sinh</p>
-                <p className="text-xs text-gray-500">1 ngày trước</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Curriculum Overview */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <BookOpen className="w-5 h-5 mr-2 text-green-600" />
-          Tổng quan chương trình học
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-red-900">Toán học</h4>
-              <span className="text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full">12 lớp</span>
-            </div>
-            <p className="text-sm text-red-700">Phát triển tư duy logic và số học cơ bản</p>
-            <div className="mt-3 bg-red-200 rounded-full h-2">
-              <div className="bg-red-500 h-2 rounded-full" style={{width: '85%'}}></div>
-            </div>
-            <p className="text-xs text-red-600 mt-1">Tiến độ: 85%</p>
-          </div>
-
-          <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-blue-900">Ngôn ngữ</h4>
-              <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">12 lớp</span>
-            </div>
-            <p className="text-sm text-blue-700">Phát triển kỹ năng giao tiếp và đọc viết</p>
-            <div className="mt-3 bg-blue-200 rounded-full h-2">
-              <div className="bg-blue-500 h-2 rounded-full" style={{width: '92%'}}></div>
-            </div>
-            <p className="text-xs text-blue-600 mt-1">Tiến độ: 92%</p>
-          </div>
-
-          <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-green-900">Khoa học</h4>
-              <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">8 lớp</span>
-            </div>
-            <p className="text-sm text-green-700">Khám phá thế giới xung quanh</p>
-            <div className="mt-3 bg-green-200 rounded-full h-2">
-              <div className="bg-green-500 h-2 rounded-full" style={{width: '78%'}}></div>
-            </div>
-            <p className="text-xs text-green-600 mt-1">Tiến độ: 78%</p>
-          </div>
-
-          <div className="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-yellow-900">Nghệ thuật</h4>
-              <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full">10 lớp</span>
-            </div>
-            <p className="text-sm text-yellow-700">Phát triển khả năng sáng tạo</p>
-            <div className="mt-3 bg-yellow-200 rounded-full h-2">
-              <div className="bg-yellow-500 h-2 rounded-full" style={{width: '88%'}}></div>
-            </div>
-            <p className="text-xs text-yellow-600 mt-1">Tiến độ: 88%</p>
-          </div>
-
-          <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-purple-900">Thể chất</h4>
-              <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full">12 lớp</span>
-            </div>
-            <p className="text-sm text-purple-700">Phát triển thể lực và vận động</p>
-            <div className="mt-3 bg-purple-200 rounded-full h-2">
-              <div className="bg-purple-500 h-2 rounded-full" style={{width: '95%'}}></div>
-            </div>
-            <p className="text-xs text-purple-600 mt-1">Tiến độ: 95%</p>
-          </div>
-
-          <div className="p-4 bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-teal-900">Xã hội</h4>
-              <span className="text-xs bg-teal-200 text-teal-800 px-2 py-1 rounded-full">8 lớp</span>
-            </div>
-            <p className="text-sm text-teal-700">Kỹ năng giao tiếp xã hội</p>
-            <div className="mt-3 bg-teal-200 rounded-full h-2">
-              <div className="bg-teal-500 h-2 rounded-full" style={{width: '82%'}}></div>
-            </div>
-            <p className="text-xs text-teal-600 mt-1">Tiến độ: 82%</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Upcoming Events */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Calendar className="w-5 h-5 mr-2 text-blue-600" />
-          Sự kiện sắp tới
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div>
-              <p className="font-medium">Họp đánh giá chương trình</p>
-              <p className="text-sm text-gray-600">Thứ 3, 9:00 AM - Phòng họp giáo dục</p>
-            </div>
-            <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-              Quan trọng
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div>
-              <p className="font-medium">Hội thảo phương pháp giảng dạy</p>
-              <p className="text-sm text-gray-600">Thứ 5, 2:00 PM - Hội trường</p>
-            </div>
-            <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-              Đào tạo
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div>
-              <p className="font-medium">Kiểm tra chất lượng giáo dục</p>
-              <p className="text-sm text-gray-600">Chủ nhật, 8:00 AM - Tất cả lớp</p>
-            </div>
-            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
-              Đánh giá
-            </span>
-          </div>
-        </div>
-      </div>
+        {/* Bar Chart Card */}
+        <Card
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            minHeight: 420,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <CardContent
+            sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+          >
+            {/* Tiêu đề */}
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Students Participation by Event
+            </Typography>
+            {/* Hàng input ngày */}
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Box display="flex" gap={2} mb={2}>
+                <DatePicker
+                  label="Start Date"
+                  value={startDate}
+                  onChange={setStartDate}
+                  maxDate={endDate ? endDate.subtract(1, "day") : undefined}
+                  format="DD/MM/YYYY" // <-- Đổi định dạng ở đây
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                      fullWidth: false,
+                      sx: { minWidth: 150 },
+                    },
+                  }}
+                />
+                <DatePicker
+                  label="End Date"
+                  value={endDate}
+                  onChange={setEndDate}
+                  minDate={startDate ? startDate.add(1, "day") : undefined}
+                  format="DD/MM/YYYY" // <-- Đổi định dạng ở đây
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                      fullWidth: false,
+                      sx: { minWidth: 150 },
+                    },
+                  }}
+                />
+              </Box>
+            </LocalizationProvider>
+            {/* Hiển thị lỗi nếu nhập sai */}
+            {dateError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {dateError}
+              </Alert>
+            )}
+            {loadingBar ? (
+              <Box display="flex" justifyContent="center" py={6}>
+                <CircularProgress />
+              </Box>
+            ) : hasBarData ? (
+              <Box sx={{ width: "100%", height: 320 }}>
+                <BarChart
+                  xAxis={[
+                    {
+                      id: "eventName",
+                      data: eventNames,
+                      label: "Event",
+                      scaleType: "band",
+                      tickLabelStyle: { fontSize: 14 },
+                    },
+                  ]}
+                  yAxis={[
+                    {
+                      label: "Student Count",
+                      tickLabelStyle: { fontSize: 13 },
+                      min: 0,
+                      max: maxStudent,
+                      ticks: Array.from(
+                        { length: maxStudent + 1 },
+                        (_, i) => i
+                      ),
+                    },
+                  ]}
+                  series={[
+                    {
+                      data: studentCounts,
+                      label: "Number of Students",
+                      color: "#2563eb",
+                    },
+                  ]}
+                  width={undefined}
+                  height={300}
+                  grid={{ vertical: true, horizontal: true }}
+                  sx={{
+                    ".MuiChartsLegend-root": { mt: 2 },
+                    ".MuiBarElement-root": { rx: 5 },
+                  }}
+                />
+              </Box>
+            ) : (
+              <Typography color="text.secondary" align="center" sx={{ my: 6 }}>
+                No data found for selected date range.
+              </Typography>
+            )}
+          </CardContent>
+        </Card>
+      </Stack>
     </div>
   );
-};
-
-export default EducationDashboard;
+}

@@ -525,7 +525,7 @@ const SyllabusManage = () => {
                 fontWeight: "medium",
               }}
             >
-              Total Lessons: {totalItems}
+              Total Syllabus: {totalItems}
             </Typography>
           </Box>
         </Box>
