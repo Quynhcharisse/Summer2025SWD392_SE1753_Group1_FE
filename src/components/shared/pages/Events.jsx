@@ -63,7 +63,7 @@ const Events = () => {
     if (!tokenData || tokenData.role?.toLowerCase() !== "parent") {
       setSnackbar({
         open: true,
-        message: "Chỉ phụ huynh (parent) mới sử dụng được chức năng này!",
+        message: "Only parents can use this function!",
         severity: "warning",
       });
       return;
