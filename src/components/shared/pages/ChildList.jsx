@@ -1,6 +1,6 @@
 import { Button, Spinner } from "@atoms";
 import { PageTemplate } from "@templates";
-import { Baby, Plus } from "lucide-react";
+import { Baby, Plus, CheckCircle, AlertCircle } from "lucide-react";
 import RenderFormPopUp from "./RenderFormPopUp";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +22,6 @@ const ChildList = () => {
       try {
         setLoading(true);
         const response = await getChildren();
-//         console.log(response);
 
         if (response.data) {
           setChildren(response.data);
@@ -31,7 +30,6 @@ const ChildList = () => {
           setError("No child information found");
         }
       } catch (err) {
-//         console.error("Failed to fetch children:", err);
         setError("Error fetching child list information");
       } finally {
         setLoading(false);
@@ -125,6 +123,26 @@ const ChildList = () => {
                   <Baby className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
+
+              {/* Form Status Indicator */}
+              <div className="mb-4">
+                {child.hadForm ? (
+                  <div className="flex items-center space-x-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">
+                      Form Submitted
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+                    <AlertCircle className="w-4 h-4 text-orange-600" />
+                    <span className="text-sm font-medium text-orange-800">
+                      Ready for Enrollment
+                    </span>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2 mb-6">
                 <div className="flex space-x-2">
                   <span className="text-gray-500 text-sm">Date of Birth:</span>
@@ -143,6 +161,7 @@ const ChildList = () => {
                   </div>
                 )}
               </div>
+              
               <Button
                 variant="primary"
                 className="w-full mb-2"
@@ -150,13 +169,23 @@ const ChildList = () => {
               >
                 Enroll
               </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setEditChildId(child.id)}
-              >
-                Edit
-              </Button>
+              
+              {/* Conditional Edit Button based on hadForm */}
+              {child.hadForm ? (
+                <div className="w-full bg-gray-100 border border-gray-300 rounded px-4 py-2 text-center">
+                  <span className="text-gray-500 text-sm">
+                    Cannot edit - Form already submitted
+                  </span>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setEditChildId(child.id)}
+                >
+                  Edit
+                </Button>
+              )}
             </div>
           ))}
         </div>
