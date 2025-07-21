@@ -60,6 +60,8 @@ import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {viVN} from '@mui/x-date-pickers/locales';
 import dayjs from "dayjs";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import {ValidateTermFormData} from "@/components/none-shared/validation/ValidateTermFormData.jsx";
+import {ValidateExtraTermFormData} from "@/components/none-shared/validation/ValidateExtraTermFormData.jsx";
 
 function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
     const [page, setPage] = useState(0);
@@ -324,26 +326,11 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
     const handleCreateExtraTerm = async (e) => {
         e.preventDefault();
 
-        // Basic validation
-        if (!formData.startDate || !formData.endDate) {
-            enqueueSnackbar('Please select both start and end dates', {variant: 'error'});
-            return;
-        }
-
-        // Validate date order
-        if (dayjs(formData.startDate) >= dayjs(formData.endDate)) {
-            enqueueSnackbar('End date must be after start date', {variant: 'error'});
-            return;
-        }
-
-        // Validate against parent term dates
-        const parentStartDate = dayjs(selectedTerm.startDate);
-        const parentEndDate = dayjs(selectedTerm.endDate);
-        const extraStartDate = dayjs(formData.startDate);
-        const extraEndDate = dayjs(formData.endDate);
-
-        if (extraStartDate < parentStartDate || extraEndDate > parentEndDate) {
-            enqueueSnackbar('Extra term dates must be within parent term dates', {variant: 'error'});
+        // Use centralized validation function
+        const validationError = ValidateExtraTermFormData(formData, selectedTerm);
+        
+        if (validationError) {
+            enqueueSnackbar(validationError, {variant: 'error'});
             return;
         }
 
@@ -1419,28 +1406,11 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
     };
 
     const validateForm = () => {
-        if (!formData.startDate) {
-            enqueueSnackbar("Start date is required", {variant: "error"});
-            return false;
-        }
-
-        if (!formData.endDate) {
-            enqueueSnackbar("End date is required", {variant: "error"});
-            return false;
-        }
-
-        if (new Date(formData.startDate) >= new Date(formData.endDate)) {
-            enqueueSnackbar("Start date must be before end date", {variant: "error"});
-            return false;
-        }
-
-        if (new Date(formData.startDate) <= new Date()) {
-            enqueueSnackbar("Start date must be in the future", {variant: "error"});
-            return false;
-        }
-
-        if (formData.termItemList.length === 0) {
-            enqueueSnackbar("At least one grade must be included in the term", {variant: "error"});
+        // Use the centralized validation function
+        const validationError = ValidateTermFormData(formData, data.terms);
+        
+        if (validationError) {
+            enqueueSnackbar(validationError, {variant: "error"});
             return false;
         }
 
@@ -1566,7 +1536,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                             }}>
                                 <TextField
                                     label="Term Name"
-                                    value={"Admission Term for " + new Date(formData.startDate).getFullYear()}
+                                    value={"Admission Term for " + calculateAcademicYear(formData.startDate)}
                                     fullWidth
                                     InputProps={{
                                         startAdornment: (
@@ -1608,7 +1578,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                             }}>
                                 <TextField
                                     label="Year"
-                                    value={formData && formData.startDate ? new Date(formData.startDate).getFullYear() : new Date().getFullYear()}
+                                    value={calculateAcademicYearRange(formData.startDate)}
                                     fullWidth
                                     InputProps={{
                                         startAdornment: (
@@ -2267,6 +2237,28 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
         </div>
     )
 }
+
+// Import calculateAcademicYear from validation file to avoid duplication
+// We can create a small wrapper if needed, but let's reuse the logic
+const calculateAcademicYear = (date) => {
+    if (!date) {
+        const currentYear = new Date().getFullYear();
+        return currentYear;
+    }
+    
+    const dateObj = new Date(date);
+    const year = dateObj.getFullYear();
+    const month = dateObj.getMonth() + 1; // Convert to 1-12
+    
+    // If date is June or later, use current year as base
+    // If date is Jan-May, use previous year as base (part of academic year that started previous calendar year)
+    return month >= 6 ? year : year - 1;
+};
+
+const calculateAcademicYearRange = (date) => {
+    const baseYear = calculateAcademicYear(date);
+    return `${baseYear}–${baseYear + 1}`;
+};
 
 
 export default function TermAdmission() {
