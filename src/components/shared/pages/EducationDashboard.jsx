@@ -38,18 +38,35 @@ export default function EducationDashboard() {
   const [endDate, setEndDate] = useState(dayjs());
   const [dateError, setDateError] = useState("");
 
+  function isCurrentYear(yearStr) {
+    if (!yearStr) return false;
+    const currentYear = new Date().getFullYear();
+    // Tách bởi - hoặc –, loại bỏ khoảng trắng
+    const years = yearStr.replace(/\s/g, "").split(/[-–]/);
+    // So sánh cả hai năm trong chuỗi năm học
+    return years.some((y) => parseInt(y) === currentYear);
+  }
+
   useEffect(() => {
     getSchoolYears().then((res) => {
-      const yearArr = (res.data?.data || []).sort((a, b) => b - a);
+      const yearArr = res.data?.data || [];
       setYears(yearArr);
-      if (yearArr.length > 0) setYear(yearArr[0]);
+      if (yearArr.length > 0) {
+        // Tìm năm học chứa năm hiện tại
+        const found = yearArr.find((y) => isCurrentYear(y));
+        setYear(found || yearArr[0]);
+      }
     });
   }, []);
-
+  const getStartYear = (yearStr) => {
+    if (!yearStr) return "";
+    // Tách bởi - hoặc –
+    return yearStr.replace(/\s/g, "").split(/[-–]/)[0];
+  };
   useEffect(() => {
     if (!year) return;
     setLoading(true);
-    getClassReportByYear(year)
+    getClassReportByYear(getStartYear(year))
       .then((res) => setReport(res.data?.data))
       .finally(() => setLoading(false));
   }, [year]);
