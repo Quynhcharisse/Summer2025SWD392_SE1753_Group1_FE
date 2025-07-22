@@ -53,7 +53,7 @@ import {
     getTermYears,
     updateTermStatus
 } from "@services/admissionService.js";
-import {useSnackbar} from "notistack";
+import {enqueueSnackbar, useSnackbar} from "notistack";
 import {formatVND} from "@/components/none-shared/formatVND.jsx";
 import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
@@ -177,55 +177,36 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                 >
                                     <TableCell align="center">{idx + 1}</TableCell>
                                     <TableCell align="center">{term.year}</TableCell>
-
+                                    <TableCell align="center">{dayjs(term.startDate).format('HH:mm DD/MM/YYYY')}</TableCell>
+                                    <TableCell align="center">{dayjs(term.endDate).format('HH:mm DD/MM/YYYY')}</TableCell>
                                     <TableCell align="center">
-                                        <Stack spacing={0.5}>
-                                            <Typography variant="body2">
-                                                {dayjs(term.startDate).format('HH:mm DD/MM/YYYY')}
-                                            </Typography>
-                                        </Stack>
+                                        <Typography
+                                            component="span"
+                                            sx={{
+                                                color:
+                                                    term.status === "active" ? "#07663a"
+                                                        : term.status === "inactive" ? "#b27a00"
+                                                            : term.status === "locked" ? "#d32f2f"
+                                                                : "#333",
+                                                fontWeight: 600,
+                                                padding: '6px 16px',
+                                                backgroundColor:
+                                                    term.status === "active" ? "rgba(7, 102, 58, 0.08)"
+                                                        : term.status === "inactive" ? "rgba(255, 193, 7, 0.12)"
+                                                            : term.status === "locked" ? "rgba(211, 47, 47, 0.10)"
+                                                                : "transparent",
+                                                borderRadius: '20px',
+                                                fontSize: '0.89rem',
+                                                letterSpacing: 1,
+                                                textTransform: "capitalize",
+                                                minWidth: 90,
+                                                display: "inline-block",
+                                                textAlign: "center"
+                                            }}
+                                        >
+                                            {term.status}
+                                        </Typography>
                                     </TableCell>
-
-                                    <TableCell align="center">
-                                        <Stack spacing={0.5}>
-                                            <Typography variant="body2">
-                                                {dayjs(term.endDate).format('HH:mm DD/MM/YYYY')}
-                                            </Typography>
-                                        </Stack>
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        <Stack spacing={0.5}>
-                                            <TableCell align="center" sx={{padding: '12px 8px'}}>
-                                                <Typography
-                                                    component="span"
-                                                    sx={{
-                                                        color:
-                                                            term.status === "active" ? "#07663a"
-                                                                : term.status === "inactive" ? "#b27a00"
-                                                                    : term.status === "locked" ? "#d32f2f"
-                                                                        : "#333",
-                                                        fontWeight: 600,
-                                                        padding: '6px 16px',
-                                                        backgroundColor:
-                                                            term.status === "active" ? "rgba(7, 102, 58, 0.08)"
-                                                                : term.status === "inactive" ? "rgba(255, 193, 7, 0.12)"
-                                                                    : term.status === "locked" ? "rgba(211, 47, 47, 0.10)"
-                                                                        : "transparent",
-                                                        borderRadius: '20px',
-                                                        fontSize: '0.89rem',
-                                                        letterSpacing: 1,
-                                                        textTransform: "capitalize",
-                                                        minWidth: 90,
-                                                        display: "inline-block",
-                                                        textAlign: "center"
-                                                    }}
-                                                >
-                                                    {term.status}
-                                                </Typography>
-                                            </TableCell>
-                                        </Stack>
-                                    </TableCell>
-
                                     <TableCell align="center">
                                         <Tooltip title="View">
                                             <IconButton
@@ -326,15 +307,13 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
     const handleCreateExtraTerm = async (e) => {
         e.preventDefault();
 
-        // Use centralized validation function
         const validationError = ValidateExtraTermFormData(formData, selectedTerm);
-        
+
         if (validationError) {
             enqueueSnackbar(validationError, {variant: 'error'});
             return;
         }
 
-        // Get the first grade that has missing students
         const firstGradeWithMissing = Object.keys(missingInfoByGrade)[0];
         const gradeInfo = firstGradeWithMissing ? missingInfoByGrade[firstGradeWithMissing] : null;
 
@@ -355,7 +334,6 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                 enqueueSnackbar(response.message || 'Failed to create extra term', {variant: 'error'});
             }
         } catch (error) {
-//             console.error('Error creating extra term:', error);
             enqueueSnackbar(
                 error.response?.data?.message || 'Error creating extra term',
                 {variant: 'error'}
@@ -447,7 +425,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                 fontSize: '1rem',
                                 letterSpacing: 1,
                                 textTransform: 'uppercase',
-                                bgcolor:
+                                backgroundColor:
                                     selectedTerm.status === 'locked'
                                         ? '#d32f2f'
                                         : selectedTerm.status === 'active'
@@ -532,7 +510,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                             Start Date
                                         </Typography>
                                         <Typography variant="body2" sx={{color: '#333'}}>
-                                            {dayjs(selectedTerm.startDate).toISOString()}
+                                            {dayjs(selectedTerm.startDate).format(' HH:mm DD/MM/YYYY')}
                                         </Typography>
                                     </Box>
                                 </Grid>
@@ -547,7 +525,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                             End Date
                                         </Typography>
                                         <Typography variant="body2" sx={{color: '#333'}}>
-                                            {dayjs(selectedTerm.endDate).toISOString()}
+                                            {dayjs(selectedTerm.endDate).format(' HH:mm DD/MM/YYYY')}
                                         </Typography>
                                     </Box>
                                 </Grid>
@@ -627,7 +605,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                     fontWeight: 600
                                                 }}
                                             >
-                                                Grade {item.grade}
+                                                Grade {formatGradeDisplay(item.grade)}
                                             </Typography>
                                         </Box>
 
@@ -1095,7 +1073,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                         borderColor: 'primary.main'
                                                     }}>
                                                         <Typography variant="h6" gutterBottom>
-                                                            Grade {grade}
+                                                            Grade {formatGradeDisplay(grade)}
                                                         </Typography>
                                                         <Typography variant="body2" color="text.secondary" gutterBottom>
                                                             Maximum Registration: {info.maxRegistration}
@@ -1280,7 +1258,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                             }}
                                         >
                                             <Typography variant="subtitle2" gutterBottom>
-                                                Grade {item.grade}
+                                                Grade {formatGradeDisplay(item.grade)}
                                             </Typography>
                                             <Grid container spacing={1}>
                                                 <Grid item xs={6}>
@@ -1311,7 +1289,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
     );
 }
 
-function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
+function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm, terms}) {
     const today = new Date()
     const tomorrow = new Date(today)
     tomorrow.setDate(today.getDate() + 1)
@@ -1365,12 +1343,13 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
         try {
             // Get default fees for the selected grade
             const response = await getDefaultGrade(selectedGrade);
+        
             if (response?.success && response?.data) {
                 const newTermItem = {
                     ...currentTermItem,
-                    grade: selectedGrade,
+                    grade: selectedGrade, // Đảm bảo gửi đúng enum cho BE
                     studentsPerClass: 20,
-                    maxNumberRegistration: parseInt(currentTermItem.expectedClasses) * 20,
+                    maxNumberRegistration: parseInt(response.data.facilityFee),
                     facilityFee: parseInt(response.data.facilityFee),
                     uniformFee: parseInt(response.data.uniformFee),
                     learningMaterialFee: parseInt(response.data.learningMaterialFee),
@@ -1393,7 +1372,6 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                 setSelectedGrade('');
             }
         } catch (error) {
-//             console.error("Error getting default fees:", error);
             enqueueSnackbar("Error loading fees", {variant: "error"});
         }
     };
@@ -1407,8 +1385,8 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
 
     const validateForm = () => {
         // Use the centralized validation function
-        const validationError = ValidateTermFormData(formData, data.terms);
-        
+        const validationError = ValidateTermFormData(formData, terms); 
+
         if (validationError) {
             enqueueSnackbar(validationError, {variant: "error"});
             return false;
@@ -1423,23 +1401,14 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                 return;
             }
 
-            // Format dates to ISO string
-            const startDateISO = new Date(formData.startDate).toISOString();
-            const endDateISO = new Date(formData.endDate).toISOString();
+            // Format dates to ISO string (use dayjs toISOString to avoid timezone issues)
+            const startDateISO = formData.startDate.toISOString();
+            const endDateISO = formData.endDate.toISOString();
 
-            // Prepare term items with all required fields
+            // Prepare term items with only required fields for BE
             const termItems = formData.termItemList.map(item => ({
                 grade: item.grade,
-                expectedClasses: Number(item.expectedClasses),
-                studentsPerClass: Number(item.studentsPerClass),
-                maxNumberRegistration: Number(item.maxNumberRegistration),
-                feeList: {
-                    facilityFee: Number(item.facilityFee),
-                    uniformFee: Number(item.uniformFee),
-                    learningMaterialFee: Number(item.learningMaterialFee),
-                    reservationFee: Number(item.reservationFee),
-                    serviceFee: Number(item.serviceFee)
-                }
+                expectedClasses: Number(item.expectedClasses)
             }));
 
 
@@ -1458,7 +1427,6 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                 enqueueSnackbar(response.message || "Failed to create term", {variant: "error"});
             }
         } catch (error) {
-//             console.error("Error in handleCreate:", error);
             enqueueSnackbar(error.response?.data?.message || "Error creating term", {variant: "error"});
         }
     };
@@ -1712,7 +1680,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                                     }}
                                 >
                                     {remainingGrades.map(grade => (
-                                        <MenuItem key={grade} value={grade}>{grade}</MenuItem>
+                                        <MenuItem key={grade} value={grade}>{formatGradeDisplay(grade)}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
@@ -1943,7 +1911,7 @@ function RenderFormPopUp({isPopUpOpen, handleClosePopUp, GetTerm}) {
                                                     borderRadius: 2
                                                 }}
                                             >
-                                                {item.grade}
+                                                {formatGradeDisplay(item.grade)}
                                             </Typography>
                                         </Box>
 
@@ -2108,10 +2076,10 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
                     const sortedYears = [...response.data].sort((a, b) => b - a);
                     setYears(['all', ...sortedYears]);
                 } else {
-//                     console.error('Failed to fetch years:', response.message);
+                    enqueueSnackbar('Failed to fetch years:', response.message);
                 }
             } catch (error) {
-//                 console.error('Error fetching years:', error);
+                enqueueSnackbar('Error fetching years:', error);
             }
         };
         fetchYears();
@@ -2238,6 +2206,11 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
     )
 }
 
+// Helper function to format grade display (Seed, Bud, Leaf)
+const formatGradeDisplay = (grade) => {
+    return grade.charAt(0).toUpperCase() + grade.slice(1);
+};
+
 // Import calculateAcademicYear from validation file to avoid duplication
 // We can create a small wrapper if needed, but let's reuse the logic
 const calculateAcademicYear = (date) => {
@@ -2245,11 +2218,12 @@ const calculateAcademicYear = (date) => {
         const currentYear = new Date().getFullYear();
         return currentYear;
     }
-    
-    const dateObj = new Date(date);
+
+    // Handle both dayjs objects and Date objects
+    const dateObj = date?.toDate ? date.toDate() : new Date(date);
     const year = dateObj.getFullYear();
     const month = dateObj.getMonth() + 1; // Convert to 1-12
-    
+
     // If date is June or later, use current year as base
     // If date is Jan-May, use previous year as base (part of academic year that started previous calendar year)
     return month >= 6 ? year : year - 1;
@@ -2320,7 +2294,7 @@ export default function TermAdmission() {
                     isPopUpOpen={popUp.isOpen}
                     handleClosePopUp={handleClosePopUp}
                     GetTerm={GetTerm}
-                    terms={data.terms}
+                    terms={data.terms} 
                 />
             )}
             {popUp.isOpen && popUp.type === 'view' && (
