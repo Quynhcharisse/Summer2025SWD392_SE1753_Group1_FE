@@ -148,7 +148,12 @@ export default function EducationClassManage() {
         }));
         setYears(years);
         if (years.length > 0) {
-          setSelectedYear(years[0].value);
+          const currentYear = new Date().getFullYear().toString();
+          // Tìm năm học nào chứa năm hiện tại (VD: "2025" trong "2025–2026")
+          const found = years.find((y) =>
+            y.value.replace(/\s/g, "").includes(currentYear)
+          );
+          setSelectedYear(found ? found.value : years[0].value);
         }
       })
       .catch((error) => {
@@ -176,11 +181,15 @@ export default function EducationClassManage() {
         });
     }
   }, [selectedGrade]);
-
+  const getStartYear = (yearStr) => {
+    if (!yearStr) return "";
+    // Tách bởi - hoặc –
+    return yearStr.replace(/\s/g, "").split(/[-–]/)[0];
+  };
   useEffect(() => {
     if (selectedYear && selectedGrade) {
       setLoading(true);
-      getClassesByYearAndGrade(selectedYear, selectedGrade)
+      getClassesByYearAndGrade(getStartYear(selectedYear), selectedGrade)
         .then((res) => {
           //           console.log("Classes response:", res.data);
           setClasses(res.data.data || []);
@@ -215,7 +224,7 @@ export default function EducationClassManage() {
   // Fetch number of unassigned students when year or grade changes
   useEffect(() => {
     if (selectedYear && selectedGrade) {
-      getNumberOfAvailableChildren(selectedYear, selectedGrade)
+      getNumberOfAvailableChildren(getStartYear(selectedYear), selectedGrade)
         .then((res) => {
           setNumUnassigned(res.data.data ?? 0);
         })
@@ -268,7 +277,7 @@ export default function EducationClassManage() {
       await deleteClass(classId);
       // Refresh class list after delete
       const classListResponse = await getClassesByYearAndGrade(
-        selectedYear,
+        getStartYear(selectedYear),
         selectedGrade
       );
       setClasses(classListResponse.data.data || []);
@@ -321,7 +330,7 @@ export default function EducationClassManage() {
 
       // Prepare payload
       const payload = {
-        year: selectedYear,
+        year: getStartYear(selectedYear),
         startDate,
         syllabusId: selectedSyllabus,
         gradeName: selectedGrade.toLowerCase(),
@@ -339,19 +348,19 @@ export default function EducationClassManage() {
 
       // Refresh class list
       const classListResponse = await getClassesByYearAndGrade(
-        selectedYear,
+        getStartYear(selectedYear),
         selectedGrade
       );
       //       console.log("Updated class list:", classListResponse.data);
       setClasses(classListResponse.data.data || []);
-
-      // Refresh number of unassigned students
-      await refreshNumUnassigned();
     } catch (error) {
       alert(
         error.response?.data?.message ||
           "An error occurred while creating the class!"
       );
+    } finally {
+      // Refresh number of unassigned students
+      await refreshNumUnassigned();
     }
   };
 
@@ -360,7 +369,7 @@ export default function EducationClassManage() {
     try {
       // Fetch unassigned students (by year & grade)
       const availableRes = await getAvailableChildren(
-        selectedYear,
+        getStartYear(selectedYear),
         selectedGrade,
         0,
         100
@@ -494,7 +503,7 @@ export default function EducationClassManage() {
       try {
         //         console.log("Refreshing number of unassigned students...");
         const res = await getNumberOfAvailableChildren(
-          selectedYear,
+          getStartYear(selectedYear),
           selectedGrade
         );
         //         console.log("Number of unassigned students updated:", res.data.data);
@@ -535,11 +544,14 @@ export default function EducationClassManage() {
 
     try {
       setLoading(true);
-      await assignAvailableStudentsAuto(selectedYear, selectedGrade);
+      await assignAvailableStudentsAuto(
+        getStartYear(selectedYear),
+        selectedGrade
+      );
 
       // Refresh classes to show updated student counts
       const classListResponse = await getClassesByYearAndGrade(
-        selectedYear,
+        getStartYear(selectedYear),
         selectedGrade
       );
       setClasses(classListResponse.data.data || []);
@@ -721,7 +733,7 @@ export default function EducationClassManage() {
       </div>
 
       {/* Create new class button - only show for current year */}
-      {isCurrentYear(selectedYear) && !isCreating && (
+      {isCurrentYear(selectedYear) && numUnassigned > 0 && !isCreating && (
         <div className="text-right mb-8">
           <Button
             onClick={() => {
