@@ -45,35 +45,22 @@ const AdmissionDashboard = () => {
 
         // Get real admission form status summary
         try {
-          const statusSummary = await getAdmissionFormStatusSummary();
-          if (statusSummary && statusSummary.success) {
-            const data = statusSummary.data;
-            // Map backend status to frontend stats
-            setStats({
-              total:
-                  (data.pendingApprovalCount || 0) +
-                  (data.refilledCount || 0) +
-                  (data.approvedCount || 0) +
-                  (data.rejectedCount || 0) +
-                  (data.paymentCount || 0),
-              pending: data.pendingApprovalCount || 0,
-              underReview: data.refilledCount || 0, // giả sử đang xem xét là refilled
-              approved: data.approvedCount || 0,
-              rejected: data.rejectedCount || 0,
-              payment: data.paymentCount || 0, // Thêm payment count      
-            });
-
-          } else {
-            // Fallback to empty stats if API fails
-            setStats({
-              total: 0,
-              pending: 0,
-              underReview: 0,
-              approved: 0,
-              rejected: 0,
-              payment: 0
-            });
-          }
+          const data = await getAdmissionFormStatusSummary();
+          setStats({
+            total:
+                (data.pendingApprovalCount || 0) +
+                (data.refilledCount || 0) +
+                (data.approvedCount || 0) +
+                (data.rejectedCount || 0) +
+                (data.paymentCount || 0) +
+                (data.waitingPaymentCount || 0),
+            pending: data.pendingApprovalCount || 0,
+            underReview: data.refilledCount || 0,
+            approved: data.approvedCount || 0,
+            rejected: data.rejectedCount || 0,
+            payment: data.paymentCount || 0,
+            waitingPayment: data.waitingPaymentCount || 0
+          });
         } catch (error) {
           console.error('Failed to fetch admission form status summary:', error);
           // Fallback to empty stats if API fails
@@ -83,7 +70,8 @@ const AdmissionDashboard = () => {
             underReview: 0,
             approved: 0,
             rejected: 0,
-            payment: 0
+            payment: 0,
+            waitingPayment: 0
           });
         }
 
