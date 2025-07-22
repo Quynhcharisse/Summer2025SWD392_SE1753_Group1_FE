@@ -1,162 +1,111 @@
-// Helper function to calculate academic year (same as in TermAdmission.jsx)
+
 const calculateAcademicYear = (date) => {
-    if (!date) {
-        const currentYear = new Date().getFullYear();
-        return currentYear;
-    }
-    
-    const dateObj = new Date(date);
-    const year = dateObj.getFullYear();
-    const month = dateObj.getMonth() + 1; // Convert to 1-12
-    
-    // If date is June or later, use current year as base
-    // If date is Jan-May, use previous year as base (part of academic year that started previous calendar year)
+    if (!date) return new Date().getFullYear();
+    const d = date.toDate ? date.toDate() : new Date(date);
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
     return month >= 6 ? year : year - 1;
 };
 
-// Main validation function that can handle both single grade and multiple grades
+// Main validator
 export const ValidateTermFormData = (formData, existingTerms = []) => {
-    // Validate Start Date
-    if (!formData.startDate) {
-        return "Start date is required";
-    }
+    const validGrades = ['SEED', 'BUD', 'LEAF'];
+    const now = new Date();
 
-    // Validate End Date
-    if (!formData.endDate) {
-        return "End date is required";
-    }
+    // --- 1. Validate Date fields ---
+    if (!formData.startDate) return "Start date is required.";
+    if (!formData.endDate) return "End date is required.";
 
-    // Validate Start Date must be before End Date
-    const startDate = new Date(formData.startDate);
-    const endDate = new Date(formData.endDate);
-    
-    if (startDate >= endDate) {
-        return "Start date must be before end date";
-    }
+    const startDate = formData.startDate.toDate ? formData.startDate.toDate() : new Date(formData.startDate);
+    const endDate = formData.endDate.toDate ? formData.endDate.toDate() : new Date(formData.endDate);
 
-    // Validate Start Date must be in the future (match backend validation)
-    if (startDate <= new Date()) {
-        return "Start date must be in the future (after today)";
-    }
-
-    // Validate Start Date and End Date must be in the same calendar year (match backend validation)
+    if (startDate >= endDate) return "Start date must be before end date.";
+    if (startDate <= now) return "Start date must be in the future (after today).";
     if (startDate.getFullYear() !== endDate.getFullYear()) {
-        return "Start date and end date must be in the same year";
+        return "Start and end dates must be in the same calendar year.";
     }
 
-    // Handle multiple grades (termItemList) validation
-    if (formData.termItemList && Array.isArray(formData.termItemList)) {
+    const academicYear = calculateAcademicYear(startDate);
+
+    // --- 2. Validate multi-grade mode ---
+    if (Array.isArray(formData.termItemList)) {
         if (formData.termItemList.length === 0) {
-            return "At least one grade must be included in the term";
+            return "At least one grade must be included in the term.";
         }
 
-        // Validate each term item
-        const validGrades = ['SEED', 'BUD', 'LEAF'];
-        const gradesInTerm = new Set();
+        const gradesSet = new Set();
 
         for (const item of formData.termItemList) {
-            // Validate grade enum
             if (!validGrades.includes(item.grade)) {
                 return `Invalid grade: ${item.grade}`;
             }
 
-            // Check for duplicate grades within the same term
-            if (gradesInTerm.has(item.grade)) {
+            if (gradesSet.has(item.grade)) {
                 return `Duplicate grade found: ${item.grade}`;
             }
-            gradesInTerm.add(item.grade);
 
-            // Validate expected classes
+            gradesSet.add(item.grade);
+
             if (!item.expectedClasses || item.expectedClasses <= 0) {
                 return `Expected classes must be greater than 0 for grade: ${item.grade}`;
             }
-        }
 
-        // Check if term already exists for calculated academic year and any grade
-        const calculatedAcademicYear = calculateAcademicYear(formData.startDate);
-        
-        // Check against existing terms using academic year (not calendar year)
-        const existingTermsForYear = existingTerms.filter(term => {
-            // Extract academic year from existing term's year string (e.g., "2024-2025" -> 2024)
-            let termAcademicYear;
-            if (typeof term.year === 'string' && term.year.includes('-')) {
-                termAcademicYear = parseInt(term.year.split('-')[0]);
-            } else {
-                // Fallback to direct year comparison if format is different
-                termAcademicYear = parseInt(term.year);
+            if (item.expectedClasses > 1000) {
+                return `Expected classes is too large for grade: ${item.grade} (maximum is 1000).`;
             }
-            return termAcademicYear === calculatedAcademicYear;
-        });
 
-        for (const item of formData.termItemList) {
-            const termExists = existingTermsForYear.some(term =>
-                term.termItemList?.some(termItem => 
-                    termItem.grade === item.grade
-                )
-            );
+            // Check if admission term already exists for this grade and academic year
+            const exists = existingTerms.some(term => {
+                let termYear = typeof term.year === 'string' && term.year.includes('-')
+                    ? parseInt(term.year.split('-')[0])
+                    : parseInt(term.year);
 
-            if (termExists) {
-                return `Admission term already exists for academic year ${calculatedAcademicYear}-${calculatedAcademicYear + 1} and grade ${item.grade}`;
+                return termYear === academicYear &&
+                    term.termItemList?.some(t => t.grade?.toLowerCase() === item.grade.toLowerCase());
+            });
+
+            if (exists) {
+                return `An admission term already exists for academic year ${academicYear}-${academicYear + 1} and grade ${item.grade}.\n\n` +
+                    "Note: Each grade level is allowed only one admission term per academic year. " +
+                    "If you need to add more classes or adjust the timeline, please edit the existing term instead of creating a new one.";
             }
         }
     }
-    // Handle single grade validation (backward compatibility)
+
+    // --- 3. Validate single-grade mode (backward compatibility) ---
     else if (formData.grade) {
-        // Validate Grade
-        if (!formData.grade || formData.grade.trim() === '') {
-            return "Grade is required";
+        const grade = formData.grade.trim().toUpperCase();
+        if (!validGrades.includes(grade)) return `Invalid grade: ${grade}`;
+
+        if (!formData.expectedClasses || parseInt(formData.expectedClasses) <= 0) {
+            return `Expected classes must be greater than 0 for grade: ${grade}`;
         }
 
-        // Validate grade enum (match backend validation)
-        const validGrades = ['SEED', 'BUD', 'LEAF'];
-        if (!validGrades.includes(formData.grade)) {
-            return `Invalid grade: ${formData.grade}`;
-        }
-
-        // Validate Expected Classes
-        if (!formData.expectedClasses || formData.expectedClasses === '') {
-            return "Expected classes is required";
-        }
-        if (parseInt(formData.expectedClasses) <= 0) {
-            return "Expected classes must be greater than 0";
-        }
-
-        // Check for overlapping terms (this validation is frontend-specific and reasonable to keep)
+        // Check for overlapping term date
         for (const term of existingTerms) {
-            if (term.grade && term.grade.toLowerCase() !== formData.grade.toLowerCase()) {
-                continue;
-            }
+            if (term.grade?.toUpperCase() !== grade) continue;
 
             const termStart = new Date(term.startDate);
             const termEnd = new Date(term.endDate);
-
-            // Check for overlap
             if (!(endDate <= termStart || startDate >= termEnd)) {
-                return `Time period overlaps with existing term "${term.name}"`;
+                return `Time period overlaps with existing term "${term.name}" for grade ${grade}`;
             }
         }
 
-        // Check if term already exists for this grade and academic year (match backend logic)
-        const calculatedAcademicYear = calculateAcademicYear(formData.startDate);
-        
-        const termExists = existingTerms.some(term => {
-            // Extract academic year from existing term's year string (e.g., "2024-2025" -> 2024)
-            let termAcademicYear;
-            if (typeof term.year === 'string' && term.year.includes('-')) {
-                termAcademicYear = parseInt(term.year.split('-')[0]);
-            } else {
-                // Fallback to direct year comparison if format is different
-                termAcademicYear = parseInt(term.year);
-            }
-            
-            return term.grade && term.grade.toLowerCase() === formData.grade.toLowerCase() && 
-                   termAcademicYear === calculatedAcademicYear;
+        // Duplicate term check
+        const exists = existingTerms.some(term => {
+            let termYear = typeof term.year === 'string' && term.year.includes('-')
+                ? parseInt(term.year.split('-')[0])
+                : parseInt(term.year);
+            return term.grade?.toUpperCase() === grade && termYear === academicYear;
         });
 
-        if (termExists) {
-            return `Admission term already exists for academic year ${calculatedAcademicYear}-${calculatedAcademicYear + 1} and grade ${formData.grade.toUpperCase()}`;
+        if (exists) {
+            return `An admission term already exists for academic year ${academicYear}-${academicYear + 1} and grade ${grade}.\n\n` +
+                "Note: Each grade level is allowed only one admission term per academic year. " +
+                "If you need to add more classes or adjust the timeline, please edit the existing term instead of creating a new one.";
         }
     }
 
-    return null; // All validations passed
+    return null; // ✅ All validations passed
 };

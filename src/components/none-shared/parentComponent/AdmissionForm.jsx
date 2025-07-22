@@ -36,7 +36,7 @@ import {
     Tooltip,
     Typography
 } from "@mui/material";
-import {Add, Close, CloudUpload} from '@mui/icons-material';
+import {Add, Close, CloudUpload, Edit, Refresh} from '@mui/icons-material';
 import {useEffect, useRef, useState} from "react";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
@@ -249,7 +249,7 @@ function RenderTable({openDetailPopUpFunc, forms, HandleSelectedForm, openRefill
                                         {form.studentName}
                                     </TableCell>
                                     <TableCell align="center" sx={{padding: '12px 8px'}}>
-                                        {dayjs(form.submittedDate).format("DD/MM/YYYY HH:mm")}
+                                        {form.submittedDate}
                                     </TableCell>
                                     <TableCell align="center" sx={{padding: '12px 8px'}}>
                                         {form.cancelReason || "N/A"}
@@ -1579,9 +1579,16 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
         address: selectedForm?.householdRegistrationAddress || '',
         note: selectedForm?.note || ''
     });
+
+    console.log("Selected form: ", selectedForm)
     const [uploadedFile, setUploadedFile] = useState({
-        childCharacteristicsForm: '',
-        commit: ''
+        childCharacteristicsForm: '', // file mới nếu có
+        commit: '' // file mới nếu có
+    });
+    // Thêm state lưu link ảnh cũ
+    const [existingFiles, setExistingFiles] = useState({
+        childCharacteristicsFormImg: selectedForm?.childCharacteristicsFormImg || '',
+        commitmentImg: selectedForm?.commitmentImg || ''
     });
 
     useEffect(() => {
@@ -1590,24 +1597,25 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                 address: selectedForm.householdRegistrationAddress || '',
                 note: selectedForm.note || ''
             });
+            setExistingFiles({
+                childCharacteristicsFormImg: selectedForm.childCharacteristicsFormImg || '',
+                commitmentImg: selectedForm.commitmentImg || ''
+            });
         }
     }, [selectedForm]);
 
     const validateForm = () => {
         const newErrors = {};
-
         if (!input.address?.trim()) {
             newErrors.address = "Household registration address is required";
         }
-
-        if (!uploadedFile.childCharacteristicsForm && !selectedForm?.childCharacteristicsFormImg) {
+        // Chỉ bắt buộc upload mới nếu không có ảnh cũ
+        if (!uploadedFile.childCharacteristicsForm && !existingFiles.childCharacteristicsFormImg) {
             newErrors.childCharacteristicsForm = "Child characteristics form is required";
         }
-
-        if (!uploadedFile.commit && !selectedForm?.commitmentImg) {
+        if (!uploadedFile.commit && !existingFiles.commitmentImg) {
             newErrors.commit = "Commitment form is required";
         }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -1681,39 +1689,39 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
 
     const handleUploadImage = async () => {
         try {
-            if (!validateFileUploads()) {
-                return null;
+            // Nếu không upload file mới, trả về link cũ
+            if (!uploadedFile.childCharacteristicsForm && !uploadedFile.commit) {
+                return {
+                    childCharacteristicsFormLink: existingFiles.childCharacteristicsFormImg,
+                    commitLink: existingFiles.commitmentImg
+                };
             }
-
-            // Upload each file to Cloudinary
+            // Nếu upload file mới, upload lên Cloudinary
             const uploadFile = async (file) => {
                 const formData = new FormData();
                 formData.append("file", file);
                 formData.append("upload_preset", "pes_swd");
                 formData.append("cloud_name", "dfx4miova");
-
                 const response = await axios.post(
                     "https://api.cloudinary.com/v1_1/dfx4miova/image/upload",
                     formData
                 );
-
                 if (response.status === 200) {
                     return response.data.secure_url;
                 }
                 throw new Error('Upload failed');
             };
-
-            // Upload both files
-            const [childCharacteristicsFormUrl, commitUrl] = await Promise.all([
-                uploadFile(uploadedFile.childCharacteristicsForm),
-                uploadFile(uploadedFile.commit)
-            ]);
-
+            // Upload file mới nếu có, nếu không thì lấy link cũ
+            const childCharacteristicsFormUrl = uploadedFile.childCharacteristicsForm
+                ? await uploadFile(uploadedFile.childCharacteristicsForm)
+                : existingFiles.childCharacteristicsFormImg;
+            const commitUrl = uploadedFile.commit
+                ? await uploadFile(uploadedFile.commit)
+                : existingFiles.commitmentImg;
             if (!childCharacteristicsFormUrl || !commitUrl) {
                 enqueueSnackbar("Failed to upload one or more images", {variant: "error"});
                 return null;
             }
-
             return {
                 childCharacteristicsFormLink: childCharacteristicsFormUrl,
                 commitLink: commitUrl
@@ -1749,18 +1757,17 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
     };
 
     async function HandleRefillSubmit() {
-
         if (!validateForm()) {
             return;
         }
-
         setIsLoading(true);
         setLoadingMessage('Uploading files...');
         const uploadResult = await handleUploadImage();
         if (!uploadResult) {
+            setIsLoading(false);
+            setLoadingMessage('');
             return;
         }
-
         setLoadingMessage('Resubmitting form...');
         const formData = {
             formId: selectedForm.id,
@@ -1770,9 +1777,7 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
             commitmentImg: uploadResult.commitLink,
             note: input.note?.trim() || ""
         };
-
         const response = await refillForm(formData);
-
         if (response && response.success) {
             enqueueSnackbar(response.message || "Form resubmitted successfully", {variant: 'success'});
             await GetForm();
@@ -1782,7 +1787,6 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
         }
         setIsLoading(false);
         setLoadingMessage('');
-
     }
 
     return (
@@ -2206,10 +2210,51 @@ export default function AdmissionForm() {
     });
 
     const [selectedForm, setSelectedForm] = useState(null);
+    const [refillConfirmDialog, setRefillConfirmDialog] = useState(false);
+    const [isResubmitting, setIsResubmitting] = useState(false);
 
     function HandleSelectedForm(form) {
         setSelectedForm(form);
     }
+
+    // Khi bấm Refill trên từng form
+    const handleRefillClick = () => {
+        setRefillConfirmDialog(true);
+    };
+
+    // Gửi lại y nguyên
+    const handleDirectResubmit = async () => {
+        setIsResubmitting(true);
+        const formData = {
+            formId: selectedForm.id,
+            studentId: selectedForm.studentId,
+            householdRegistrationAddress: selectedForm.householdRegistrationAddress,
+            childCharacteristicsFormImg: selectedForm.childCharacteristicsFormImg,
+            commitmentImg: selectedForm.commitmentImg,
+            note: selectedForm.note || ""
+        };
+        try {
+            const response = await refillForm(formData);
+            if (response && response.success) {
+                enqueueSnackbar(response.message || "Form resubmitted successfully", {variant: 'success'});
+                setRefillConfirmDialog(false);
+                await GetForm();
+            } else {
+                enqueueSnackbar(response?.message || "Failed to resubmit form", {variant: "error"});
+            }
+        } catch (error) {
+            enqueueSnackbar(error.message || "Failed to resubmit form", {variant: "error"});
+        }
+        setIsResubmitting(false);
+    };
+
+    // Chỉnh sửa rồi gửi lại
+    const handleEditThenResubmit = () => {
+        setRefillConfirmDialog(false);
+        setPopUp({ isOpen: true, type: 'refill' });
+        console.log("Refill form: ", selectedForm)
+        setSelectedForm(selectedForm);
+    };
 
     const handleOpenPopUp = (type) => {
         setPopUp({...popUp, isOpen: true, type: type});
@@ -2240,6 +2285,8 @@ export default function AdmissionForm() {
         GetForm();
     }, []);
 
+    console.log("Selected form: ", selectedForm)
+
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'vi-VN'}
                               localeText={viVN.components.MuiLocalizationProvider.defaultProps.localeText}>
@@ -2247,7 +2294,7 @@ export default function AdmissionForm() {
                 forms={data.admissionFormList}
                 openFormPopUpFunc={() => handleOpenPopUp('form')}
                 openDetailPopUpFunc={() => handleOpenPopUp('detail')}
-                openRefillPopUpFunc={() => handleOpenPopUp('refill')}
+                openRefillPopUpFunc={handleRefillClick}
                 HandleSelectedForm={HandleSelectedForm}
                 studentList={data.studentList}
             />
@@ -2275,6 +2322,230 @@ export default function AdmissionForm() {
                     GetForm={GetForm}
                 />
             )}
+            {/* Dialog xác nhận refill với 2 lựa chọn */}
+            <Dialog 
+                open={refillConfirmDialog} 
+                onClose={() => setRefillConfirmDialog(false)}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 4,
+                        boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.20)',
+                        overflow: 'hidden'
+                    }
+                }}
+            >
+                <Box sx={{ 
+                    bgcolor: '#d32f2f',
+                    p: 3,
+                    color: 'white',
+                    textAlign: 'center'
+                }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+                        ⚠️ IMPORTANT NOTICE - ADMISSION FORM RESUBMISSION
+                    </Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                        Please read carefully before proceeding
+                    </Typography>
+                </Box>
+
+                <DialogContent sx={{ p: 4 }}>
+                    <Alert 
+                        severity="error" 
+                        sx={{ 
+                            mb: 3,
+                            borderRadius: 2,
+                            '& .MuiAlert-icon': { fontSize: 24 },
+                            '& .MuiAlert-message': { fontSize: '16px' }
+                        }}
+                    >
+                        <Typography variant="body1" sx={{ fontWeight: 700, mb: 1 }}>
+                            FORM REJECTION NOTICE
+                        </Typography>
+                        <Typography variant="body1" sx={{ mb: 1 }}>
+                            The admission form for <strong>{selectedForm?.studentName}</strong> has been <strong>REJECTED</strong> by the admission committee.
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                            You must choose ONE of the following options to proceed with resubmission.
+                        </Typography>
+                    </Alert>
+
+                    <Alert 
+                        severity="warning" 
+                        sx={{ 
+                            mb: 4,
+                            borderRadius: 2,
+                            '& .MuiAlert-icon': { fontSize: 24 }
+                        }}
+                    >
+                        <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
+                            CRITICAL REMINDER:
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                            • This is your opportunity to correct any issues that led to the rejection
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                            • Resubmitting identical information may result in another rejection
+                        </Typography>
+                        <Typography variant="body2">
+                            • Consider carefully whether any information needs to be updated before resubmitting
+                        </Typography>
+                    </Alert>
+
+                    <Typography variant="h6" sx={{ mb: 3, color: '#d32f2f', fontWeight: 700, textAlign: 'center' }}>
+                        SELECT YOUR RESUBMISSION METHOD:
+                    </Typography>
+
+                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                        <Grid item xs={12} md={6}>
+                            <Paper 
+                                elevation={2}
+                                sx={{ 
+                                    p: 3,
+                                    border: '2px solid #2196f3',
+                                    borderRadius: 2,
+                                    backgroundColor: '#f8f9fa'
+                                }}
+                            >
+                                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#1976d2', textAlign: 'center' }}>
+                                    OPTION 1: RESUBMIT AS IS
+                                </Typography>
+                                <Typography variant="body1" sx={{ mb: 2, fontWeight: 600 }}>
+                                    What this means:
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    • Submit the exact same information without any modifications
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    • All documents and data remain unchanged
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 2 }}>
+                                    • Fastest option - immediate resubmission
+                                </Typography>
+                                <Alert severity="info" sx={{ mt: 2 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                        WARNING: Use this option only if you believe the rejection was due to administrative reasons, not data issues.
+                                    </Typography>
+                                </Alert>
+                            </Paper>
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Paper 
+                                elevation={2}
+                                sx={{ 
+                                    p: 3,
+                                    border: '2px solid #ff9800',
+                                    borderRadius: 2,
+                                    backgroundColor: '#fff8f0'
+                                }}
+                            >
+                                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#f57c00', textAlign: 'center' }}>
+                                    OPTION 2: EDIT THEN RESUBMIT
+                                </Typography>
+                                <Typography variant="body1" sx={{ mb: 2, fontWeight: 600 }}>
+                                    What this means:
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    • Review and modify your application information
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    • Update documents if necessary
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 2 }}>
+                                    • Address potential issues that caused rejection
+                                </Typography>
+                                <Alert severity="warning" sx={{ mt: 2 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                        RECOMMENDED: Choose this option if you suspect there were errors or incomplete information in your original submission.
+                                    </Typography>
+                                </Alert>
+                            </Paper>
+                        </Grid>
+                    </Grid>
+
+                    <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 700, mb: 1 }}>
+                            FINAL WARNING:
+                        </Typography>
+                        <Typography variant="body2">
+                            By proceeding with resubmission, you acknowledge that this is your second attempt. Subsequent rejections may impact your eligibility for this admission term. Please ensure all information is accurate and complete.
+                        </Typography>
+                    </Alert>
+                </DialogContent>
+
+                <Box sx={{ 
+                    bgcolor: '#f5f5f5',
+                    p: 4,
+                    borderTop: '3px solid #d32f2f'
+                }}>
+                    <Typography variant="body1" sx={{ fontWeight: 700, mb: 2, textAlign: 'center', color: '#d32f2f' }}>
+                        PROCEED WITH CAUTION - YOUR DECISION CANNOT BE UNDONE
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3 }}>
+                        <Button 
+                            onClick={() => setRefillConfirmDialog(false)} 
+                            variant="outlined"
+                            color="inherit"
+                            disabled={isResubmitting}
+                            size="large"
+                            sx={{
+                                px: 4,
+                                py: 1.5,
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                minWidth: 120
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={handleEditThenResubmit}
+                            variant="contained"
+                            color="warning"
+                            disabled={isResubmitting}
+                            startIcon={<Edit />}
+                            size="large"
+                            sx={{
+                                px: 4,
+                                py: 1.5,
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                minWidth: 200
+                            }}
+                        >
+                            Edit Then Resubmit
+                        </Button>
+                        <Button 
+                            onClick={handleDirectResubmit}
+                            variant="contained"
+                            color="error"
+                            disabled={isResubmitting}
+                            startIcon={isResubmitting ? <CircularProgress size={18} color="inherit" /> : <Refresh />}
+                            size="large"
+                            sx={{
+                                px: 4,
+                                py: 1.5,
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                minWidth: 200,
+                                bgcolor: '#d32f2f',
+                                '&:hover': {
+                                    bgcolor: '#b71c1c'
+                                }
+                            }}
+                        >
+                            {isResubmitting ? 'Processing...' : 'Resubmit As Is'}
+                        </Button>
+                    </Box>
+                    
+                    <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mt: 2, fontStyle: 'italic', color: '#666' }}>
+                        * By clicking any option above, you confirm that you have read and understood all warnings and consequences.
+                    </Typography>
+                </Box>
+            </Dialog>
         </LocalizationProvider>
     );
 }

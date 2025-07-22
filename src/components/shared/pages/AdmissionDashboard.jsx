@@ -60,10 +60,7 @@ const AdmissionDashboard = () => {
               underReview: data.refilledCount || 0, // giả sử đang xem xét là refilled
               approved: data.approvedCount || 0,
               rejected: data.rejectedCount || 0,
-              payment: data.paymentCount || 0, // Thêm payment count
-              // waitlisted: 0, // không có trường này trong BE
-              // thisWeek: 0,   // chưa có trong BE
-              // thisMonth: 0   // chưa có trong BE
+              payment: data.paymentCount || 0, // Thêm payment count      
             });
 
           } else {
@@ -169,7 +166,18 @@ const AdmissionDashboard = () => {
       <PageTemplate title="Dashboard tuyển sinh">
         <div className="text-center py-8">
           <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải thông tin...</p>
+          <p className="text-gray-600">Loading information...</p>
+        </div>
+      </PageTemplate>
+    );
+  }
+
+  if (!user) {
+    return (
+      <PageTemplate title="Dashboard tuyển sinh">
+        <div className="text-center py-8">
+          <Spinner size="lg" className="mx-auto mb-4" />
+          <p className="text-gray-600">Loading user information...</p>
         </div>
       </PageTemplate>
     );
@@ -177,7 +185,7 @@ const AdmissionDashboard = () => {
 
   return (
     <PageTemplate
-      title={`Welcome, ${user.data?.name || user?.fullName || 'User'}`}
+      title={`Welcome, ${user?.data?.name || user?.fullName || 'User'}`}
       subtitle="Manage admission applications and registration approvals"
       actions={
         <div className="flex gap-4">
