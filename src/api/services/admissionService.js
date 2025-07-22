@@ -63,7 +63,6 @@ export const createExtraTerm = async (formData) => {
         });
         return response.data;
     } catch (error) {
-//         console.error('Error creating extra term:', error);
         throw error;
     }
 };

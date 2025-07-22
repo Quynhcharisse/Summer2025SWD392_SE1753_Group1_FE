@@ -2072,8 +2072,8 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
             try {
                 const response = await getTermYears();
                 if (response.success) {
-                    // Sort years in descending order
-                    const sortedYears = [...response.data].sort((a, b) => b - a);
+                    // Sort years in descending order (chuỗi dạng "2025–2026")
+                    const sortedYears = [...response.data].sort((a, b) => b.localeCompare(a));
                     setYears(['all', ...sortedYears]);
                 } else {
                     enqueueSnackbar('Failed to fetch years:', response.message);
@@ -2087,16 +2087,23 @@ function RenderPage({openFormPopUpFunc, openDetailPopUpFunc, terms, HandleSelect
 
     const formatYear = (year) => {
         if (year === 'all') return 'All Years';
-        return `${year}-${parseInt(year) + 1}`;
+        return year;
     };
 
+    // Đảm bảo selectedYear và year cùng định dạng (string)
     const filteredTerms = selectedYear === 'all'
         ? terms.filter(term => !term.isExtraTerm)
         : terms.filter(term => {
-            // Format the term year to match the filter format
-            const termYear = term.year.split('-')[0];
-            return termYear === selectedYear.toString() && !term.isExtraTerm;
+            // Normalize: thay tất cả dấu '-' bằng en dash '–'
+            let termYearStr = typeof term.year === 'string'
+                ? term.year.replace(/-/g, '–')
+                : `${term.year}–${Number(term.year) + 1}`;
+            console.log("term.year:", term.year, "termYearStr:", termYearStr, "selectedYear:", selectedYear);
+            return termYearStr === String(selectedYear) && !term.isExtraTerm;
         });
+    console.log("All terms: ", terms);
+    console.log("Selected year: ", selectedYear);
+    console.log("filteredTerms: ", filteredTerms);
 
     return (
         <div className="container">

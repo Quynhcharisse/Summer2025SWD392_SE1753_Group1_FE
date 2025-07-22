@@ -166,7 +166,7 @@ const AdmissionDashboard = () => {
       <PageTemplate title="Dashboard tuyển sinh">
         <div className="text-center py-8">
           <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải thông tin...</p>
+          <p className="text-gray-600">Loading information...</p>
         </div>
       </PageTemplate>
     );
@@ -177,7 +177,7 @@ const AdmissionDashboard = () => {
       <PageTemplate title="Dashboard tuyển sinh">
         <div className="text-center py-8">
           <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải thông tin người dùng...</p>
+          <p className="text-gray-600">Loading user information...</p>
         </div>
       </PageTemplate>
     );
