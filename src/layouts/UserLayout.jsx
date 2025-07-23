@@ -30,8 +30,56 @@ const UserLayout = ({children}) => {
 
     // Get user info from token
     const tokenData = getCurrentTokenData();
+    console.log("[UserLayout] tokenData:", tokenData);
+
     const userRole = tokenData?.role?.toLowerCase();
+    console.log("[UserLayout] userRole:", userRole);
+
     const userName = tokenData?.name || "User";
+    console.log("[UserLayout] userName:", userName);
+
+    if (!tokenData) {
+      console.warn("[UserLayout] Cảnh báo: Không lấy được tokenData. Token có thể đã hết hạn hoặc bị xóa.");
+    }
+    if (!userRole) {
+      console.warn("[UserLayout] Cảnh báo: Không lấy được userRole từ token. Token có thể không hợp lệ hoặc thiếu trường role.");
+    }
+
+    if(!sessionStorage.getItem("roleChecked")) {
+        switch (userRole){
+            case 'hr': {
+                sessionStorage.setItem("roleChecked", "true")
+                window.location.href = "/user/hr/dashboard"
+                break
+            }
+            case 'parent': {
+                sessionStorage.setItem("roleChecked", "true")
+                window.location.href = "/user/parent/dashboard"
+                break
+            }
+            case 'admission': {
+                sessionStorage.setItem("roleChecked", "true")
+                window.location.href = "/user/admission/dashboard"
+                break
+            }
+            case 'education': {
+                sessionStorage.setItem("roleChecked", "true")
+                window.location.href = "/user/education/dashboard"
+                break
+            }
+            case 'teacher': {
+                sessionStorage.setItem("roleChecked", "true")
+                window.location.href = "/user/teacher/dashboard"
+                break
+            }
+            case 'admin': {
+                sessionStorage.setItem("roleChecked", "true")
+                window.location.href = "/user/admin/dashboard"
+                break
+            }
+        }
+
+    }
 
     // Navigation items based on user role
     const getNavigationItems = () => {
@@ -205,12 +253,6 @@ const UserLayout = ({children}) => {
                         label: 'Class Management',
                         path: '/user/education/classes'
                     },
-                    // {
-                    //     key: '/user/education/reports',
-                    //     icon: TrendingUp,
-                    //     label: 'Education Reports',
-                    //     path: '/user/education/reports'
-                    // },
                     {
                         key: "/user/shared/profile",
                         icon: User,
@@ -277,9 +319,8 @@ const UserLayout = ({children}) => {
         try {
             await authService.logout();
         } catch (e) {
-//             console.error("Logout API failed:", e);
+            console.error("Logout API failed:", e);
         }
-        // Sau đó xóa local FE
         localStorage.removeItem('user');
         sessionStorage.clear();
         // Chuyển về Home
