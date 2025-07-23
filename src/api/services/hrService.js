@@ -32,25 +32,13 @@ export const teacherService = {
    */
   updateTeacher: async (id, teacherData) => {
     try {
-//       console.log('Updating teacher with ID:', id); // Debug log
-//       console.log('Teacher data:', teacherData); // Debug log
-      
+
       if (!id) {
         throw new Error('Teacher ID is required for update');
       }
-      
-      // If the ID looks like an email, we might need to use a different approach
-      if (id.includes('@')) {
-//         console.log('Using email-based update approach');
-        // You might need to modify this endpoint or use a different approach
-        // For now, let's try the same endpoint but note this might need backend changes
-      }
-      
       const response = await apiClient.put(`/hr/teacher?id=${encodeURIComponent(id)}`, teacherData);
       return response.data;
     } catch (error) {
-//       console.error('Error updating teacher:', error);
-//       console.error('Request details - ID:', id, 'Data:', teacherData);
       throw error;
     }
   },

@@ -284,8 +284,8 @@ const UserLayout = ({children}) => {
         // Sau đó xóa local FE
         localStorage.removeItem('user');
         sessionStorage.clear();
-        // Chuyển về login
-        navigate("/auth/login");
+        // Chuyển về Home
+        navigate("/");
     };
 
 
