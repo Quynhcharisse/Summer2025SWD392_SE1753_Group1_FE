@@ -205,7 +205,7 @@ export default function EducationDashboard() {
           >
             {/* Tiêu đề */}
             <Typography variant="h6" sx={{ mb: 1 }}>
-              Students Participation by Event
+              Students Participation Of Events By Start Date
             </Typography>
             {/* Hàng input ngày */}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
