@@ -439,9 +439,12 @@ export default function EducationClassManage() {
       fetchStudentsForClass(assigningClassId);
       setSelectedUnassigned([]);
       refreshNumUnassigned();
-    } catch (err) {
-      // The error message and error variable are not in a valid statement.
-      // This catch block is effectively empty.
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to assign students!";
+      enqueueSnackbar(errorMessage, { variant: "error" });
     }
   };
 
@@ -478,9 +481,11 @@ export default function EducationClassManage() {
       setSelectedAssigned([]);
       refreshNumUnassigned();
     } catch (err) {
-      enqueueSnackbar("Failed to unassign students!", {
-        variant: "error",
-      });
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to unassign students!";
+      enqueueSnackbar(errorMessage, { variant: "error" });
     }
   };
 
@@ -563,11 +568,11 @@ export default function EducationClassManage() {
         variant: "success",
       });
     } catch (error) {
-      enqueueSnackbar(
-        error.response?.data?.message ||
-          "Failed to automatically assign students",
-        { variant: "error" }
-      );
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to automatically assign students";
+      enqueueSnackbar(errorMessage, { variant: "error" });
     } finally {
       setLoading(false);
     }
