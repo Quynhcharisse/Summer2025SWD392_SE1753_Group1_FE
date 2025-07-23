@@ -320,8 +320,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
         try {
             const response = await createExtraTerm({
                 parentTermId: selectedTerm.id,
-                startDate: dayjs(extraStartDate),
-                endDate: dayjs(extraEndDate),
+                startDate: dayjs(formData.startDate),
+                endDate: dayjs(formData.endDate),
                 maxNumberRegistration: gradeInfo?.missingStudents || 0,
                 expectedClasses: gradeInfo?.expectedClasses || 0
             });
@@ -334,10 +334,9 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                 enqueueSnackbar(response.message || 'Failed to create extra term', {variant: 'error'});
             }
         } catch (error) {
-            enqueueSnackbar(
-                error.response?.data?.message || 'Error creating extra term',
-                {variant: 'error'}
-            );
+            const errMsg = error.response?.data?.message || 'Error creating extra term';
+            enqueueSnackbar(errMsg, {variant: 'error'});
+            console.error('[ExtraTerm][Error]', error.response?.data || error);
         }
     };
 
@@ -998,7 +997,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                 }}>
                                                     <EventOutlined sx={{fontSize: 16, mr: 0.5}}/>
                                                     <Typography variant="caption">
-                                                        {dayjs(extraTerm.startDate)} - {dayjs(extraTerm.endDate)}
+                                                        {dayjs(extraTerm.startDate).format('HH:mm DD/MM/YYYY')} - {dayjs(extraTerm.endDate).format('HH:mm DD/MM/YYYY')}
                                                     </Typography>
                                                 </Box>
                                             </Box>
@@ -1027,8 +1026,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                         )}
                                         <Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
                                             <Typography variant="body2" color="textSecondary">
-                                                Parent
-                                                Term: {dayjs(selectedTerm.startDate).toISOString()} - {(dayjs(selectedTerm.endDate).toISOString())}
+                                                Parent Term: from {dayjs(selectedTerm.startDate).format('DD-MM-YYYY')} to {dayjs(selectedTerm.endDate).format('DD-MM-YYYY')}
                                             </Typography>
 
                                             {/* Date Selection */}
@@ -1039,7 +1037,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                                     setFormData(prev => ({...prev, startDate: newValue}));
                                                 }}
                                                 renderInput={(params) => <TextField {...params} fullWidth required/>}
-                                                minDate={dayjs(selectedTerm.startDate)}
+                                                minDate={dayjs().startOf('day')}
                                                 maxDate={dayjs(selectedTerm.endDate)}
                                             />
                                             <DateTimePicker
@@ -1212,7 +1210,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                     Start Date
                                 </Typography>
                                 <Typography variant="body1">
-                                    {dayjs(selectedExtraTerm.startDate)}
+                                    {dayjs(selectedExtraTerm.startDate).format('HH:mm DD/MM/YYYY')}
                                 </Typography>
                             </Box>
 
@@ -1221,7 +1219,7 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedTerm, GetTerm
                                     End Date
                                 </Typography>
                                 <Typography variant="body1">
-                                    {dayjs(selectedExtraTerm.endDate)}
+                                    {dayjs(selectedExtraTerm.endDate).format('HH:mm DD/MM/YYYY')}
                                 </Typography>
                             </Box>
 
