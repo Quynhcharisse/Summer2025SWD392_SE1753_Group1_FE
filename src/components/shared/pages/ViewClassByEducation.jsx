@@ -26,10 +26,9 @@ const ViewClassByEducation = () => {
   const [showStudents, setShowStudents] = useState(false);
   const [exportingStudents, setExportingStudents] = useState(false);
 
-
   // Helper function to handle errors
   const handleFetchError = (error) => {
-//     console.error("Error fetching data:", error);
+    //     console.error("Error fetching data:", error);
 
     if (error.response?.status === 403) {
       enqueueSnackbar(
@@ -59,12 +58,12 @@ const ViewClassByEducation = () => {
           activityResponse.data?.activities ||
           [];
 
-//       console.log(
-   
+      //       console.log(
+
       setActivities(activityData);
     } catch (error) {
-//       console.error(
-   
+      //       console.error(
+
       setActivities([]);
       handleFetchError(error);
     } finally {
@@ -76,27 +75,27 @@ const ViewClassByEducation = () => {
   const fetchClassData = async () => {
     setLoading(true);
     try {
-//       console.log("Fetching class data for classId:", classId);
+      //       console.log("Fetching class data for classId:", classId);
 
       const [classResponse, scheduleResponse] = await Promise.all([
         getClassDetail(classId),
         getClassScheduleList(classId),
       ]);
 
-//       console.log("Class detail response:", classResponse);
-//       console.log("Schedule response:", scheduleResponse);
-//       console.log("Setting classDetails to:", classResponse.data);
+      //       console.log("Class detail response:", classResponse);
+      //       console.log("Schedule response:", scheduleResponse);
+      //       console.log("Setting classDetails to:", classResponse.data);
 
       // Extract the actual data from the response
       const actualClassData = classResponse.data?.data || classResponse.data;
-//       console.log("Actual class data:", actualClassData);
+      //       console.log("Actual class data:", actualClassData);
       setClassDetails(actualClassData);
 
       const schedulesData = Array.isArray(scheduleResponse.data)
         ? scheduleResponse.data
         : scheduleResponse.data?.data || scheduleResponse.data?.schedules || [];
 
-//       console.log("Processed schedules data:", schedulesData);
+      //       console.log("Processed schedules data:", schedulesData);
       setSchedules(schedulesData);
 
       // Auto-select first schedule if available and fetch its activities
@@ -109,8 +108,10 @@ const ViewClassByEducation = () => {
         setSelectedSchedule(null);
         setActivities([]);
       }
-      
-      enqueueSnackbar('Class data refreshed successfully', { variant: 'success' });
+
+      enqueueSnackbar("Class data refreshed successfully", {
+        variant: "success",
+      });
     } catch (error) {
       handleFetchError(error);
     } finally {
@@ -131,7 +132,7 @@ const ViewClassByEducation = () => {
 
     try {
       const formattedDate = dayjs(date).format("YYYY-MM-DD");
-//       console.log(
+      //       console.log(
 
       await deleteActivitiesByDayAndSchedule(
         selectedSchedule.id,
@@ -145,7 +146,7 @@ const ViewClassByEducation = () => {
         variant: "success",
       });
     } catch (error) {
-//       console.error("Error deleting activities:", error);
+      //       console.error("Error deleting activities:", error);
 
       if (error.response?.status === 403) {
         enqueueSnackbar(
@@ -166,22 +167,22 @@ const ViewClassByEducation = () => {
   const fetchStudentsList = async () => {
     setStudentsLoading(true);
     try {
-//       console.log("Fetching students for classId:", classId);
+      //       console.log("Fetching students for classId:", classId);
       const response = await getAssignedStudentsOfClass(classId);
-//       console.log("Students response:", response);
-      
+      //       console.log("Students response:", response);
+
       const studentsData = Array.isArray(response.data)
         ? response.data
         : response.data?.data || [];
-      
-//       console.log("Processed students data:", studentsData);
+
+      //       console.log("Processed students data:", studentsData);
       setStudents(studentsData);
-      
+
       enqueueSnackbar(`Loaded ${studentsData.length} students successfully`, {
         variant: "success",
       });
     } catch (error) {
-//       console.error("Error fetching students:", error);
+      //       console.error("Error fetching students:", error);
       setStudents([]);
       handleFetchError(error);
     } finally {
@@ -193,41 +194,45 @@ const ViewClassByEducation = () => {
   const handleExportStudents = async () => {
     setExportingStudents(true);
     try {
-//       console.log("Exporting students for classId:", classId);
+      //       console.log("Exporting students for classId:", classId);
       const response = await exportStudentsOfClass(classId);
-      
+
       // Create blob and download file
-      const blob = new Blob([response.data], { 
-        type: response.headers['content-type'] || 'application/octet-stream' 
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"] || "application/octet-stream",
       });
-      
+
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      
+
       // Get filename from response headers or use default
-      const contentDisposition = response.headers['content-disposition'];
-      let filename = `class_${classDetails?.name || classId}_students_${dayjs().format('YYYY-MM-DD')}.xlsx`;
-      
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = `class_${
+        classDetails?.name || classId
+      }_students_${dayjs().format("YYYY-MM-DD")}.xlsx`;
+
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        const filenameMatch = contentDisposition.match(
+          /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+        );
         if (filenameMatch?.[1]) {
-          filename = filenameMatch[1].replace(/['"]/g, '');
+          filename = filenameMatch[1].replace(/['"]/g, "");
         }
       }
-      
+
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       enqueueSnackbar("Students list exported successfully", {
         variant: "success",
       });
     } catch (error) {
-//       console.error("Error exporting students:", error);
-      
+      //       console.error("Error exporting students:", error);
+
       if (error.response?.status === 403) {
         enqueueSnackbar(
           "Access denied. You may not have permission to export student data.",
@@ -291,7 +296,7 @@ const ViewClassByEducation = () => {
     if (classId) {
       fetchClassData();
     } else {
-//       console.error("No classId provided");
+      //       console.error("No classId provided");
       enqueueSnackbar("No class ID provided", { variant: "error" });
       setLoading(false);
     }
@@ -322,7 +327,6 @@ const ViewClassByEducation = () => {
             variant="primary"
             size="sm"
             onClick={() => {
-//               console.log('Retry button clicked');
               fetchClassData();
             }}
             className="mt-2"
@@ -433,7 +437,11 @@ const ViewClassByEducation = () => {
             onClick={handleViewStudents}
             disabled={studentsLoading}
           >
-            {studentsLoading ? "Loading..." : showStudents ? "Hide Students" : "Show Assigned Students"}
+            {studentsLoading
+              ? "Loading..."
+              : showStudents
+              ? "Hide Students"
+              : "Show Assigned Students"}
           </Button>
           <Button
             variant="secondary"
@@ -467,7 +475,7 @@ const ViewClassByEducation = () => {
               </Button>
             </div>
           </div>
-          
+
           {studentsLoading ? (
             <div className="flex justify-center items-center h-32">
               <div className="text-center">
@@ -498,7 +506,9 @@ const ViewClassByEducation = () => {
                       </span>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
-                      <span className="font-medium text-gray-700">Birth Date:</span>
+                      <span className="font-medium text-gray-700">
+                        Birth Date:
+                      </span>
                       <span className="ml-1 text-gray-600">
                         {dayjs(student.dateOfBirth).format("MMM DD, YYYY")}
                       </span>
@@ -506,11 +516,14 @@ const ViewClassByEducation = () => {
                     <div className="bg-gray-50 p-2 rounded">
                       <span className="font-medium text-gray-700">Age:</span>
                       <span className="ml-1 text-gray-600">
-                        {dayjs().diff(dayjs(student.dateOfBirth), 'year')} years old
+                        {dayjs().diff(dayjs(student.dateOfBirth), "year")} years
+                        old
                       </span>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
-                      <span className="font-medium text-gray-700">Place of Birth:</span>
+                      <span className="font-medium text-gray-700">
+                        Place of Birth:
+                      </span>
                       <span className="ml-1 text-gray-600">
                         {student.placeOfBirth}
                       </span>
@@ -656,7 +669,7 @@ const ViewClassByEducation = () => {
           variant="primary"
           size="sm"
           onClick={() => {
-//             console.log('Refresh button clicked');
+            //             console.log('Refresh button clicked');
             fetchClassData();
           }}
           disabled={isRefreshing}
@@ -782,7 +795,6 @@ const ViewClassByEducation = () => {
       )}
 
       {/* Students Section */}
-      
     </div>
   );
 };

@@ -1,9 +1,9 @@
 import { Footer, Header } from "@organisms";
-import { themeClasses } from '@theme/colors';
-import PropTypes from 'prop-types';
-import { useEffect, useRef } from 'react';
-import { refreshToken } from '@services/JWTService.jsx';
-import Cookies from 'js-cookie';
+import { themeClasses } from "@theme/colors";
+import PropTypes from "prop-types";
+import { useEffect, useRef } from "react";
+import { refreshToken } from "@services/JWTService.jsx";
+import Cookies from "js-cookie";
 
 const MainTemplate = ({ children }) => {
   const intervalRef = useRef(null);
@@ -20,7 +20,7 @@ const MainTemplate = ({ children }) => {
         if (!accessToken) return;
 
         // Parse token để lấy expiry time
-        const tokenData = JSON.parse(atob(accessToken.split('.')[1]));
+        const tokenData = JSON.parse(atob(accessToken.split(".")[1]));
         const currentTime = Math.floor(Date.now() / 1000);
         const timeUntilExpiry = tokenData.exp - currentTime;
 
@@ -32,9 +32,7 @@ const MainTemplate = ({ children }) => {
         const isUserActive = timeSinceActivity < tenMinutes;
 
         if (timeUntilExpiry > 0 && timeUntilExpiry <= 120 && isUserActive) {
-          console.log("🔄 MainTemplate - Auto refreshing token for active user...");
           await refreshToken();
-          console.log("✅ MainTemplate - Token refreshed successfully");
         }
       } catch (error) {
         console.error("❌ MainTemplate - Auto refresh failed:", error);
@@ -42,8 +40,14 @@ const MainTemplate = ({ children }) => {
     };
 
     // Track user activity
-    const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-    activityEvents.forEach(event => {
+    const activityEvents = [
+      "mousemove",
+      "keydown",
+      "click",
+      "scroll",
+      "touchstart",
+    ];
+    activityEvents.forEach((event) => {
       document.addEventListener(event, trackActivity, { passive: true });
     });
 
@@ -55,10 +59,10 @@ const MainTemplate = ({ children }) => {
 
     // Cleanup
     return () => {
-      activityEvents.forEach(event => {
+      activityEvents.forEach((event) => {
         document.removeEventListener(event, trackActivity);
       });
-      
+
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
@@ -66,9 +70,15 @@ const MainTemplate = ({ children }) => {
   }, []);
 
   return (
-    <div className={`min-h-screen flex flex-col ${themeClasses.backgroundSurface} ${themeClasses.textPrimary}`}>
+    <div
+      className={`min-h-screen flex flex-col ${themeClasses.backgroundSurface} ${themeClasses.textPrimary}`}
+    >
       <Header />
-      <main className={`flex-1 container mx-auto p-4 ${themeClasses.backgroundSurface}`}>{children}</main>
+      <main
+        className={`flex-1 container mx-auto p-4 ${themeClasses.backgroundSurface}`}
+      >
+        {children}
+      </main>
       <Footer />
     </div>
   );

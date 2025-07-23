@@ -1,15 +1,15 @@
-import React, { useEffect } from "react";
-import clsx from "clsx";
-import { PageTemplate } from "@templates";
-import { Button, Badge } from "@atoms";
-import { InfoListCard } from "@molecules";
-import { 
-  getCurrentEnrollmentPeriod, 
-  getNextEnrollmentPeriod, 
-  getRegistrationStatus,
+import {
   formatPeriodRange,
-  formatRegistrationDates
+  formatRegistrationDates,
+  getCurrentEnrollmentPeriod,
+  getNextEnrollmentPeriod,
+  getRegistrationStatus,
 } from "@/utils/enrollmentPeriods";
+import { Badge, Button } from "@atoms";
+import { InfoListCard } from "@molecules";
+import { PageTemplate } from "@templates";
+import clsx from "clsx";
+import { useEffect } from "react";
 
 const Classes = () => {
   // Get current and next enrollment periods
@@ -17,67 +17,11 @@ const Classes = () => {
   const nextPeriod = getNextEnrollmentPeriod();
   const currentRegistrationStatus = getRegistrationStatus(currentPeriod);
   const currentRegistrationDates = formatRegistrationDates(currentPeriod);
-  const nextRegistrationDates = formatRegistrationDates(nextPeriod);useEffect(() => {
+  const nextRegistrationDates = formatRegistrationDates(nextPeriod);
+  useEffect(() => {
     document.title = "Classes - Sunshine Preschool";
   }, []);
-  const classes = [
-    {
-      id: 1,
-      name: "Toddler Class (18-24 months)",
-      description:
-        "Gentle introduction to learning through play, music, and sensory activities.",
-      schedule: "Monday - Friday, 8:00 AM - 12:00 PM",
-      capacity: "8 students",
-      teacher: "Ms. Sarah Johnson",
-      color: "blue",
-      enrollmentPeriod: "September 2025 - December 2025",
-      registrationStatus: "open",
-      registrationDeadline: "August 15, 2025",
-      nextPeriod: "January 2026 - April 2026"
-    },
-    {
-      id: 2,
-      name: "Pre-K Class (2-3 years)",
-      description:
-        "Focus on social skills, basic academic concepts, and creative expression.",
-      schedule: "Monday - Friday, 8:00 AM - 3:00 PM",
-      capacity: "12 students",
-      teacher: "Ms. Emily Chen",
-      color: "green",
-      enrollmentPeriod: "September 2025 - December 2025",
-      registrationStatus: "open",
-      registrationDeadline: "August 15, 2025",
-      nextPeriod: "January 2026 - April 2026"
-    },
-    {
-      id: 3,
-      name: "Kindergarten Prep (4-5 years)",
-      description:
-        "Advanced preparation for kindergarten with structured learning activities.",
-      schedule: "Monday - Friday, 8:00 AM - 4:00 PM",
-      capacity: "15 students",
-      teacher: "Mr. David Wilson",
-      color: "purple",
-      enrollmentPeriod: "September 2025 - December 2025",
-      registrationStatus: "waiting",
-      registrationDeadline: "August 15, 2025",
-      nextPeriod: "January 2026 - April 2026"
-    },
-    {
-      id: 4,
-      name: "After School Program",
-      description:
-        "Homework help, recreational activities, and supervised play time.",
-      schedule: "Monday - Friday, 3:00 PM - 6:00 PM",
-      capacity: "20 students",
-      teacher: "Ms. Lisa Park",
-      color: "orange",
-      enrollmentPeriod: "September 2025 - December 2025",
-      registrationStatus: "closed",
-      registrationDeadline: "August 15, 2025",
-      nextPeriod: "January 2026 - April 2026"
-    },
-  ];
+  const classes = [];
   const getColorClasses = (color) => {
     const colorMap = {
       blue: "from-blue-50 to-blue-100 border-blue-200 text-blue-600",
@@ -91,17 +35,21 @@ const Classes = () => {
     const statusConfig = {
       open: { variant: "success", text: "Registration Open" },
       waiting: { variant: "warning", text: "Waiting List" },
-      closed: { variant: "danger", text: "Registration Closed" }
+      closed: { variant: "danger", text: "Registration Closed" },
     };
     return statusConfig[status] || statusConfig.closed;
   };
 
   const getEnrollButtonText = (status) => {
     switch (status) {
-      case "open": return "Enroll Now";
-      case "waiting": return "Join Waiting List";
-      case "closed": return "Notify Next Period";
-      default: return "Registration Closed";
+      case "open":
+        return "Enroll Now";
+      case "waiting":
+        return "Join Waiting List";
+      case "closed":
+        return "Notify Next Period";
+      default:
+        return "Registration Closed";
     }
   };
 
@@ -109,12 +57,13 @@ const Classes = () => {
     return status === "open" || status === "waiting";
   };
 
-  return (    <PageTemplate
+  return (
+    <PageTemplate
       title="Our Classes"
       subtitle="4-month enrollment periods with age-appropriate programs designed to nurture your child's development through play-based learning"
       breadcrumbs={[
         { label: "Home", href: "/homepage" },
-        { label: "Classes", href: "/homepage/classes" }
+        { label: "Classes", href: "/homepage/classes" },
       ]}
       actions={
         <div className="flex gap-4">
@@ -137,27 +86,31 @@ const Classes = () => {
                 "bg-gradient-to-br rounded-lg p-6 border",
                 getColorClasses(classItem.color)
               )}
-            >              <div className="flex items-start justify-between mb-3">
+            >
+              {" "}
+              <div className="flex items-start justify-between mb-3">
                 <h3 className="text-xl font-semibold text-gray-900">
                   {classItem.name}
-                </h3>                <div className="flex flex-col items-end gap-1">
-                  <Badge 
-                    variant="info" 
-                    size="sm"
-                  >
+                </h3>{" "}
+                <div className="flex flex-col items-end gap-1">
+                  <Badge variant="info" size="sm">
                     {classItem.capacity}
                   </Badge>
-                  <Badge 
-                    variant={getRegistrationStatusBadge(classItem.registrationStatus).variant}
+                  <Badge
+                    variant={
+                      getRegistrationStatusBadge(classItem.registrationStatus)
+                        .variant
+                    }
                     size="sm"
                   >
-                    {getRegistrationStatusBadge(classItem.registrationStatus).text}
+                    {
+                      getRegistrationStatusBadge(classItem.registrationStatus)
+                        .text
+                    }
                   </Badge>
                 </div>
               </div>
-
               <p className="text-gray-700 mb-4">{classItem.description}</p>
-
               <div className="space-y-2 text-sm mb-4">
                 <div className="flex items-center">
                   <span className="font-medium text-gray-700 w-20">
@@ -170,7 +123,9 @@ const Classes = () => {
                   <span className="font-medium text-gray-700 w-20">
                     📚 Period:
                   </span>
-                  <span className="text-gray-600">{classItem.enrollmentPeriod}</span>
+                  <span className="text-gray-600">
+                    {classItem.enrollmentPeriod}
+                  </span>
                 </div>
 
                 <div className="flex items-center">
@@ -184,7 +139,9 @@ const Classes = () => {
                   <span className="font-medium text-gray-700 w-20">
                     ⏰ Deadline:
                   </span>
-                  <span className="text-gray-600">{classItem.registrationDeadline}</span>
+                  <span className="text-gray-600">
+                    {classItem.registrationDeadline}
+                  </span>
                 </div>
 
                 {classItem.registrationStatus === "closed" && (
@@ -192,94 +149,147 @@ const Classes = () => {
                     <span className="font-medium text-gray-700 w-20">
                       🔄 Next Period:
                     </span>
-                    <span className="text-gray-600">{classItem.nextPeriod}</span>
+                    <span className="text-gray-600">
+                      {classItem.nextPeriod}
+                    </span>
                   </div>
                 )}
-              </div>              <div className="pt-4 border-t border-gray-200">
-                <Button 
-                  variant={isEnrollmentActive(classItem.registrationStatus) ? "primary" : "outline"}
+              </div>{" "}
+              <div className="pt-4 border-t border-gray-200">
+                <Button
+                  variant={
+                    isEnrollmentActive(classItem.registrationStatus)
+                      ? "primary"
+                      : "outline"
+                  }
                   size="md"
                   className="w-full"
-                  disabled={!isEnrollmentActive(classItem.registrationStatus) && classItem.registrationStatus !== "closed"}
+                  disabled={
+                    !isEnrollmentActive(classItem.registrationStatus) &&
+                    classItem.registrationStatus !== "closed"
+                  }
                 >
                   {getEnrollButtonText(classItem.registrationStatus)}
                 </Button>
-                
+
                 {classItem.registrationStatus === "closed" && (
                   <p className="text-xs text-gray-500 mt-2 text-center">
-                    Get notified when registration opens for {classItem.nextPeriod}
+                    Get notified when registration opens for{" "}
+                    {classItem.nextPeriod}
                   </p>
                 )}
               </div>
             </div>
           ))}
-        </div>        {/* Enrollment Periods Information */}
+        </div>{" "}
+        {/* Enrollment Periods Information */}
         <div className="bg-blue-50 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             📅 Enrollment Periods
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="bg-white rounded-lg p-4">
-              <h3 className="font-semibold text-gray-800 mb-2">Current Period</h3>
-              <p className="text-gray-600 mb-1">{formatPeriodRange(currentPeriod)}</p>
-              <p className={clsx(
-                "text-sm font-medium",
-                currentRegistrationStatus === 'open' ? "text-green-600" : 
-                currentRegistrationStatus === 'closed' ? "text-red-600" : "text-blue-600"
-              )}>
-                {currentRegistrationStatus === 'open' && `Registration Open until: ${currentRegistrationDates.end}`}
-                {currentRegistrationStatus === 'closed' && `Registration Closed on: ${currentRegistrationDates.end}`}
-                {currentRegistrationStatus === 'upcoming' && `Registration Opens: ${currentRegistrationDates.start}`}
+              <h3 className="font-semibold text-gray-800 mb-2">
+                Current Period
+              </h3>
+              <p className="text-gray-600 mb-1">
+                {formatPeriodRange(currentPeriod)}
+              </p>
+              <p
+                className={clsx(
+                  "text-sm font-medium",
+                  currentRegistrationStatus === "open"
+                    ? "text-green-600"
+                    : currentRegistrationStatus === "closed"
+                    ? "text-red-600"
+                    : "text-blue-600"
+                )}
+              >
+                {currentRegistrationStatus === "open" &&
+                  `Registration Open until: ${currentRegistrationDates.end}`}
+                {currentRegistrationStatus === "closed" &&
+                  `Registration Closed on: ${currentRegistrationDates.end}`}
+                {currentRegistrationStatus === "upcoming" &&
+                  `Registration Opens: ${currentRegistrationDates.start}`}
               </p>
             </div>
             <div className="bg-white rounded-lg p-4">
               <h3 className="font-semibold text-gray-800 mb-2">Next Period</h3>
-              <p className="text-gray-600 mb-1">{formatPeriodRange(nextPeriod)}</p>
-              <p className="text-sm text-blue-600 font-medium">Registration Opens: {nextRegistrationDates.start}</p>
+              <p className="text-gray-600 mb-1">
+                {formatPeriodRange(nextPeriod)}
+              </p>
+              <p className="text-sm text-blue-600 font-medium">
+                Registration Opens: {nextRegistrationDates.start}
+              </p>
             </div>
           </div>
           <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <h4 className="font-semibold text-amber-800 mb-2">📋 Important Notes:</h4>
+            <h4 className="font-semibold text-amber-800 mb-2">
+              📋 Important Notes:
+            </h4>
             <ul className="text-sm text-amber-700 space-y-1">
               <li>• Each enrollment period is 4 months long</li>
               <li>• Registration opens 2 months before each period starts</li>
-              <li>• Early registration is recommended due to limited capacity</li>
+              <li>
+                • Early registration is recommended due to limited capacity
+              </li>
               <li>• Waiting lists are available when classes are full</li>
               <li>• No refunds after the first week of each period</li>
             </ul>
           </div>
         </div>
-
         {/* Additional Information */}
         <div className="bg-gray-50 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             📋 Class Information
           </h2>
 
-          <div className="grid gap-6 md:grid-cols-2">            <InfoListCard
+          <div className="grid gap-6 md:grid-cols-2">
+            {" "}
+            <InfoListCard
               title="What's Included:"
               items={[
-                { emoji: "✓", text: "Healthy snacks and lunch", color: "green" },
+                {
+                  emoji: "✓",
+                  text: "Healthy snacks and lunch",
+                  color: "green",
+                },
                 { emoji: "✓", text: "Art and craft supplies", color: "green" },
-                { emoji: "✓", text: "Educational toys and materials", color: "green" },
-                { emoji: "✓", text: "Outdoor play equipment", color: "green" }
+                {
+                  emoji: "✓",
+                  text: "Educational toys and materials",
+                  color: "green",
+                },
+                { emoji: "✓", text: "Outdoor play equipment", color: "green" },
               ]}
               variant="clean"
               iconPosition="left"
-            />            <InfoListCard
+            />{" "}
+            <InfoListCard
               title="Special Programs:"
               items={[
-                { emoji: "🎵", text: "Music and movement classes", color: "blue" },
-                { emoji: "📚", text: "Language development activities", color: "blue" },
+                {
+                  emoji: "🎵",
+                  text: "Music and movement classes",
+                  color: "blue",
+                },
+                {
+                  emoji: "📚",
+                  text: "Language development activities",
+                  color: "blue",
+                },
                 { emoji: "🔬", text: "Science exploration", color: "blue" },
-                { emoji: "💪", text: "Character building exercises", color: "blue" }
+                {
+                  emoji: "💪",
+                  text: "Character building exercises",
+                  color: "blue",
+                },
               ]}
               variant="clean"
               iconPosition="left"
             />
           </div>
         </div>
-
         {/* Call to Action */}
         <section className="bg-blue-50 p-8 rounded-xl text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">

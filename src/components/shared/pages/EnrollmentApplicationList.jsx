@@ -1,8 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button, Spinner, Badge } from "@atoms";
+import { Badge, Button, Spinner } from "@atoms";
 import { PageTemplate } from "@templates";
-import { AlertCircle, CheckCircle, FileText, Filter, Search } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle,
+  FileText,
+  Filter,
+  Search,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const EnrollmentApplicationList = () => {
   const navigate = useNavigate();
@@ -23,7 +29,6 @@ const EnrollmentApplicationList = () => {
           setApplications([]);
         }
       } catch (err) {
-//         console.error("Failed to fetch enrollment applications:", err);
         setError("Error loading application list");
       } finally {
         setLoading(false);
@@ -55,18 +60,19 @@ const EnrollmentApplicationList = () => {
 
   // Filter applications based on search term and status
   const filteredApplications = applications.filter((app) => {
-    const matchesSearch = 
+    const matchesSearch =
       app.child?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.program?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.applicationId?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = filterStatus === "ALL" || app.status === filterStatus;
-    
+
     return matchesSearch && matchesStatus;
   });
 
   if (loading) {
-    return (      <PageTemplate title="My Applications">
+    return (
+      <PageTemplate title="My Applications">
         <div className="text-center py-8">
           <Spinner size="lg" className="mx-auto mb-4" />
           <p className="text-gray-600">Loading application list...</p>
@@ -75,7 +81,8 @@ const EnrollmentApplicationList = () => {
     );
   }
 
-  return (    <PageTemplate
+  return (
+    <PageTemplate
       title="My Applications"
       subtitle="Manage and track all your enrollment applications"
       actions={
@@ -94,7 +101,9 @@ const EnrollmentApplicationList = () => {
 
       {/* Search and Filter */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <div className="relative flex-1">
+          {" "}
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
             placeholder="Search by child name, program, application ID..."
@@ -110,7 +119,9 @@ const EnrollmentApplicationList = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-            >              <option value="ALL">All Statuses</option>
+            >
+              {" "}
+              <option value="ALL">All Statuses</option>
               <option value="SUBMITTED">Submitted</option>
               <option value="UNDER_REVIEW">Under Review</option>
               <option value="APPROVED">Approved</option>
@@ -128,7 +139,8 @@ const EnrollmentApplicationList = () => {
             No Applications Yet
           </h3>
           <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            You don't have any enrollment applications yet. Create a new application to get started.
+            You don't have any enrollment applications yet. Create a new
+            application to get started.
           </p>
           <Button variant="primary" onClick={handleNewApplication}>
             Create New Application
@@ -151,11 +163,21 @@ const EnrollmentApplicationList = () => {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 text-left">
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Mã đơn</th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tên trẻ</th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Chương trình</th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày nộp</th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Application ID
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Child Name
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Program
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Submission Date
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
                   <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                 </tr>
               </thead>
@@ -172,7 +194,9 @@ const EnrollmentApplicationList = () => {
                       {application.program}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {new Date(application.applicationDate).toLocaleDateString("vi-VN")}
+                      {new Date(application.applicationDate).toLocaleDateString(
+                        "en-US"
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(application.status)}
@@ -184,7 +208,7 @@ const EnrollmentApplicationList = () => {
                         onClick={() => handleViewApplication(application.id)}
                         className="text-blue-600 hover:text-blue-800"
                       >
-                        Xem chi tiết
+                        View Details
                       </Button>
                     </td>
                   </tr>
@@ -200,11 +224,19 @@ const EnrollmentApplicationList = () => {
         <div className="flex">
           <CheckCircle className="w-5 h-5 text-blue-500 mr-3 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-medium text-blue-800 mb-1">Thông tin hữu ích</h3>
+            <h3 className="font-medium text-blue-800 mb-1">
+              Useful Information
+            </h3>
             <ul className="space-y-1 text-blue-700 list-disc list-inside pl-1">
-              <li>Các đơn đăng ký sẽ được xem xét trong vòng 5-7 ngày làm việc</li>
-              <li>Bạn sẽ nhận được thông báo qua email khi trạng thái đơn thay đổi</li>
-              <li>Liên hệ bộ phận tuyển sinh để biết thêm chi tiết: <span className="font-medium">1900-1234</span></li>
+              <li>Applications will be reviewed within 5-7 business days</li>
+              <li>
+                You will receive email notifications when the application status
+                changes
+              </li>
+              <li>
+                Contact the admissions department for more details:{" "}
+                <span className="font-medium">1900-1234</span>
+              </li>
             </ul>
           </div>
         </div>

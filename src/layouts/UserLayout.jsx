@@ -275,10 +275,8 @@ const UserLayout = ({children}) => {
 
     const handleLogout = async () => {
         try {
-            // Gọi API logout trước (để backend xóa session/JWT cookie)
             await authService.logout();
         } catch (e) {
-            // Dù lỗi vẫn tiếp tục xóa FE và chuyển trang
 //             console.error("Logout API failed:", e);
         }
         // Sau đó xóa local FE

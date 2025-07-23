@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import {
-  getClassesOfStudent,
   getClassDetail,
+  getClassesOfStudent,
   getClassScheduleList,
   getScheduleActivityList,
 } from "@/api/services/classService";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 // Badge status style theo status
 const STATUS_STYLES = {

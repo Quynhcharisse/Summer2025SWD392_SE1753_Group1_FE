@@ -185,7 +185,7 @@ export default function Home() {
             variant="primary"
             size="md"
             onClick={handleEnrollmentClick}
-            title={authStatus.statusMessage || "Đăng ký nhập học"}
+            title={authStatus.statusMessage || "Enroll Now"}
           >
             {t("enroll_button")}
           </Button>
@@ -238,7 +238,6 @@ export default function Home() {
               variant="numbered"
               status="active"
               actionLabel={t("step1_action")}
-//               onAction={() => console.log("Booking tour")}
             />
             <ProcessStepCard
               step={2}
@@ -274,9 +273,6 @@ export default function Home() {
               price={t("prog1_price")}
               badge={{ text: t("prog1_badge"), variant: "primary" }}
               onEnroll={handleEnrollmentClick}
-//               onLearnMore={() =>
-// //                 console.log("Learning more about Toddler Discovery")
-//               }
             />
             <ProgramCard
               title={t("prog2_title")}
@@ -290,9 +286,6 @@ export default function Home() {
               price={t("prog2_price")}
               badge={{ text: t("prog2_badge"), variant: "secondary" }}
               onEnroll={handleEnrollmentClick}
-//               onLearnMore={() =>
-// //                 console.log("Learning more about Pre-K Excellence")
-//               }
             />
             <ProgramCard
               title={t("prog3_title")}
@@ -306,9 +299,6 @@ export default function Home() {
               price={t("prog3_price")}
               badge={{ text: t("prog3_badge"), variant: "outline" }}
               onEnroll={handleEnrollmentClick}
-//               onLearnMore={() =>
-// //                 console.log("Learning more about After School Care")
-//               }
             />
           </div>
         </div>
