@@ -142,41 +142,11 @@ const ParentDashboard = () => {
         </div>
       }
     >
-      <div className="space-y-8">
-        {/* Quick Stats */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Applications"
-            value={applications.length}
-            description="Total applications"
-            icon={FileText}
-            trend={{ value: 0, isPositive: true }}
-          />
-          <StatCard
-            title="New Notifications"
-            value={notifications.filter((n) => !n.read).length}
-            description="Unread"
-            icon={Bell}
-            trend={{ value: 0, isPositive: true }}
-          />
-          <StatCard
-            title="Events"
-            value={upcomingEvents.length}
-            description="Upcoming"
-            icon={Calendar}
-            trend={{ value: 0, isPositive: true }}
-          />
-          <StatCard
-            title="Messages"
-            value={0}
-            description="New messages"
-            icon={MessageSquare}
-            trend={{ value: 0, isPositive: true }}
-          />
-        </section>
+      {/* <div className="space-y-8"> */}
+       
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-8"> */}
           {/* Left Column - Applications and Events */}
           <div className="lg:col-span-2 space-y-6">
             {/* Recent Applications */}
@@ -384,8 +354,8 @@ const ParentDashboard = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        {/* </div> */}
+      {/* </div> */}
     </PageTemplate>
   );
 };

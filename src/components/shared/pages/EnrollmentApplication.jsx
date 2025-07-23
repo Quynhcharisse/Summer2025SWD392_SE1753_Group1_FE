@@ -11,20 +11,24 @@ import PropTypes from "prop-types";
 // Success Message Component
 const EnrollmentSuccess = ({ applicationData, onContinue }) => (
   <AuthTemplate
-    title="Đăng ký thành công!"
-    subtitle="Đơn đăng ký nhập học đã được gửi thành công"
+    title="Enrollment Successful!"
+    subtitle="Your enrollment application has been submitted successfully"
   >
     <div className="text-center space-y-6">
       <div className="mx-auto w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
         <CheckCircle className="w-10 h-10 text-white" />
       </div>
-      
+
       <div className="space-y-3">
         <p className="text-gray-600">
-          Cảm ơn bạn đã gửi đơn đăng ký nhập học cho <strong>{applicationData?.childName}</strong>!
+          Thank you for submitting the enrollment application for{" "}
+          <strong>{applicationData?.childName}</strong>!
         </p>
         <p className="text-sm text-gray-500">
-          Mã đơn đăng ký: <span className="font-mono bg-gray-100 px-2 py-1 rounded">{applicationData?.applicationId}</span>
+          Application ID:{" "}
+          <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+            {applicationData?.applicationId}
+          </span>
         </p>
       </div>
 
@@ -32,19 +36,20 @@ const EnrollmentSuccess = ({ applicationData, onContinue }) => (
         <div className="flex">
           <FileText className="w-5 h-5 text-blue-400 mt-0.5" />
           <div className="ml-3">
-            <h4 className="text-sm font-medium text-blue-800">Bước tiếp theo:</h4>
+            <h4 className="text-sm font-medium text-blue-800">Next steps:</h4>
             <p className="text-sm text-blue-700 mt-1">
-              Chúng tôi sẽ liên hệ với bạn trong vòng 2-3 ngày làm việc để hướng dẫn về việc nộp giấy tờ và lịch phỏng vấn.
+              We will contact you within 2-3 business days to guide you on
+              document submission and interview schedule.
             </p>
             <ul className="mt-2 text-sm text-blue-600 list-disc list-inside">
-              <li>Kiểm tra email để nhận thông tin chi tiết</li>
-              <li>Chuẩn bị các giấy tờ cần thiết</li>
-              <li>Chờ lịch hẹn phỏng vấn</li>
+              <li>Check your email for detailed information</li>
+              <li>Prepare necessary documents</li>
+              <li>Wait for the interview appointment</li>
             </ul>
           </div>
         </div>
       </div>
-      
+
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Button
           variant="primary"
@@ -52,13 +57,10 @@ const EnrollmentSuccess = ({ applicationData, onContinue }) => (
           className="flex items-center gap-2"
         >
           <FileText className="w-4 h-4" />
-          Quản lý đơn đăng ký
+          Manage Applications
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => window.location.href = '/'}
-        >
-          Về trang chủ
+        <Button variant="outline" onClick={() => (window.location.href = "/")}>
+          Back to Home
         </Button>
       </div>
     </div>
@@ -73,20 +75,20 @@ EnrollmentSuccess.propTypes = {
 // Login Required Message
 const LoginRequired = ({ onLogin }) => (
   <AuthTemplate
-    title="Yêu cầu đăng nhập"
-    subtitle="Bạn cần đăng nhập để tiếp tục đăng ký nhập học"
+    title="Login Required"
+    subtitle="You need to log in to continue with the enrollment application"
   >
     <div className="text-center space-y-6">
       <div className="mx-auto w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
         <AlertTriangle className="w-10 h-10 text-white" />
       </div>
-      
+
       <div className="space-y-3">
         <p className="text-gray-600">
-          Để đảm bảo thông tin chính xác và bảo mật, bạn cần có tài khoản để đăng ký nhập học.
+          To ensure accurate information and security, you need an account to apply for enrollment.
         </p>
         <p className="text-sm text-gray-500">
-          Nếu chưa có tài khoản, bạn có thể đăng ký miễn phí.
+          If you don't have an account yet, you can register for free.
         </p>
       </div>
 
@@ -94,29 +96,28 @@ const LoginRequired = ({ onLogin }) => (
         <div className="flex">
           <FileText className="w-5 h-5 text-blue-400 mt-0.5" />
           <div className="ml-3">
-            <h4 className="text-sm font-medium text-blue-800">Tại sao cần đăng nhập?</h4>
+            <h4 className="text-sm font-medium text-blue-800">
+              Why login is required?
+            </h4>
             <ul className="mt-2 text-sm text-blue-700 list-disc list-inside">
-              <li>Theo dõi trạng thái đơn đăng ký</li>
-              <li>Nhận thông báo cập nhật qua email</li>
-              <li>Quản lý thông tin và giấy tờ</li>
-              <li>Liên hệ trực tiếp với nhà trường</li>
+              <li>Track application status</li>
+              <li>Receive updates via email</li>
+              <li>Manage information and documents</li>
+              <li>Contact the school directly</li>
             </ul>
           </div>
         </div>
       </div>
-      
+
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        <Button
-          variant="primary"
-          onClick={onLogin}
-        >
-          Đăng nhập
+        <Button variant="primary" onClick={onLogin}>
+          Login
         </Button>
         <Button
           variant="outline"
-          onClick={() => window.location.href = '/signup'}
+          onClick={() => (window.location.href = "/signup")}
         >
-          Đăng ký tài khoản
+          Create Account
         </Button>
       </div>
     </div>
@@ -142,13 +143,10 @@ const EnrollmentApplication = () => {
       try {
         const authenticated = isAuthenticated();
         setIsUserAuthenticated(authenticated);
-        
+
         if (authenticated) {
-          // Optional: Check enrollment eligibility
-          
         }
       } catch (error) {
-//         console.error('Authentication check failed:', error);
         setIsUserAuthenticated(false);
       } finally {
         setCheckingAuth(false);
@@ -159,14 +157,10 @@ const EnrollmentApplication = () => {
   }, []);
 
   const handleSubmit = async (formData) => {
-//     console.log("🚀 EnrollmentApplication handleSubmit called with:", formData);
-    
     setSubmitError("");
     setLoading(true);
 
     try {
-//       console.log("📡 Calling enrollmentService.submitEnrollmentApplication...");
-      
       // Prepare enrollment data
       const enrollmentData = {
         // Child information
@@ -191,32 +185,29 @@ const EnrollmentApplication = () => {
         program: formData.program,
         // Additional data
         applicationDate: new Date().toISOString(),
-        status: 'SUBMITTED'
+        status: "SUBMITTED",
       };
 
-      const response = await enrollmentService.submitEnrollmentApplication(enrollmentData);
-      
-//       console.log("✅ Enrollment application submitted successfully:", response);
+      const response = await enrollmentService.submitEnrollmentApplication(
+        enrollmentData
+      );
 
       // Set success data
       setApplicationData({
-        applicationId: response.applicationId || 'ENR-' + Date.now(),
+        applicationId: response.applicationId || "ENR-" + Date.now(),
         childName: `${formData.childFirstName} ${formData.childLastName}`,
         program: formData.program,
-        parentEmail: formData.parentEmail
+        parentEmail: formData.parentEmail,
       });
 
       setShowSuccess(true);
-
     } catch (error) {
-//       console.error("❌ Enrollment application submission failed:", error);
-      
       if (error.response?.data?.message) {
         setSubmitError(error.response.data.message);
       } else if (error.message) {
         setSubmitError(error.message);
       } else {
-        setSubmitError("Gửi đơn đăng ký thất bại. Vui lòng thử lại.");
+        setSubmitError("Failed to submit application. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -225,25 +216,25 @@ const EnrollmentApplication = () => {
 
   const handleLogin = () => {
     // Redirect to login with return URL
-    navigate('/auth/login', { 
-      state: { 
-        returnUrl: '/user/parent/add-child',
-        message: 'Vui lòng đăng nhập để tiếp tục đăng ký nhập học.'
-      }
+    navigate("/auth/login", {
+      state: {
+        returnUrl: "/user/parent/add-child",
+        message: "Please log in to continue with the enrollment application.",
+      },
     });
   };
 
   const handleManageApplications = () => {
-    navigate('/user/parent/forms');
+    navigate("/user/parent/forms");
   };
 
   // Show loading while checking authentication
   if (checkingAuth) {
     return (
-      <AuthTemplate title="Đang kiểm tra...">
+      <AuthTemplate title="Checking...">
         <div className="text-center py-8">
           <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Đang kiểm tra trạng thái đăng nhập...</p>
+          <p className="text-gray-600">Checking login status...</p>
         </div>
       </AuthTemplate>
     );
@@ -267,8 +258,8 @@ const EnrollmentApplication = () => {
   // Main enrollment application form
   return (
     <AuthTemplate
-      title="Đăng ký nhập học"
-      subtitle="Vui lòng điền đầy đủ thông tin để đăng ký nhập học cho trẻ"
+      title="Enrollment Application"
+      subtitle="Please fill in all information to register your child for admission"
       showLogo={false}
     >
       <div className="space-y-6">
@@ -295,12 +286,15 @@ const EnrollmentApplication = () => {
         {/* Help Information */}
         <div className="text-center text-sm text-gray-500 mt-6">
           <p>
-            Cần hỗ trợ? Liên hệ:{" "}
+            Need help? Contact:{" "}
             <a href="tel:1900-1234" className="text-blue-600 hover:underline">
               1900-1234
             </a>{" "}
-            hoặc{" "}
-            <a href="mailto:admissions@sunshinepreschool.com" className="text-blue-600 hover:underline">
+            or{" "}
+            <a
+              href="mailto:admissions@sunshinepreschool.com"
+              className="text-blue-600 hover:underline"
+            >
               admissions@sunshinepreschool.com
             </a>
           </p>

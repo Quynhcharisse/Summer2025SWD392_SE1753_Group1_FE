@@ -17,9 +17,14 @@ import {
   Upload,
   File,
   CheckCircle,
-  X
+  X,
 } from "lucide-react";
-import { RELATIONSHIPS, PROGRAMS, ENROLLMENT_REQUIREMENTS, DOCUMENT_TYPES } from "../../../../constants/enrollment";
+import {
+  RELATIONSHIPS,
+  PROGRAMS,
+  ENROLLMENT_REQUIREMENTS,
+  DOCUMENT_TYPES,
+} from "../../../../constants/enrollment";
 
 // Error Message Component
 const ErrorMessage = ({ error }) =>
@@ -77,15 +82,15 @@ InputWithIcon.propTypes = {
 };
 
 // Document Upload Component
-const DocumentUpload = ({ 
-  documentType, 
-  title, 
-  description, 
-  required = false, 
-  uploadedFiles, 
-  onFileUpload, 
+const DocumentUpload = ({
+  documentType,
+  title,
+  description,
+  required = false,
+  uploadedFiles,
+  onFileUpload,
   onFileRemove,
-  disabled = false 
+  disabled = false,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = React.useRef(null);
@@ -109,10 +114,10 @@ const DocumentUpload = ({
 
   const handleFileUpload = (files) => {
     if (disabled) return;
-    
-    const validFiles = files.filter(file => {
-      const isValidType = ['image/*', 'application/pdf', '.doc', '.docx'].some(type => 
-        file.type.match(type.replace('*', '.*'))
+
+    const validFiles = files.filter((file) => {
+      const isValidType = ["image/*", "application/pdf", ".doc", ".docx"].some(
+        (type) => file.type.match(type.replace("*", ".*"))
       );
       const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
       return isValidType && isValidSize;
@@ -162,20 +167,21 @@ const DocumentUpload = ({
         onClick={triggerFileInput}
         className={`
           border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-          ${isDragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}
-          ${disabled ? 'cursor-not-allowed opacity-50' : 'hover:border-gray-400'}
-          ${currentFiles.length > 0 ? 'bg-green-50 border-green-300' : ''}
+          ${isDragOver ? "border-blue-400 bg-blue-50" : "border-gray-300"}
+          ${
+            disabled ? "cursor-not-allowed opacity-50" : "hover:border-gray-400"
+          }
+          ${currentFiles.length > 0 ? "bg-green-50 border-green-300" : ""}
         `}
       >
         <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
         <p className="text-sm text-gray-600">
-          {currentFiles.length > 0 
-            ? `${currentFiles.length} tệp đã tải lên` 
-            : 'Kéo thả tệp vào đây hoặc nhấp để chọn tệp'
-          }
+          {currentFiles.length > 0
+            ? `${currentFiles.length} files uploaded`
+            : "Drag and drop files here or click to select files"}
         </p>
         <p className="text-xs text-gray-500 mt-1">
-          Hỗ trợ: PDF, DOC, DOCX, JPG, PNG (tối đa 5MB)
+          Supported formats: PDF, DOC, DOCX, JPG, PNG (max 5MB)
         </p>
       </div>
 
@@ -189,15 +195,19 @@ const DocumentUpload = ({
         disabled={disabled}
       />
 
-      {/* Uploaded Files List */}
       {currentFiles.length > 0 && (
         <div className="space-y-2">
-          <h5 className="text-sm font-medium text-gray-700">Tệp đã tải lên:</h5>
+          <h5 className="text-sm font-medium text-gray-700">Uploaded files:</h5>
           {currentFiles.map((file, index) => (
-            <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+            <div
+              key={index}
+              className="flex items-center justify-between bg-gray-50 p-2 rounded"
+            >
               <div className="flex items-center">
                 <File className="w-4 h-4 text-gray-500 mr-2" />
-                <span className="text-sm text-gray-700 truncate">{file.name}</span>
+                <span className="text-sm text-gray-700 truncate">
+                  {file.name}
+                </span>
                 <span className="text-xs text-gray-500 ml-2">
                   ({(file.size / 1024 / 1024).toFixed(2)}MB)
                 </span>
@@ -232,7 +242,7 @@ DocumentUpload.propTypes = {
   uploadedFiles: PropTypes.object.isRequired,
   onFileUpload: PropTypes.func.isRequired,
   onFileRemove: PropTypes.func.isRequired,
-  disabled: PropTypes.bool
+  disabled: PropTypes.bool,
 };
 
 const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
@@ -253,17 +263,31 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
 
   const nextStep = async () => {
     let fieldsToValidate = [];
-    
+
     if (currentStep === 1) {
-      fieldsToValidate = ['childFirstName', 'childLastName', 'childDateOfBirth', 'childGender', 'program'];
+      fieldsToValidate = [
+        "childFirstName",
+        "childLastName",
+        "childDateOfBirth",
+        "childGender",
+        "program",
+      ];
     } else if (currentStep === 2) {
-      fieldsToValidate = ['parentFirstName', 'parentLastName', 'relationship', 'parentPhone', 'parentEmail'];
+      fieldsToValidate = [
+        "parentFirstName",
+        "parentLastName",
+        "relationship",
+        "parentPhone",
+        "parentEmail",
+      ];
     } else if (currentStep === 3) {
-      fieldsToValidate = Object.keys(ENROLLMENT_REQUIREMENTS).flatMap(key => {
-        return ENROLLMENT_REQUIREMENTS[key].documents.map(doc => `${key}_${doc.type}`);
+      fieldsToValidate = Object.keys(ENROLLMENT_REQUIREMENTS).flatMap((key) => {
+        return ENROLLMENT_REQUIREMENTS[key].documents.map(
+          (doc) => `${key}_${doc.type}`
+        );
       });
     }
-    
+
     const isValid = await trigger(fieldsToValidate);
     if (isValid && currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -277,7 +301,7 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
   };
 
   const onFormSubmit = (formData) => {
-//     console.log('📝 EnrollmentForm onSubmit called with:', formData);
+    //     console.log('📝 EnrollmentForm onSubmit called with:', formData);
     onSubmit(formData);
   };
 
@@ -308,10 +332,10 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
 
   const renderStepTitle = () => {
     const titles = {
-      1: "Thông tin trẻ em",
-      2: "Thông tin phụ huynh/người giám hộ", 
-      3: "Tải lên tài liệu",
-      4: "Xác nhận thông tin"
+      1: "Child Information",
+      2: "Parent Information",
+      3: "Document Upload",
+      4: "Confirm Information",
     };
     return (
       <h3 className="text-xl font-semibold text-gray-800 text-center mb-6">
@@ -333,11 +357,14 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
               <InputWithIcon
                 icon={User}
                 name="childFirstName"
-                placeholder="Tên của trẻ *"
+                placeholder="Child's First Name *"
                 register={register}
                 rules={{
-                  required: "Tên của trẻ không được để trống",
-                  minLength: { value: 2, message: "Tên phải có ít nhất 2 ký tự" }
+                  required: "Child's first name is required",
+                  minLength: {
+                    value: 2,
+                    message: "First name must be at least 2 characters",
+                  },
                 }}
                 error={errors.childFirstName}
                 disabled={isFormDisabled}
@@ -346,11 +373,14 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
               <InputWithIcon
                 icon={User}
                 name="childLastName"
-                placeholder="Họ của trẻ *"
+                placeholder="Child's Last Name *"
                 register={register}
                 rules={{
-                  required: "Họ của trẻ không được để trống",
-                  minLength: { value: 2, message: "Họ phải có ít nhất 2 ký tự" }
+                  required: "Child's last name is required",
+                  minLength: {
+                    value: 2,
+                    message: "Last name must be at least 2 characters",
+                  },
                 }}
                 error={errors.childLastName}
                 disabled={isFormDisabled}
@@ -361,10 +391,10 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
               icon={Calendar}
               type="date"
               name="childDateOfBirth"
-              placeholder="Ngày sinh của trẻ *"
+              placeholder="Child's Date of Birth *"
               register={register}
               rules={{
-                required: "Ngày sinh không được để trống",
+                required: "Date of birth is required",
                 validate: (value) => {
                   const birthDate = new Date(value);
                   const today = new Date();
@@ -373,7 +403,7 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
                     return "Trẻ phải từ 1-6 tuổi";
                   }
                   return true;
-                }
+                },
               }}
               error={errors.childDateOfBirth}
               disabled={isFormDisabled}
@@ -382,8 +412,8 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
             <div className="space-y-1">
               <InputSelect
                 name="childGender"
-                {...register("childGender", { 
-                  required: "Vui lòng chọn giới tính" 
+                {...register("childGender", {
+                  required: "Vui lòng chọn giới tính",
                 })}
                 value={watch("childGender") || ""}
                 options={[
@@ -401,15 +431,24 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
             <div className="space-y-1">
               <InputSelect
                 name="program"
-                {...register("program", { 
-                  required: "Vui lòng chọn chương trình học" 
+                {...register("program", {
+                  required: "Vui lòng chọn chương trình học",
                 })}
                 value={watch("program") || ""}
                 options={[
                   { value: "", label: "Chọn chương trình học *" },
-                  { value: PROGRAMS.TODDLER, label: "Toddler Program (18 tháng - 2 tuổi)" },
-                  { value: PROGRAMS.PRESCHOOL, label: "Preschool Program (3 - 4 tuổi)" },
-                  { value: PROGRAMS.PRE_K, label: "Pre-K Program (4 - 5 tuổi)" },
+                  {
+                    value: PROGRAMS.TODDLER,
+                    label: "Toddler Program (18 tháng - 2 tuổi)",
+                  },
+                  {
+                    value: PROGRAMS.PRESCHOOL,
+                    label: "Preschool Program (3 - 4 tuổi)",
+                  },
+                  {
+                    value: PROGRAMS.PRE_K,
+                    label: "Pre-K Program (4 - 5 tuổi)",
+                  },
                 ]}
                 error={!!errors.program}
                 disabled={isFormDisabled}
@@ -425,7 +464,10 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
               register={register}
               rules={{
                 required: "Địa chỉ không được để trống",
-                minLength: { value: 10, message: "Địa chỉ phải có ít nhất 10 ký tự" }
+                minLength: {
+                  value: 10,
+                  message: "Địa chỉ phải có ít nhất 10 ký tự",
+                },
               }}
               error={errors.childAddress}
               disabled={isFormDisabled}
@@ -444,7 +486,10 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
                 register={register}
                 rules={{
                   required: "Tên không được để trống",
-                  minLength: { value: 2, message: "Tên phải có ít nhất 2 ký tự" }
+                  minLength: {
+                    value: 2,
+                    message: "Tên phải có ít nhất 2 ký tự",
+                  },
                 }}
                 error={errors.parentFirstName}
                 disabled={isFormDisabled}
@@ -457,7 +502,10 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
                 register={register}
                 rules={{
                   required: "Họ không được để trống",
-                  minLength: { value: 2, message: "Họ phải có ít nhất 2 ký tự" }
+                  minLength: {
+                    value: 2,
+                    message: "Họ phải có ít nhất 2 ký tự",
+                  },
                 }}
                 error={errors.parentLastName}
                 disabled={isFormDisabled}
@@ -467,8 +515,8 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
             <div className="space-y-1">
               <InputSelect
                 name="relationship"
-                {...register("relationship", { 
-                  required: "Vui lòng chọn mối quan hệ" 
+                {...register("relationship", {
+                  required: "Vui lòng chọn mối quan hệ",
                 })}
                 value={watch("relationship") || ""}
                 options={[
@@ -495,8 +543,8 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
                 required: "Số điện thoại không được để trống",
                 pattern: {
                   value: /^[0-9+\-\s()]+$/,
-                  message: "Số điện thoại không hợp lệ"
-                }
+                  message: "Số điện thoại không hợp lệ",
+                },
               }}
               error={errors.parentPhone}
               disabled={isFormDisabled}
@@ -512,8 +560,8 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
                 required: "Email không được để trống",
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Email không hợp lệ"
-                }
+                  message: "Email không hợp lệ",
+                },
               }}
               error={errors.parentEmail}
               disabled={isFormDisabled}
@@ -528,8 +576,8 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
                 required: "Số CMND/CCCD không được để trống",
                 pattern: {
                   value: /^\d{9,12}$/,
-                  message: "Số CMND/CCCD phải có 9-12 chữ số"
-                }
+                  message: "Số CMND/CCCD phải có 9-12 chữ số",
+                },
               }}
               error={errors.parentIdNumber}
               disabled={isFormDisabled}
@@ -542,7 +590,10 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
               register={register}
               rules={{
                 required: "Địa chỉ không được để trống",
-                minLength: { value: 10, message: "Địa chỉ phải có ít nhất 10 ký tự" }
+                minLength: {
+                  value: 10,
+                  message: "Địa chỉ phải có ít nhất 10 ký tự",
+                },
               }}
               error={errors.parentAddress}
               disabled={isFormDisabled}
@@ -567,7 +618,10 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
                 }}
                 onFileRemove={(type, index) => {
                   const currentFiles = watch("documents")?.[type] || [];
-                  setValue(`documents.${type}`, currentFiles.filter((_, i) => i !== index));
+                  setValue(
+                    `documents.${type}`,
+                    currentFiles.filter((_, i) => i !== index)
+                  );
                 }}
                 disabled={isFormDisabled}
               />
@@ -579,11 +633,15 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
         {currentStep === 4 && (
           <div className="space-y-6">
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-gray-800 mb-4">Thông tin trẻ em</h4>
+              <h4 className="font-semibold text-gray-800 mb-4">
+                Thông tin trẻ em
+              </h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Họ tên:</span>
-                  <p className="font-medium">{watch("childFirstName")} {watch("childLastName")}</p>
+                  <p className="font-medium">
+                    {watch("childFirstName")} {watch("childLastName")}
+                  </p>
                 </div>
                 <div>
                   <span className="text-gray-600">Ngày sinh:</span>
@@ -592,7 +650,11 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
                 <div>
                   <span className="text-gray-600">Giới tính:</span>
                   <p className="font-medium">
-                    {watch("childGender") === "male" ? "Nam" : watch("childGender") === "female" ? "Nữ" : ""}
+                    {watch("childGender") === "male"
+                      ? "Nam"
+                      : watch("childGender") === "female"
+                      ? "Nữ"
+                      : ""}
                   </p>
                 </div>
                 <div>
@@ -603,11 +665,15 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
             </div>
 
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-gray-800 mb-4">Thông tin phụ huynh/người giám hộ</h4>
+              <h4 className="font-semibold text-gray-800 mb-4">
+                Thông tin phụ huynh/người giám hộ
+              </h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Họ tên:</span>
-                  <p className="font-medium">{watch("parentFirstName")} {watch("parentLastName")}</p>
+                  <p className="font-medium">
+                    {watch("parentFirstName")} {watch("parentLastName")}
+                  </p>
                 </div>
                 <div>
                   <span className="text-gray-600">Mối quan hệ:</span>
@@ -625,22 +691,33 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
             </div>
 
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-gray-800 mb-4">Tài liệu đã tải lên</h4>
+              <h4 className="font-semibold text-gray-800 mb-4">
+                Tài liệu đã tải lên
+              </h4>
               <div className="grid grid-cols-1 gap-4 text-sm">
                 {Object.keys(ENROLLMENT_REQUIREMENTS).map((key) => {
                   const files = watch("documents")?.[key] || [];
                   return (
                     <div key={key} className="space-y-2">
-                      <p className="font-medium text-gray-800">{ENROLLMENT_REQUIREMENTS[key].title}:</p>
+                      <p className="font-medium text-gray-800">
+                        {ENROLLMENT_REQUIREMENTS[key].title}:
+                      </p>
                       {files.length === 0 ? (
-                        <p className="text-gray-500 text-sm">Chưa có tệp nào được tải lên</p>
+                        <p className="text-gray-500 text-sm">
+                          Chưa có tệp nào được tải lên
+                        </p>
                       ) : (
                         <div className="space-y-1">
                           {files.map((file, index) => (
-                            <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <div
+                              key={index}
+                              className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                            >
                               <div className="flex items-center">
                                 <File className="w-4 h-4 text-gray-500 mr-2" />
-                                <span className="text-sm text-gray-700 truncate">{file.name}</span>
+                                <span className="text-sm text-gray-700 truncate">
+                                  {file.name}
+                                </span>
                                 <span className="text-xs text-gray-500 ml-2">
                                   ({(file.size / 1024 / 1024).toFixed(2)}MB)
                                 </span>
@@ -660,7 +737,8 @@ const EnrollmentForm = ({ onSubmit, loading = false, className = "" }) => {
                 <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5" />
                 <div className="ml-3">
                   <p className="text-sm text-blue-700">
-                    Sau khi gửi đơn đăng ký, bạn sẽ cần chuẩn bị và nộp các giấy tờ sau:
+                    Sau khi gửi đơn đăng ký, bạn sẽ cần chuẩn bị và nộp các giấy
+                    tờ sau:
                   </p>
                   <ul className="mt-2 text-sm text-blue-600 list-disc list-inside">
                     <li>Giấy khai sinh của trẻ</li>
