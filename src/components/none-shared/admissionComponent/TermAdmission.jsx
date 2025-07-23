@@ -180,33 +180,33 @@ function RenderTable({openDetailPopUpFunc, terms, HandleSelectedTerm}) {
                                     <TableCell align="center">{dayjs(term.startDate).format('HH:mm DD/MM/YYYY')}</TableCell>
                                     <TableCell align="center">{dayjs(term.endDate).format('HH:mm DD/MM/YYYY')}</TableCell>
                                     <TableCell align="center">
-                                        <Typography
-                                            component="span"
-                                            sx={{
-                                                color:
-                                                    term.status === "active" ? "#07663a"
-                                                        : term.status === "inactive" ? "#b27a00"
-                                                            : term.status === "locked" ? "#d32f2f"
-                                                                : "#333",
-                                                fontWeight: 600,
-                                                padding: '6px 16px',
-                                                backgroundColor:
-                                                    term.status === "active" ? "rgba(7, 102, 58, 0.08)"
-                                                        : term.status === "inactive" ? "rgba(255, 193, 7, 0.12)"
-                                                            : term.status === "locked" ? "rgba(211, 47, 47, 0.10)"
-                                                                : "transparent",
-                                                borderRadius: '20px',
-                                                fontSize: '0.89rem',
-                                                letterSpacing: 1,
-                                                textTransform: "capitalize",
-                                                minWidth: 90,
-                                                display: "inline-block",
-                                                textAlign: "center"
-                                            }}
-                                        >
-                                            {term.status}
-                                        </Typography>
-                                    </TableCell>
+                                                <Typography
+                                                    component="span"
+                                                    sx={{
+                                                        color:
+                                                            term.status === "active" ? "#07663a"
+                                                                : term.status === "inactive" ? "#b27a00"
+                                                                    : term.status === "locked" ? "#d32f2f"
+                                                                        : "#333",
+                                                        fontWeight: 600,
+                                                        padding: '6px 16px',
+                                                        backgroundColor:
+                                                            term.status === "active" ? "rgba(7, 102, 58, 0.08)"
+                                                                : term.status === "inactive" ? "rgba(255, 193, 7, 0.12)"
+                                                                    : term.status === "locked" ? "rgba(211, 47, 47, 0.10)"
+                                                                        : "transparent",
+                                                        borderRadius: '20px',
+                                                        fontSize: '0.89rem',
+                                                        letterSpacing: 1,
+                                                        textTransform: "capitalize",
+                                                        minWidth: 90,
+                                                        display: "inline-block",
+                                                        textAlign: "center"
+                                                    }}
+                                                >
+                                                    {term.status}
+                                                </Typography>
+                                            </TableCell>
                                     <TableCell align="center">
                                         <Tooltip title="View">
                                             <IconButton
@@ -2299,7 +2299,7 @@ export default function TermAdmission() {
                     isPopUpOpen={popUp.isOpen}
                     handleClosePopUp={handleClosePopUp}
                     GetTerm={GetTerm}
-                    terms={data.terms} 
+                    terms={data.terms}
                 />
             )}
             {popUp.isOpen && popUp.type === 'view' && (

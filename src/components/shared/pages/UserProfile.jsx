@@ -514,13 +514,13 @@ const UserProfile = () => {
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                     <Users className="w-4 h-4 text-gray-500" />
                     <span className="text-gray-900">
-                      {(formData.gender || profile?.gender) === "male"
-                        ? "Male"
-                        : (formData.gender || profile?.gender) === "female"
-                        ? "Female"
-                        : (formData.gender || profile?.gender) === "other"
-                        ? "Other"
-                        : "Not updated"}
+                      {(() => {
+                        const genderValue = (formData.gender || profile?.gender || "").toLowerCase();
+                        if (genderValue === "male") return "Male";
+                        if (genderValue === "female") return "Female";
+                        if (genderValue === "other") return "Other";
+                        return "Not updated";
+                      })()}
                     </span>
                   </div>
                 )}
