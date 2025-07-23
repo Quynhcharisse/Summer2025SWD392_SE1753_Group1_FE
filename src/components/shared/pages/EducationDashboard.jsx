@@ -114,7 +114,7 @@ export default function EducationDashboard() {
         <h1 className="text-2xl font-bold">Education Dashboard</h1>
       </div>
       <Stack
-        direction={{ xs: "column", md: "row" }}
+        direction={{ xs: "column", md: "column" }}
         gap={4}
         sx={{
           maxWidth: 1100,
