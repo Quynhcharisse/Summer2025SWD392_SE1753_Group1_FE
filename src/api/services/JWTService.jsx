@@ -13,7 +13,7 @@ export const decodeToken = (token) => {
 
 export const getCurrentTokenData = () => {
     let accessToken = Cookies.get("access");
-
+    console.log('access: ', accessToken)
     if (!accessToken) {
         // Fallback: try to get from localStorage (for compatibility)
         const userStr = localStorage.getItem("user");
@@ -27,10 +27,6 @@ export const getCurrentTokenData = () => {
                 console.warn("🔍 getCurrentTokenData - Failed to parse localStorage user data:", e.message);
             }
         }
-    }
-
-    if (!accessToken) {
-        return null;
     }
     return decodeToken(accessToken);
 };

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Download, Search } from 'lucide-react';
+import { Users, Plus, Edit, Download, Search, Eye } from 'lucide-react';
 import { hrService } from '@/api/services/hrService';
 import TeacherFormModal from './TeacherFormModal';
 import LoadingOverlay from '../LoadingOverlay';
+import TeacherDetailModal from './TeacherDetailModal';
 
 const TeacherList = () => {
   const [teachers, setTeachers] = useState([]);
@@ -11,6 +12,7 @@ const TeacherList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
     fetchTeachers();
@@ -60,40 +62,51 @@ const TeacherList = () => {
     setShowModal(true);
   };
 
+  const handleViewTeacher = (teacher) => {
+    setSelectedTeacher(teacher);
+    setShowDetailModal(true);
+  };
+
   const handleModalClose = () => {
     setShowModal(false);
     setSelectedTeacher(null);
     setIsEditing(false);
   };
 
+
   const handleTeacherSubmit = async (teacherData) => {
     try {
+      console.log('handleTeacherSubmit called', { teacherData, selectedTeacher, isEditing });
       if (isEditing && selectedTeacher) {
-        // Try different possible ID field names
-        const teacherId = selectedTeacher.id || selectedTeacher.teacherId || selectedTeacher._id || selectedTeacher.userId || selectedTeacher.email;
-//         console.log('Teacher ID for update:', teacherId); // Debug log
-//         console.log('Available teacher fields:', Object.keys(selectedTeacher)); // Debug log
-        
-        if (!teacherId) {
-//           console.error('No teacher ID found in:', selectedTeacher);
-          // Try using email as identifier if no ID is available
-          if (selectedTeacher.email) {
-//             console.log('Using email as identifier:', selectedTeacher.email);
-            await hrService.teachers.updateTeacher(selectedTeacher.email, teacherData);
-          } else {
-            throw new Error('No unique identifier found for teacher update. The API response is missing ID fields.');
-          }
-        } else {
-          await hrService.teachers.updateTeacher(teacherId, teacherData);
+        const teacherId = selectedTeacher.id || selectedTeacher.teacherId || selectedTeacher._id || selectedTeacher.userId;
+        console.log('teacherId:', teacherId);
+        if (!teacherId || isNaN(Number(teacherId))) {
+          throw new Error('No unique numeric identifier found for teacher update. The API response is missing ID fields.');
         }
+        // Truyền đủ các trường backend hỗ trợ
+        const {
+          name, phone, gender, avatarUrl, address, identityNumber, email
+        } = teacherData;
+        await hrService.teachers.updateTeacher(teacherId, {
+          name,
+          phone,
+          gender,
+          avatarUrl,
+          address,
+          identityNumber,
+          email
+        });
+        console.log('Update API called');
       } else {
-        await hrService.teachers.createTeacher(teacherData);
+        const { name, gender } = teacherData;
+        await hrService.teachers.createTeacher({ name, gender });
+        console.log('Create API called');
       }
       await fetchTeachers();
       handleModalClose();
     } catch (error) {
-//       console.error('Error saving teacher:', error);
-      throw error; // Let the modal handle the error
+      console.error('Error in handleTeacherSubmit:', error);
+      alert(error.message || 'An error occurred while updating the teacher!');
     }
   };
 
@@ -184,12 +197,22 @@ const TeacherList = () => {
                     <p className="text-sm text-gray-500">{teacher.email}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleEditTeacher(teacher)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleViewTeacher(teacher)}
+                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="View details"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleEditTeacher(teacher)}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Edit"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -246,6 +269,14 @@ const TeacherList = () => {
           onSubmit={handleTeacherSubmit}
           teacher={selectedTeacher}
           isEditing={isEditing}
+        />
+      )}
+
+      {showDetailModal && (
+        <TeacherDetailModal
+          isOpen={showDetailModal}
+          onClose={() => setShowDetailModal(false)}
+          teacher={selectedTeacher}
         />
       )}
     </div>

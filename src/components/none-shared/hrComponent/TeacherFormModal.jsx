@@ -7,7 +7,9 @@ const TeacherFormModal = ({ isOpen, onClose, onSubmit, teacher, isEditing }) => 
     phone: '',
     gender: '',
     avatarUrl: '',
-    email: ''
+    email: '',
+    address: '',
+    identityNumber: ''
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -19,7 +21,9 @@ const TeacherFormModal = ({ isOpen, onClose, onSubmit, teacher, isEditing }) => 
         phone: teacher.phone || '',
         gender: teacher.gender || '',
         avatarUrl: teacher.avatarUrl || '',
-        email: teacher.email || ''
+        email: teacher.email || '',
+        address: teacher.address || '',
+        identityNumber: teacher.identityNumber || ''
       });
     } else {
       setFormData({
@@ -27,7 +31,9 @@ const TeacherFormModal = ({ isOpen, onClose, onSubmit, teacher, isEditing }) => 
         phone: '',
         gender: '',
         avatarUrl: '',
-        email: ''
+        email: '',
+        address: '',
+        identityNumber: ''
       });
     }
     setErrors({});
@@ -40,20 +46,22 @@ const TeacherFormModal = ({ isOpen, onClose, onSubmit, teacher, isEditing }) => 
       newErrors.name = 'Name is required';
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^\d{10,11}$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Please enter a valid phone number';
-    }
-
     if (!formData.gender) {
       newErrors.gender = 'Gender is required';
     } else if (!['male', 'female', 'other'].includes(formData.gender)) {
       newErrors.gender = 'Please select a valid gender';
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    // Chỉ validate phone/email khi isEditing (chỉnh sửa)
+    if (isEditing) {
+      if (!formData.phone.trim()) {
+        newErrors.phone = 'Phone number is required';
+      } else if (!/^\d{10,11}$/.test(formData.phone.replace(/\s/g, ''))) {
+        newErrors.phone = 'Please enter a valid phone number';
+      }
+      if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
     }
 
     setErrors(newErrors);
@@ -134,33 +142,6 @@ const TeacherFormModal = ({ isOpen, onClose, onSubmit, teacher, isEditing }) => 
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Avatar Upload */}
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center overflow-hidden">
-                {formData.avatarUrl ? (
-                  <img
-                    src={formData.avatarUrl}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-8 h-8 text-white" />
-                )}
-              </div>
-              <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
-                <Upload className="w-3 h-3" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </label>
-            </div>
-            <p className="text-sm text-gray-500">Click to upload avatar</p>
-          </div>
-
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -177,42 +158,6 @@ const TeacherFormModal = ({ isOpen, onClose, onSubmit, teacher, isEditing }) => 
               placeholder="Enter teacher's full name"
             />
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Enter email address"
-            />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone Number *
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.phone ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Enter phone number"
-            />
-            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
           </div>
 
           {/* Gender */}
@@ -236,20 +181,87 @@ const TeacherFormModal = ({ isOpen, onClose, onSubmit, teacher, isEditing }) => 
             {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
           </div>
 
-          {/* Avatar URL (manual input) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Avatar URL (optional)
-            </label>
-            <input
-              type="url"
-              name="avatarUrl"
-              value={formData.avatarUrl}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter avatar URL"
-            />
-          </div>
+          {/* Chỉ hiển thị các trường khác khi isEditing === true */}
+          {isEditing && (
+            <>
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter email address"
+                />
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+              </div>
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.phone ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter phone number"
+                />
+                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+              </div>
+              {/* Avatar URL (manual input) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Avatar URL (optional)
+                </label>
+                <input
+                  type="url"
+                  name="avatarUrl"
+                  value={formData.avatarUrl}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter avatar URL"
+                />
+              </div>
+              {/* Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address (optional)
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter address"
+                />
+              </div>
+              {/* Identity Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Identity Number (optional)
+                </label>
+                <input
+                  type="text"
+                  name="identityNumber"
+                  value={formData.identityNumber}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter identity number"
+                />
+              </div>
+            </>
+          )}
 
           {/* Action Buttons */}
           <div className="flex space-x-3 pt-4 border-t">
