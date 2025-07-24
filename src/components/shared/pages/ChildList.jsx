@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { useForm } from "react-hook-form";
 import RenderFormPopUp from "./RenderFormPopUp";
+import { Visibility } from '@mui/icons-material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton } from '@mui/material';
 const MAX_EDIT_TIMES = 5;
 
 // Constants from AddChildForm
@@ -539,9 +541,13 @@ const ChildList = () => {
       }));
 
       // Update children list
-      setChildren(prev => prev.map(child => 
-        child.id === editingChild.id ? formattedData : child
-      ));
+      setChildren(prev => {
+        const updated = prev.map(child =>
+          child.id === editingChild.id ? formattedData : child
+        );
+        // Sắp xếp lại theo id giảm dần
+        return updated.sort((a, b) => b.id - a.id);
+      });
 
       enqueueSnackbar("Child updated successfully!", { variant: "success" });
       closeEditModal();
@@ -563,7 +569,9 @@ const ChildList = () => {
         const response = await getChildren();
 
         if (response.data) {
-          setChildren(response.data);
+          // Sắp xếp id giảm dần
+          const sorted = [...response.data].sort((a, b) => b.id - a.id);
+          setChildren(sorted);
         } else {
           setChildren([]);
           setError("No child information found");
@@ -594,6 +602,38 @@ const ChildList = () => {
     navigate(`/user/parent/forms`, {
       state: { studentId: child.id },
     });
+  };
+
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedChild, setSelectedChild] = useState(null);
+  const [zoomedImage, setZoomedImage] = useState(null);
+
+  const openDetailModal = (child) => {
+    setSelectedChild(child);
+    setDetailModalOpen(true);
+  };
+  const closeDetailModal = () => {
+    setDetailModalOpen(false);
+    setSelectedChild(null);
+  };
+
+  // Thêm hàm getGradeByAge nếu chưa có
+  const getGradeByAge = (dateOfBirth) => {
+    if (!dateOfBirth) return null;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    if (age === 3) return "SEED";
+    if (age === 4) return "BUD";
+    if (age === 5) return "LEAF";
+    return null;
   };
 
   if (loading) {
@@ -642,8 +682,18 @@ const ChildList = () => {
           {children.map((child) => (
             <div
               key={child.id}
-              className="bg-white rounded-lg border hover:border-blue-300 shadow-sm hover:shadow transition-all p-6"
+              className="bg-white rounded-lg border hover:border-blue-300 shadow-sm hover:shadow transition-all relative"
             >
+              {/* Icon View (con mắt) ở góc trên bên phải, không chồng lên icon trẻ con */}
+              <button
+                type="button"
+                className="absolute top-2 right-16 z-20 bg-white rounded-full shadow p-1 hover:bg-blue-50 transition"
+                onClick={() => openDetailModal(child)}
+                title="View Details"
+                style={{ border: 'none', cursor: 'pointer' }}
+              >
+                <Visibility style={{ fontSize: 26, color: '#2563eb' }} />
+              </button>
               <div className="flex justify-between items-start">
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold text-gray-800">
@@ -736,7 +786,9 @@ const ChildList = () => {
               setLoading(true);
               const response = await getChildren();
               if (response.data) {
-                setChildren(response.data);
+                // Sắp xếp id giảm dần
+                const sorted = [...response.data].sort((a, b) => b.id - a.id);
+                setChildren(sorted);
               }
             } catch (err) {
               console.error("Error fetching child list:", err);
@@ -1328,8 +1380,79 @@ const ChildList = () => {
           </div>
         </div>
       )}
+
+      {/* Child Details Modal */}
+      <Dialog open={detailModalOpen} onClose={closeDetailModal} maxWidth="sm" fullWidth scroll="paper">
+        <DialogTitle style={{ padding: 0 }}>
+          <div className="flex flex-col items-center justify-center pt-8 pb-2">
+            <div className="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mb-2 shadow">
+              <Baby className="w-12 h-12 text-blue-500" />
+            </div>
+            <span className="text-2xl font-bold text-blue-700">Child Details</span>
+          </div>
+        </DialogTitle>
+        <DialogContent dividers style={{ background: '#f9fafb', padding: '0 0 32px 0', display: 'flex', justifyContent: 'center' }}>
+          {selectedChild && (
+            <div className="bg-white rounded-2xl shadow-xl px-10 py-8 w-full max-w-lg flex flex-col items-center gap-10">
+              <div className="flex flex-col items-center gap-2 w-full">
+                <span className="text-sm text-gray-500">Full Name</span>
+                <span className="text-3xl font-bold text-gray-900">{selectedChild.name}</span>
+              </div>
+              <div className="flex flex-row justify-center gap-12 w-full">
+                <div className="flex flex-col items-center">
+                  <span className="text-sm text-gray-500">Gender</span>
+                  <span className="text-xl font-semibold text-gray-800">{getGenderLabel(selectedChild.gender)}</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-sm text-gray-500">Date of Birth</span>
+                  <span className="text-xl font-semibold text-gray-800">{selectedChild.dateOfBirth ? new Date(selectedChild.dateOfBirth).toLocaleDateString('vi-VN') : ''}</span>
+                </div>
+              </div>
+              <div className="flex flex-row justify-between w-full">
+                <div className="flex flex-col items-start w-2/3">
+                  <span className="text-sm text-gray-500">Place of Birth</span>
+                  <span className="text-xl font-semibold text-gray-800 break-words">{selectedChild.placeOfBirth}</span>
+                </div>
+                <div className="flex flex-col items-end w-1/3">
+                  <span className="text-sm text-gray-500">Grade</span>
+                  <span className="text-xl font-semibold text-gray-800">{getGradeByAge(selectedChild.dateOfBirth) || 'N/A'}</span>
+                </div>
+              </div>
+              <div className="flex flex-row justify-center gap-8 w-full mt-2">
+                <div className="flex flex-col items-center bg-gray-50 rounded-xl border shadow-sm p-2 transition-transform hover:scale-105 cursor-pointer" onClick={() => setZoomedImage(selectedChild.profileImage)}>
+                  <img src={selectedChild.profileImage} alt="Profile" className="h-32 w-32 object-cover rounded-lg border mb-1 bg-white" />
+                  <span className="text-sm text-gray-600 font-medium">Profile Image</span>
+                </div>
+                <div className="flex flex-col items-center bg-gray-50 rounded-xl border shadow-sm p-2 transition-transform hover:scale-105 cursor-pointer" onClick={() => setZoomedImage(selectedChild.birthCertificateImg)}>
+                  <img src={selectedChild.birthCertificateImg} alt="Birth Certificate" className="h-32 w-32 object-cover rounded-lg border mb-1 bg-white" />
+                  <span className="text-sm text-gray-600 font-medium">Birth Certificate</span>
+                </div>
+                <div className="flex flex-col items-center bg-gray-50 rounded-xl border shadow-sm p-2 transition-transform hover:scale-105 cursor-pointer" onClick={() => setZoomedImage(selectedChild.householdRegistrationImg)}>
+                  <img src={selectedChild.householdRegistrationImg} alt="Household Registration" className="h-32 w-32 object-cover rounded-lg border mb-1 bg-white" />
+                  <span className="text-sm text-gray-600 font-medium">Household Registration</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <MuiButton onClick={closeDetailModal}>Close</MuiButton>
+        </DialogActions>
+      </Dialog>
+      {/* Lightbox modal phóng to ảnh */}
+      {zoomedImage && (
+        <Dialog open={!!zoomedImage} onClose={() => setZoomedImage(null)} maxWidth="md" fullWidth>
+          <DialogContent style={{ background: '#111827', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+            <img src={zoomedImage} alt="Zoomed" className="max-h-[70vh] max-w-full rounded-2xl shadow-2xl border-4 border-white" style={{ objectFit: 'contain' }} />
+          </DialogContent>
+          <DialogActions style={{ justifyContent: 'center', background: '#111827' }}>
+            <MuiButton onClick={() => setZoomedImage(null)} style={{ color: 'white' }}>Close</MuiButton>
+          </DialogActions>
+        </Dialog>
+      )}
     </PageTemplate>
   );
 };
 
 export default ChildList;
+
