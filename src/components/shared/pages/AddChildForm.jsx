@@ -341,9 +341,6 @@ const AddChildForm = () => {
                 <option value="female">
                   {t("parent:child_form.gender_options.female")}
                 </option>
-                <option value="other">
-                  {t("parent:child_form.gender_options.other")}
-                </option>
               </select>
               {errors.gender && (
                 <div className="text-red-500 text-sm mt-1">

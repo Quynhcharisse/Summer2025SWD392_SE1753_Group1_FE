@@ -636,6 +636,20 @@ const ChildList = () => {
     return null;
   };
 
+  // Thêm hàm getGradeColor
+  const getGradeColor = (grade) => {
+    switch (grade) {
+      case 'SEED':
+        return 'bg-green-100 text-green-700 border-green-300';
+      case 'BUD':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'LEAF':
+        return 'bg-blue-100 text-blue-700 border-blue-300';
+      default:
+        return 'bg-gray-100 text-gray-600 border-gray-300';
+    }
+  };
+
   if (loading) {
     return (
       <PageTemplate title="Child List">
@@ -1393,29 +1407,34 @@ const ChildList = () => {
         </DialogTitle>
         <DialogContent dividers style={{ background: '#f9fafb', padding: '0 0 32px 0', display: 'flex', justifyContent: 'center' }}>
           {selectedChild && (
-            <div className="bg-white rounded-2xl shadow-xl px-10 py-8 w-full max-w-lg flex flex-col items-center gap-10">
-              <div className="flex flex-col items-center gap-2 w-full">
-                <span className="text-sm text-gray-500">Full Name</span>
-                <span className="text-3xl font-bold text-gray-900">{selectedChild.name}</span>
-              </div>
-              <div className="flex flex-row justify-center gap-12 w-full">
-                <div className="flex flex-col items-center">
-                  <span className="text-sm text-gray-500">Gender</span>
+            <div className="bg-white rounded-2xl shadow-xl px-10 py-8 w-full max-w-lg flex flex-col items-start gap-10">
+              <div className="flex flex-col items-start gap-4 w-full">
+                <div>
+                  <span className="text-sm text-gray-500">Full Name</span><br />
+                  <span className="text-xl font-bold text-gray-800">{selectedChild.name}</span>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Gender</span><br />
                   <span className="text-xl font-semibold text-gray-800">{getGenderLabel(selectedChild.gender)}</span>
                 </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-sm text-gray-500">Date of Birth</span>
-                  <span className="text-xl font-semibold text-gray-800">{selectedChild.dateOfBirth ? new Date(selectedChild.dateOfBirth).toLocaleDateString('vi-VN') : ''}</span>
+                <div className="flex flex-row gap-8 w-full">
+                  <div>
+                    <span className="text-sm text-gray-500">Date of Birth</span><br />
+                    <span className="text-xl font-semibold text-gray-800">{selectedChild.dateOfBirth ? new Date(selectedChild.dateOfBirth).toLocaleDateString('vi-VN') : ''}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Grade</span><br />
+                    {(() => {
+                      const grade = getGradeByAge(selectedChild.dateOfBirth) || 'N/A';
+                      return (
+                        <span className={`inline-block px-3 py-1 rounded-full border font-bold text-base mt-1 ${getGradeColor(grade)}`}>{grade}</span>
+                      );
+                    })()}
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-row justify-between w-full">
-                <div className="flex flex-col items-start w-2/3">
-                  <span className="text-sm text-gray-500">Place of Birth</span>
+                <div>
+                  <span className="text-sm text-gray-500">Place of Birth</span><br />
                   <span className="text-xl font-semibold text-gray-800 break-words">{selectedChild.placeOfBirth}</span>
-                </div>
-                <div className="flex flex-col items-end w-1/3">
-                  <span className="text-sm text-gray-500">Grade</span>
-                  <span className="text-xl font-semibold text-gray-800">{getGradeByAge(selectedChild.dateOfBirth) || 'N/A'}</span>
                 </div>
               </div>
               <div className="flex flex-row justify-center gap-8 w-full mt-2">
