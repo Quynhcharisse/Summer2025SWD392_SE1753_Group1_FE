@@ -81,3 +81,6 @@ export const getClassReportByYear = (year) =>
 // Lấy thống kê số lượng học sinh tham gia theo sự kiện (event)
 export const getEventParticipantsStats = (params) =>
   apiClient.put('/education/event/numberOfParticipants/stats', params);
+
+export const getEducationDashboardData = () =>
+  apiClient.get('/education/dashboard');
