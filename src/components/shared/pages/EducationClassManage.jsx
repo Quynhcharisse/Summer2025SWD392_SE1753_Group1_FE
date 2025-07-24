@@ -320,7 +320,9 @@ export default function EducationClassManage() {
     try {
       // Validate form
       if (!selectedYear || !selectedGrade || !selectedSyllabus || !startDate) {
-        alert("Please fill in all required information!");
+        enqueueSnackbar(`Please fill in all required information!`, {
+          variant: "error",
+        });
         return;
       }
 
@@ -357,9 +359,10 @@ export default function EducationClassManage() {
       //       console.log("Updated class list:", classListResponse.data);
       setClasses(classListResponse.data.data || []);
     } catch (error) {
-      alert(
+      enqueueSnackbar(
         error.response?.data?.message ||
-          "An error occurred while creating the class!"
+          "An error occurred while creating the class!",
+        { variant: "error" }
       );
     } finally {
       // Refresh number of unassigned students
