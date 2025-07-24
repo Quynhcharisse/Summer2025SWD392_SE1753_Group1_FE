@@ -83,11 +83,15 @@ const TimelineCircle = styled("div")(({ theme, active, completed }) => ({
   alignItems: "center",
   justifyContent: "center",
   backgroundColor: active ? "#1976d2" : completed ? "#009688" : "#e3f2fd",
-  border: active ? "3px solid #1976d2" : completed ? "3px solid #009688" : "3px solid #e3f2fd",
-  boxShadow: active 
-    ? "0 4px 16px rgba(25,118,210,0.18)" 
-    : completed 
-    ? "0 4px 16px rgba(0,150,136,0.18)" 
+  border: active
+    ? "3px solid #1976d2"
+    : completed
+    ? "3px solid #009688"
+    : "3px solid #e3f2fd",
+  boxShadow: active
+    ? "0 4px 16px rgba(25,118,210,0.18)"
+    : completed
+    ? "0 4px 16px rgba(0,150,136,0.18)"
     : "0 2px 8px rgba(25,118,210,0.08)",
   transition: "all 0.3s ease",
   color: active || completed ? "#fff" : "#90caf9",
@@ -112,7 +116,11 @@ const TimelineContent = styled("div")(({ theme, active, completed }) => ({
   padding: theme.spacing(2),
   backgroundColor: active ? "#e3f2fd" : completed ? "#e8f5e8" : "#f8f9fa",
   borderRadius: theme.spacing(2),
-  border: active ? "2px solid #1976d2" : completed ? "2px solid #009688" : "2px solid #e0e0e0",
+  border: active
+    ? "2px solid #1976d2"
+    : completed
+    ? "2px solid #009688"
+    : "2px solid #e0e0e0",
   transition: "all 0.3s ease",
   "&:hover": {
     transform: "translateY(-2px)",
@@ -154,11 +162,9 @@ const CustomTimelineStep = ({ step, index, active, completed, icon }) => {
             icon
           )}
         </TimelineCircle>
-        {index < 1 && (
-          <TimelineLine active={active} completed={completed} />
-        )}
+        {index < 1 && <TimelineLine active={active} completed={completed} />}
       </TimelineCircleContainer>
-      
+
       <TimelineContent active={active} completed={completed}>
         <StepNumber active={active} completed={completed}>
           Step {index + 1}
@@ -461,7 +467,7 @@ const SyllabusManage = () => {
       }
       handleClose();
     } catch (error) {
-//       console.error("Error submitting syllabus:", error);
+      //       console.error("Error submitting syllabus:", error);
       const errorMessage =
         error?.response?.data?.message || "Operation failed. Please try again.";
       setSnackbar({
@@ -633,17 +639,7 @@ const SyllabusManage = () => {
                 >
                   Syllabus Name
                 </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    color: "#1976d2",
-                    fontWeight: "bold",
-                    fontSize: "1.08rem",
-                    py: 2.5,
-                  }}
-                >
-                  Description
-                </TableCell>
+
                 <TableCell
                   align="center"
                   sx={{
@@ -703,7 +699,6 @@ const SyllabusManage = () => {
                   <TableCell align="center" sx={{ fontWeight: 600 }}>
                     {row.subject || "-"}
                   </TableCell>
-                  <TableCell align="center">{row.description || "-"}</TableCell>
                   <TableCell align="center">
                     {row.numberOfWeek || "-"}
                   </TableCell>
@@ -1070,7 +1065,8 @@ const SyllabusManage = () => {
                 <CustomTimelineStep
                   step={{
                     title: "Basic Information",
-                    description: "Enter syllabus name, description, duration, and grade level"
+                    description:
+                      "Enter syllabus name, description, duration, and grade level",
                   }}
                   index={0}
                   active={activeStep === 0}
@@ -1080,7 +1076,7 @@ const SyllabusManage = () => {
                 <CustomTimelineStep
                   step={{
                     title: "Lesson Assignment",
-                    description: "Select and assign lessons to the syllabus"
+                    description: "Select and assign lessons to the syllabus",
                   }}
                   index={1}
                   active={activeStep === 1}
@@ -1504,17 +1500,40 @@ const SyllabusManage = () => {
               <CircularProgress size={40} />
             </Box>
           ) : detailData?.data?.data ? (
-            <Box sx={{ p: { xs: 2, sm: 4 }, background: '#f6fafd' }}>
-              
+            <Box sx={{ p: { xs: 2, sm: 4 }, background: "#f6fafd" }}>
               {/* Main Info */}
-              <Card sx={{ p: 4, borderRadius: 3, boxShadow: 2, maxWidth: 700, mx: 'auto', mb: 3 }}>
-                <Typography variant="h6" fontWeight={800} align="center" sx={{ mb: 3, letterSpacing: 1 }}>
+              <Card
+                sx={{
+                  p: 4,
+                  borderRadius: 3,
+                  boxShadow: 2,
+                  maxWidth: 700,
+                  mx: "auto",
+                  mb: 3,
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  fontWeight={800}
+                  align="center"
+                  sx={{ mb: 3, letterSpacing: 1 }}
+                >
                   Syllabus Information
                 </Typography>
                 {/* Row 1: Syllabus Name | Number of Weeks */}
-                <Grid container spacing={30} sx={{ mb: 1 }} display="flex" justifyContent="flex-start">
+                <Grid
+                  container
+                  spacing={30}
+                  sx={{ mb: 1 }}
+                  display="flex"
+                  justifyContent="flex-start"
+                >
                   <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
-                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      fontWeight={700}
+                    >
                       Syllabus Name
                     </Typography>
                     <Typography variant="body1" fontWeight={600}>
@@ -1522,7 +1541,11 @@ const SyllabusManage = () => {
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
-                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      fontWeight={700}
+                    >
                       Number of Weeks
                     </Typography>
                     <Typography variant="body1" fontWeight={600}>
@@ -1533,7 +1556,11 @@ const SyllabusManage = () => {
                 {/* Row 2: Hours of Syllabus | Grade */}
                 <Grid container spacing={27.5} sx={{ mb: 1 }}>
                   <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
-                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      fontWeight={700}
+                    >
                       Hours of Syllabus
                     </Typography>
                     <Typography variant="body1" fontWeight={600}>
@@ -1541,7 +1568,11 @@ const SyllabusManage = () => {
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
-                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      fontWeight={700}
+                    >
                       Grade
                     </Typography>
                     <Chip
@@ -1555,14 +1586,32 @@ const SyllabusManage = () => {
                           ? "error"
                           : "default"
                       }
-                      sx={{ fontWeight: 700, fontSize: 16, px: 2, py: 1, height: 32, borderRadius: 2, letterSpacing: 1 }}
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: 16,
+                        px: 2,
+                        py: 1,
+                        height: 32,
+                        borderRadius: 2,
+                        letterSpacing: 1,
+                      }}
                     />
                   </Grid>
                 </Grid>
                 {/* Row 3: Description (full width) */}
-                <Grid container spacing={2}  display="flex" justifyContent="flex-start">
+                <Grid
+                  container
+                  spacing={2}
+                  display="flex"
+                  justifyContent="flex-start"
+                >
                   <Grid item xs={12} sx={{ textAlign: "left" }}>
-                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700} sx={{ mt: -0.5 }}>
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      fontWeight={700}
+                      sx={{ mt: -0.5 }}
+                    >
                       Description
                     </Typography>
                     <Typography variant="body1" fontWeight={500}>
@@ -1589,24 +1638,36 @@ const SyllabusManage = () => {
                         sx={{
                           p: 2.5,
                           borderRadius: 3,
-                          boxShadow: '0 2px 8px rgba(25,118,210,0.08)',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            boxShadow: '0 6px 24px rgba(25,118,210,0.18)',
-                            transform: 'translateY(-2px) scale(1.03)',
+                          boxShadow: "0 2px 8px rgba(25,118,210,0.08)",
+                          transition: "all 0.2s",
+                          "&:hover": {
+                            boxShadow: "0 6px 24px rgba(25,118,210,0.18)",
+                            transform: "translateY(-2px) scale(1.03)",
                           },
-                          height: '100%',
-                          textAlign: 'center',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
+                          height: "100%",
+                          textAlign: "center",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "center",
                         }}
                       >
-                        <Box display="flex" alignItems="center" gap={1} mb={1} justifyContent="center">
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          gap={1}
+                          mb={1}
+                          justifyContent="center"
+                        >
                           <LibraryBooksIcon color="primary" />
-                          <Typography fontWeight={700}>{lesson.topic}</Typography>
+                          <Typography fontWeight={700}>
+                            {lesson.topic}
+                          </Typography>
                         </Box>
-                        <Typography color="text.secondary" variant="body2" sx={{ mb: 1 }}>
+                        <Typography
+                          color="text.secondary"
+                          variant="body2"
+                          sx={{ mb: 1 }}
+                        >
                           {lesson.description}
                         </Typography>
                         <Chip
@@ -1633,8 +1694,14 @@ const SyllabusManage = () => {
                     gap: 2,
                   }}
                 >
-                  <LibraryBooksIcon sx={{ color: "#bdbdbd", fontSize: 40, mb: 1 }} />
-                  <Typography color="text.secondary" fontWeight={600} fontSize="1.1rem">
+                  <LibraryBooksIcon
+                    sx={{ color: "#bdbdbd", fontSize: 40, mb: 1 }}
+                  />
+                  <Typography
+                    color="text.secondary"
+                    fontWeight={600}
+                    fontSize="1.1rem"
+                  >
                     No lessons assigned.
                   </Typography>
                 </Box>
@@ -1642,7 +1709,10 @@ const SyllabusManage = () => {
             </Box>
           ) : (
             <Box sx={{ p: 4, textAlign: "center" }}>
-              <Typography color="error" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
+              <Typography
+                color="error"
+                sx={{ fontSize: "1.1rem", fontWeight: 500 }}
+              >
                 Failed to load syllabus details.
               </Typography>
             </Box>
