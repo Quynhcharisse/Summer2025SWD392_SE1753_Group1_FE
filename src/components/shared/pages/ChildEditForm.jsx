@@ -28,7 +28,9 @@ const ChildEditForm = ({ child, onSuccess }) => {
       setSuccess("Updated successfully!");
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError("Update failed. Please try again.");
+      // Hiển thị lỗi chi tiết từ BE nếu có
+      const beMsg = err?.response?.data?.message;
+      setError(beMsg || "Update failed. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -228,11 +228,13 @@ const AddChildForm = () => {
       enqueueSnackbar(t("parent:child_form.success"), { variant: "success" });
       navigate("/user/parent/child-list");
     } catch (err) {
-      //       console.error("Child registration error:", err);
+      // Hiển thị lỗi chi tiết từ BE nếu có
+      const beMsg = err?.response?.data?.message;
       setError("root.serverError", {
         type: "manual",
-        message: t("parent:child_form.error"),
+        message: beMsg || t("parent:child_form.error"),
       });
+      enqueueSnackbar(beMsg || t("parent:child_form.error"), { variant: "error" });
     } finally {
       setUploading(false);
     }
