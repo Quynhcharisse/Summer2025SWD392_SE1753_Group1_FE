@@ -343,7 +343,10 @@ export default function EducationClassManage() {
       //       console.log("Create class response:", response);
 
       // Success handling
-      alert("Class created successfully!");
+      enqueueSnackbar(`Created classes successfully!`, {
+        variant: "success",
+      });
+
       setIsCreating(false);
 
       // Refresh class list
