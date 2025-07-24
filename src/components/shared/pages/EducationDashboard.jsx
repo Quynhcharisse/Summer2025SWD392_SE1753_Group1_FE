@@ -19,9 +19,17 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import {
   getClassReportByYear,
+  getEducationDashboardData,
   getEventParticipantsStats,
   getSchoolYears,
 } from "@/api/services/classService";
+import { StatCard } from "../molecules";
+import {
+  Book,
+  ClassOutlined,
+  EventNote,
+  LibraryBooks,
+} from "@mui/icons-material";
 
 const COLORS = ["#3b82f6", "#fbbf24", "#ef4444"]; // SEED, BUD, LEAF
 
@@ -32,7 +40,12 @@ export default function EducationDashboard() {
   const [years, setYears] = useState([]);
   const [barData, setBarData] = useState([]);
   const [loadingBar, setLoadingBar] = useState(false);
-
+  const [stats, setStats] = useState({
+    totalClasses: 0,
+    totalEvents: 0,
+    totalSyllabusAssigned: 0,
+    totalLessonAssigned: 0,
+  });
   // Ngày mặc định (ISO format)
   const [startDate, setStartDate] = useState(dayjs().subtract(7, "day"));
   const [endDate, setEndDate] = useState(dayjs());
@@ -56,6 +69,15 @@ export default function EducationDashboard() {
         const found = yearArr.find((y) => isCurrentYear(y));
         setYear(found || yearArr[0]);
       }
+    });
+    getEducationDashboardData().then((res) => {
+      const data = res.data?.data || {};
+      setStats({
+        totalClasses: data.totalClasses || 0,
+        totalEvents: data.totalEvents || 0,
+        totalSyllabusAssigned: data.totalSyllabusAssigned || 0,
+        totalLessonAssigned: data.totalLessonAssigned || 0,
+      });
     });
   }, []);
   const getStartYear = (yearStr) => {
@@ -110,9 +132,6 @@ export default function EducationDashboard() {
 
   return (
     <div>
-      <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-8 rounded-2xl shadow-lg mb-6">
-        <h1 className="text-2xl font-bold">Education Dashboard</h1>
-      </div>
       <Stack
         direction={{ xs: "column", md: "column" }}
         gap={4}
@@ -122,6 +141,35 @@ export default function EducationDashboard() {
           alignItems: "stretch",
         }}
       >
+        <section className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-8 rounded-2xl shadow-lg mb-6">
+          <h1 className="text-2xl font-bold">Education Dashboard</h1>
+        </section>
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            title="Total Assigned Syllabuses"
+            description="All Assigned Syllabuses"
+            icon={LibraryBooks}
+            trend={{ value: stats.totalSyllabusAssigned, isPositive: true }}
+          />
+          <StatCard
+            title="Total Assigned Lessons"
+            description="All Assigned Lessons"
+            icon={Book}
+            trend={{ value: stats.totalLessonAssigned, isPositive: true }}
+          />
+          <StatCard
+            title="Total Events"
+            description="All Events"
+            icon={EventNote}
+            trend={{ value: stats.totalEvents, isPositive: true }}
+          />
+          <StatCard
+            title="Total Classes"
+            description="All Classes"
+            icon={ClassOutlined}
+            trend={{ value: stats.totalClasses, isPositive: true }}
+          />
+        </section>
         {/* Pie Chart Card */}
         <Card
           sx={{
@@ -205,8 +253,9 @@ export default function EducationDashboard() {
           >
             {/* Tiêu đề */}
             <Typography variant="h6" sx={{ mb: 1 }}>
-              Students Participation Of Events By Start Date
+              Students Participation Of Started Events
             </Typography>
+            <br />
             {/* Hàng input ngày */}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Box display="flex" gap={2} mb={2}>
