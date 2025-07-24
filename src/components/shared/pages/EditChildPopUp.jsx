@@ -97,7 +97,6 @@ export default function EditChildPopUp({ open, onClose, childId, onSuccess }) {
           <RadioGroup row name="gender" value={form.gender} onChange={handleChange}>
             <FormControlLabel value="male" control={<Radio />} label="Male" />
             <FormControlLabel value="female" control={<Radio />} label="Female" />
-            <FormControlLabel value="other" control={<Radio />} label="Other" />
           </RadioGroup>
           <TextField
             label="Date of Birth"
