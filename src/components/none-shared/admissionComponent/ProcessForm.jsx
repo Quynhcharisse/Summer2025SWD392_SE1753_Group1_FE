@@ -320,15 +320,13 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                             </RadioGroup>
                         </FormControl>
                     </Stack>
-                    <Stack>
+                    {/* Date of birth và Grade trên cùng 1 hàng */}
+                    <Stack direction="row" spacing={2}>
                         <LocalizationProvider dateAdapter={AdapterDateFns}>
                             <DatePicker label='Date of birth' disabled
                                         value={selectedForm.studentDateOfBirth ? parseISO(selectedForm.studentDateOfBirth.toString()) : null}
                             />
                         </LocalizationProvider>
-                    </Stack>
-                    {/* Thêm field grade dựa trên age */}
-                    <Stack>
                         <TextField fullWidth label={'Grade'} disabled value={getGradeByAge(selectedForm.studentDateOfBirth)}/>
                     </Stack>
                     <Stack>
@@ -520,7 +518,7 @@ function RenderPage({openDetailPopUpFunc, forms, HandleSelectedForm}) {
                 <RenderTable
                     forms={forms}
                     openDetailPopUpFunc={openDetailPopUpFunc}
-                    HandleSelectedForm={HandleSelectedForm}
+                    HandleSelectedForm={HandleSelectedForm} // là 1 hàm, truyền hàm vào, để cập nhật for đã chọn
                 />
             </Box>
         </Box>
