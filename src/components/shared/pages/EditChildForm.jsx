@@ -38,6 +38,13 @@ const EditChildForm = () => {
               birthCertificateImg: found.birthCertificateImg || "",
               householdRegistrationImg: found.householdRegistrationImg || ""
             });
+            // Kiểm tra trạng thái các form
+            const hasActiveForm = found.admissionForms && found.admissionForms.some(
+              form => !['draft', 'cancelled', 'rejected'].includes((form.status || '').toLowerCase())
+            );
+            if (hasActiveForm) {
+              setError("Cannot update child info while there is an active admission form (pending/approved)");
+            }
           } else {
             setError("Child not found");
           }
@@ -57,6 +64,7 @@ const EditChildForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (error) return; // Không cho submit nếu có lỗi trạng thái
     setSubmitting(true);
     setError("");
     try {
@@ -95,61 +103,66 @@ const EditChildForm = () => {
   }
   return (
     <PageTemplate title="Edit Child">
-      <form onSubmit={handleSubmit} className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow space-y-4">
-        <div>
-          <label className="block font-medium mb-1">Name</label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-            required
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Gender</label>
-          <select
-            name="gender"
-            value={form.gender}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-            required
-          >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Date of Birth</label>
-          <input
-            type="date"
-            name="dateOfBirth"
-            value={form.dateOfBirth}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-            required
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Place of Birth</label>
-          <input
-            type="text"
-            name="placeOfBirth"
-            value={form.placeOfBirth}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-            required
-          />
-        </div>
-        {/* Có thể bổ sung upload ảnh nếu muốn */}
-        <div className="flex justify-end">
-          <Button type="submit" variant="primary" disabled={submitting}>
-            {submitting ? <Spinner size="sm" /> : "Save"}
-          </Button>
-        </div>
-      </form>
+      {error && (
+        <div className="text-center py-8 text-red-600">{error}</div>
+      )}
+      {!error && (
+        <form onSubmit={handleSubmit} className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow space-y-4">
+          <div>
+            <label className="block font-medium mb-1">Name</label>
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              className="input input-bordered w-full"
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Gender</label>
+            <select
+              name="gender"
+              value={form.gender}
+              onChange={handleChange}
+              className="input input-bordered w-full"
+              required
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Date of Birth</label>
+            <input
+              type="date"
+              name="dateOfBirth"
+              value={form.dateOfBirth}
+              onChange={handleChange}
+              className="input input-bordered w-full"
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Place of Birth</label>
+            <input
+              type="text"
+              name="placeOfBirth"
+              value={form.placeOfBirth}
+              onChange={handleChange}
+              className="input input-bordered w-full"
+              required
+            />
+          </div>
+          {/* Có thể bổ sung upload ảnh nếu muốn */}
+          <div className="flex justify-end">
+            <Button type="submit" variant="primary" disabled={submitting}>
+              {submitting ? <Spinner size="sm" /> : "Save"}
+            </Button>
+          </div>
+        </form>
+      )}
     </PageTemplate>
   );
 };
