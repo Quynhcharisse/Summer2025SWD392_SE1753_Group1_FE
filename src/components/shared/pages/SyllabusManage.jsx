@@ -186,6 +186,7 @@ const SyllabusManage = () => {
   const [selectedLessons, setSelectedLessons] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [gradeFilter, setGradeFilter] = useState("ALL");
+  const [syllabusSortOrder, setSyllabusSortOrder] = useState("default");
 
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -261,18 +262,30 @@ const SyllabusManage = () => {
   const totalItems = syllabusList.length || 0;
 
   // Filter and search logic
-  const filteredData =
-    syllabusList?.filter((syllabus) => {
+  const filteredData = (syllabusList || [])
+    .filter((syllabus) => {
       const matchesSearch =
         searchQuery === "" ||
         syllabus.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
         syllabus.description.toLowerCase().includes(searchQuery.toLowerCase());
-
       const matchesGrade =
         gradeFilter === "ALL" || syllabus.grade === gradeFilter;
-
       return matchesSearch && matchesGrade;
-    }) || [];
+    })
+    .sort((a, b) => {
+      if (syllabusSortOrder === "asc") {
+        const na = typeof a.numberOfWeek === "number" ? a.numberOfWeek : Infinity;
+        const nb = typeof b.numberOfWeek === "number" ? b.numberOfWeek : Infinity;
+        return na - nb;
+      } else if (syllabusSortOrder === "desc") {
+        const na = typeof a.numberOfWeek === "number" ? a.numberOfWeek : Infinity;
+        const nb = typeof b.numberOfWeek === "number" ? b.numberOfWeek : Infinity;
+        return nb - na;
+      } else {
+        // Mặc định: mới nhất lên đầu
+        return b.id - a.id;
+      }
+    });
 
   const displayedData = filteredData.slice(
     page * rowsPerPage,
@@ -476,6 +489,12 @@ const SyllabusManage = () => {
         severity: "error",
       });
     }
+  };
+
+  const handleSyllabusSortClick = () => {
+    setSyllabusSortOrder((prev) =>
+      prev === "default" ? "asc" : prev === "asc" ? "desc" : "default"
+    );
   };
 
   if (isError) {
@@ -1523,12 +1542,13 @@ const SyllabusManage = () => {
                 {/* Row 1: Syllabus Name | Number of Weeks */}
                 <Grid
                   container
-                  spacing={30}
+                  spacing={1}
                   sx={{ mb: 1 }}
+                  
                   display="flex"
                   justifyContent="flex-start"
                 >
-                  <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
+                  <Grid item xs={12} sm={6} minWidth={300} sx={{ textAlign: "left" }}>
                     <Typography
                       variant="subtitle2"
                       color="text.secondary"
@@ -1554,8 +1574,8 @@ const SyllabusManage = () => {
                   </Grid>
                 </Grid>
                 {/* Row 2: Hours of Syllabus | Grade */}
-                <Grid container spacing={27.5} sx={{ mb: 1 }}>
-                  <Grid item xs={12} sm={6} sx={{ textAlign: "left" }}>
+                <Grid container spacing={1} sx={{ mb: 1 }}>
+                  <Grid item xs={12} sm={6}  minWidth={300} sx={{ textAlign: "left" }}>
                     <Typography
                       variant="subtitle2"
                       color="text.secondary"
@@ -1645,6 +1665,7 @@ const SyllabusManage = () => {
                             transform: "translateY(-2px) scale(1.03)",
                           },
                           height: "100%",
+                          minWidth: 260,  
                           textAlign: "center",
                           display: "flex",
                           flexDirection: "column",
@@ -1663,13 +1684,6 @@ const SyllabusManage = () => {
                             {lesson.topic}
                           </Typography>
                         </Box>
-                        <Typography
-                          color="text.secondary"
-                          variant="body2"
-                          sx={{ mb: 1 }}
-                        >
-                          {lesson.description}
-                        </Typography>
                         <Chip
                           label={`Duration: ${lesson.duration} hours`}
                           color="info"
