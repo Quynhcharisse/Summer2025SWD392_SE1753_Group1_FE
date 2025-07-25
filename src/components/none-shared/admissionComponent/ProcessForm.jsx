@@ -258,6 +258,22 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
         }
     }
 
+    // Hàm tính grade dựa trên tuổi
+    const getGradeByAge = (dateOfBirth) => {
+        if (!dateOfBirth) return '';
+        const today = new Date();
+        const birthDate = new Date(dateOfBirth);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        if (age === 3) return 'SEED';
+        if (age === 4) return 'BUD';
+        if (age === 5) return 'LEAF';
+        return '';
+    };
+
     return (
         <Dialog
             fullScreen
@@ -310,6 +326,10 @@ function RenderDetailPopUp({isPopUpOpen, handleClosePopUp, selectedForm}) {
                                         value={selectedForm.studentDateOfBirth ? parseISO(selectedForm.studentDateOfBirth.toString()) : null}
                             />
                         </LocalizationProvider>
+                    </Stack>
+                    {/* Thêm field grade dựa trên age */}
+                    <Stack>
+                        <TextField fullWidth label={'Grade'} disabled value={getGradeByAge(selectedForm.studentDateOfBirth)}/>
                     </Stack>
                     <Stack>
                         <TextField fullWidth label={'Place of birth'} disabled
