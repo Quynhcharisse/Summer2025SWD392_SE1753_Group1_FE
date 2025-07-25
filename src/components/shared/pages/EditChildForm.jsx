@@ -40,9 +40,9 @@ const EditChildForm = () => {
             });
             // Kiểm tra trạng thái các form
             const hasActiveForm = found.admissionForms && found.admissionForms.some(
-              form => !['draft', 'cancelled', 'rejected'].includes((form.status || '').toLowerCase())
+              form => !['draft', 'cancelled', 'rejected', 'refilled'].includes((form.status || '').toLowerCase())
             );
-            if (hasActiveForm) {
+            if (!hasActiveForm) {
               setError("Cannot update child info while there is an active admission form (pending/approved)");
             }
           } else {

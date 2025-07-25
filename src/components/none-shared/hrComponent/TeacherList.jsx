@@ -39,15 +39,17 @@ const TeacherList = () => {
     try {
       setLoading(true);
       const data = await hrService.teachers.getAllTeachers();
-      //       console.log('Teachers API response:', data); // Debug log
-      //       console.log('Teachers data array:', data.data); // Debug log
 
       if (data.data && data.data.length > 0) {
         //         console.log('Sample teacher object keys:', Object.keys(data.data[0])); // Debug log to see structure
         //         console.log('Full sample teacher object:', data.data[0]); // Debug log
       }
 
-      setTeachers(data.data || []);
+      setTeachers(
+        (data.data || []).sort(
+          (a, b) => new Date(b.createAt) - new Date(a.createAt)
+        )
+      );
     } catch (error) {
       //       console.error('Error fetching teachers:', error);
       // You might want to show a toast notification here
