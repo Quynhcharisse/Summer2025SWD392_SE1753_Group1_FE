@@ -631,17 +631,7 @@ const router = createBrowserRouter([
           </UserPageWrapper>
         ),
       },
-      {
-        path: "recruitment",
-        element: (
-          <UserPageWrapper requiredRoles={["HR"]}>
-            <ComingSoon
-              title="Recruitment"
-              description="Manage job postings and applications."
-            />
-          </UserPageWrapper>
-        ),
-      },
+     
       {
         path: "reports",
         element: (
