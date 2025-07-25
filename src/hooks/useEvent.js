@@ -114,10 +114,13 @@ export const useRegisterEvent = () => {
   });
 };
 
-export const useChildren = () => {
+// Sửa: Cho phép truyền options, mặc định enabled: false để không tự động fetch
+export const useChildren = (options = {}) => {
   return useQuery({
     queryKey: ['children'],
     queryFn: eventService.getChildren,
+    enabled: false, // Không tự động fetch
+    ...options, // Cho phép override enabled nếu cần
   });
 };
 

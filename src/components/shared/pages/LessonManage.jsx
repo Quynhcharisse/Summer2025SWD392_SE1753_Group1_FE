@@ -28,6 +28,7 @@ import {
   Card,
   Divider,
   Stack,
+  Chip,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
@@ -46,7 +47,7 @@ const LessonManage = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortOrder, setSortOrder] = useState("default");
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -215,10 +216,18 @@ const LessonManage = () => {
       );
     })
     .sort((a, b) => {
-      // Nếu duration không number, gán Infinity để xếp cuối
-      const da = typeof a.duration === "number" ? a.duration : Infinity;
-      const db = typeof b.duration === "number" ? b.duration : Infinity;
-      return sortOrder === "asc" ? da - db : db - da;
+      if (sortOrder === "asc") {
+        const da = typeof a.duration === "number" ? a.duration : Infinity;
+        const db = typeof b.duration === "number" ? b.duration : Infinity;
+        return da - db;
+      } else if (sortOrder === "desc") {
+        const da = typeof a.duration === "number" ? a.duration : Infinity;
+        const db = typeof b.duration === "number" ? b.duration : Infinity;
+        return db - da;
+      } else {
+        // Mặc định: mới nhất lên đầu
+        return b.id - a.id;
+      }
     });
 
   const displayedData = filteredAndSortedData.slice(
@@ -227,7 +236,9 @@ const LessonManage = () => {
   );
 
   const handleSortClick = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    setSortOrder((prev) =>
+      prev === "default" ? "asc" : prev === "asc" ? "desc" : "default"
+    );
   };
 
   // Tìm detail dựa trên toàn bộ lessonList, guard null
@@ -411,7 +422,7 @@ const LessonManage = () => {
                       },
                     }}
                   >
-                    {sortOrder === 'asc' ? '↑' : '↓'}
+                    {sortOrder === 'asc' ? '↑' : sortOrder === 'desc' ? '↓' : '↕'}
                   </Button>
                 </TableCell>
                 <TableCell
@@ -687,8 +698,8 @@ const LessonManage = () => {
                 <Typography variant="h6" fontWeight={800} align="center" sx={{ mb: 3, letterSpacing: 1 }}>
                   Lesson Information
                 </Typography>
-                <Grid container spacing={17} sx={{ mb: 1 }} display="flex" justifyContent="flex-start">
-                  <Grid item xs={12} sm={4} sx={{ textAlign: "left" }}>
+                <Grid container spacing={1}  sx={{ mb: 1 }} display="flex" justifyContent="flex-start">
+                  <Grid item xs={12} sm={6} minWidth={300} sx={{ textAlign: "left" }}>
                     <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
                       Lesson Name
                     </Typography>
@@ -696,7 +707,7 @@ const LessonManage = () => {
                       {lessonDetail.topic ?? "N/A"}
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} sm={4} sx={{ textAlign: "left" }}>
+                  <Grid item xs={12} sm={6} minWidth={300} sx={{ textAlign: "left" }}>
                     <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
                       Duration per Week
                     </Typography>
@@ -704,17 +715,20 @@ const LessonManage = () => {
                       {typeof lessonDetail.duration === "number" ? `${lessonDetail.duration} hours` : "N/A"}
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} sm={4} sx={{ textAlign: "left" }}>
-                    <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
+                  
+                </Grid>
+                <Grid container spacing={2} display="flex" justifyContent="flex-start">
+                <Grid item xs={12} sm={12} sx={{ textAlign: "left" }}>
+                <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
                       Objective
                     </Typography>
                     <Typography variant="body1" fontWeight={600}>
                       {lessonDetail.objective ?? "N/A"}
                     </Typography>
-                  </Grid>
+                  </Grid> 
                 </Grid>
                 <Grid container spacing={2} display="flex" justifyContent="flex-start">
-                  
+                
                   <Grid item xs={12} sm={12} sx={{ textAlign: "left" }}>
                     <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
                       Description
@@ -745,6 +759,7 @@ const LessonManage = () => {
                             transform: 'translateY(-2px) scale(1.03)',
                           },
                           height: '100%',
+                          minWidth: 350,  
                           textAlign: 'center',
                           display: 'flex',
                           flexDirection: 'column',
@@ -755,9 +770,36 @@ const LessonManage = () => {
                           <LibraryBooksIcon color="success" />
                           <Typography fontWeight={700}>{syllabus.subject}</Typography>
                         </Box>
-                        <Typography color="text.secondary" variant="body2" sx={{ mb: 1 }}>
-                          Syllabus ID: #{syllabus.id}
-                        </Typography>
+                        <Chip
+                          label={`Syllabus Grade: ${syllabus.grade}`}
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: 16,
+                            px: 2,
+                            py: 1,
+                            height: 32,
+                            borderRadius: 2,
+                            letterSpacing: 1,
+                            background:
+                              syllabus.grade === "LEAF"
+                                ? "#e8f5e9"
+                                : syllabus.grade === "BUD"
+                                ? "#fff8e1"
+                                : syllabus.grade === "SEED"
+                                ? "#ffebee"
+                                : "#e3f2fd",
+                            color:
+                              syllabus.grade === "LEAF"
+                                ? "#388e3c"
+                                : syllabus.grade === "BUD"
+                                ? "#f57c00"
+                                : syllabus.grade === "SEED"
+                                ? "#d32f2f"
+                                : "#1976d2",
+                            border: "1.5px solid #e0e0e0",
+                            mb: 1,
+                          }}
+                        />
                       </Card>
                     </Grid>
                   ))}

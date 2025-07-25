@@ -4,6 +4,7 @@ import { CircularProgress, Alert, Box, Typography, Paper, Chip, Dialog, DialogTi
 import dayjs from "dayjs";
 import React from "react";
 import Snackbar from '@mui/material/Snackbar';
+import { getCurrentTokenData } from "@services/JWTService.jsx";
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return "";
@@ -15,7 +16,8 @@ const EventDetail = () => {
   const { id } = useParams();
   const { data, isLoading, isError, error } = useEventActiveDetail(id);
   const registerEventMutation = useRegisterEvent();
-  const { data: childrenData, isLoading: isLoadingChildren, refetch: refetchChildren } = useChildren();
+  // Sử dụng useChildren với enabled: false để không tự động fetch
+  const { data: childrenData, isLoading: isLoadingChildren, refetch: refetchChildren } = useChildren({ enabled: false });
   const [selectedStudentIds, setSelectedStudentIds] = React.useState([]);
   const [openRegisterDialog, setOpenRegisterDialog] = React.useState(false);
   const event = data?.data?.data;
@@ -73,6 +75,17 @@ const EventDetail = () => {
       navigate("/auth/login");
       return;
     }
+    // Kiểm tra role, chỉ cho phép parent đăng ký
+    const tokenData = getCurrentTokenData();
+    if (!tokenData || tokenData.role?.toLowerCase() !== "parent") {
+      setSnackbar({
+        open: true,
+        message: "Only parents can register their children for events!",
+        severity: "warning",
+      });
+      return;
+    }
+    // Nếu là parent thì mới fetch children và mở dialog
     handleOpenRegisterDialog();
   };
 
