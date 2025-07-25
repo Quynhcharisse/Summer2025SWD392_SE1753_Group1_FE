@@ -50,6 +50,7 @@ const TIME_SLOTS = [
 export default function EducationClassManage() {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const [isCreatingClass, setIsCreatingClass] = useState(false);
 
   // State for class list view
   const [years, setYears] = useState([]);
@@ -106,6 +107,8 @@ export default function EducationClassManage() {
 
   // State for tracking which class is being deleted
   const [deletingClassId, setDeletingClassId] = useState(null);
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState(false);
+  const [pendingDeleteClass, setPendingDeleteClass] = useState(null); // {id, name}
 
   // State for assign students modal
   const [assignModalOpen, setAssignModalOpen] = useState(false);
@@ -114,7 +117,7 @@ export default function EducationClassManage() {
   const [assignedStudents, setAssignedStudents] = useState([]); // [{id, name}]
   const [selectedUnassigned, setSelectedUnassigned] = useState([]);
   const [selectedAssigned, setSelectedAssigned] = useState([]);
-
+  const [lessonDurations, setLessonDurations] = useState({});
   // State for number of unassigned students
   const [numUnassigned, setNumUnassigned] = useState(0);
 
@@ -163,10 +166,8 @@ export default function EducationClassManage() {
 
   useEffect(() => {
     if (selectedGrade) {
-      //       console.log("Fetching syllabus for grade:", selectedGrade);
       getSyllabusByGrade(selectedGrade)
         .then((res) => {
-          //           console.log("Syllabus response:", res.data);
           const syllabuses = (res.data.data || []).map((s) => ({
             value: s.id,
             label: s.subject,
@@ -177,10 +178,35 @@ export default function EducationClassManage() {
           }
         })
         .catch((error) => {
-          //           console.error("Error fetching syllabus:", error);
+          // console.error("Error fetching syllabus:", error);
         });
     }
   }, [selectedGrade]);
+
+  // Reset lessons and timetable when syllabus changes in create mode
+  useEffect(() => {
+    if (isCreating) {
+      setLessonDurations({});
+      setLessonList([]);
+      // Reset timetable activities to default lunch/nap
+      setActivities(() => {
+        const obj = {};
+        DAYS.forEach((day) => {
+          const slots = Array(TIME_SLOTS.length).fill(null);
+          const lunchTimeIndex = TIME_SLOTS.findIndex((slot) => slot === "11:00-12:00");
+          if (lunchTimeIndex !== -1) {
+            slots[lunchTimeIndex] = { type: "activity", value: "Lunch Time" };
+          }
+          const napTimeIndex = TIME_SLOTS.findIndex((slot) => slot === "12:00-13:00");
+          if (napTimeIndex !== -1) {
+            slots[napTimeIndex] = { type: "activity", value: "Nap Time" };
+          }
+          obj[day] = slots;
+        });
+        return obj;
+      });
+    }
+  }, [selectedSyllabus]);
   const getStartYear = (yearStr) => {
     if (!yearStr) return "";
     // Tách bởi - hoặc –
@@ -203,23 +229,46 @@ export default function EducationClassManage() {
 
   useEffect(() => {
     if (popupOpen && popupType === "lesson" && selectedSyllabus) {
-      //       console.log("Fetching lessons for syllabus:", selectedSyllabus);
       getLessonsBySyllabus(selectedSyllabus)
         .then((res) => {
-          //           console.log("Lessons response:", res.data);
+          console.log("Lessons response:", res.data);
+          const lessons = res.data.data || [];
+
+          // Initialize lesson durations if not already set
+          setLessonDurations((prevDurations) => {
+            const newDurations = { ...prevDurations };
+            lessons.forEach((lesson) => {
+              if (!(lesson.id in newDurations)) {
+                newDurations[lesson.id] = lesson.duration;
+              }
+            });
+            return newDurations;
+          });
+
+          // Only show lessons with duration > 0
           setLessonList(
-            (res.data.data || []).map((l) => ({
-              value: l.id,
-              label: l.topic,
-              topic: l.topic,
-            }))
+            lessons
+              .filter((l) => (lessonDurations[l.id] ?? l.duration) > 0)
+              .map((l) => {
+                const remainingDuration = lessonDurations[l.id] ?? l.duration;
+                return {
+                  value: l.id,
+                  label: `${l.topic} (${remainingDuration} remaining)`,
+                  topic: l.topic,
+                  duration: remainingDuration,
+                  originalDuration: l.duration,
+                  description: l.description,
+                  toolsRequired: l.toolsRequired,
+                  objective: l.objective,
+                };
+              })
           );
         })
         .catch((error) => {
-          //           console.error("Error fetching lessons:", error);
+          console.error("Error fetching lessons:", error);
         });
     }
-  }, [popupOpen, popupType, selectedSyllabus]);
+  }, [popupOpen, popupType, selectedSyllabus, lessonDurations]);
 
   // Fetch number of unassigned students when year or grade changes
   useEffect(() => {
@@ -235,6 +284,17 @@ export default function EducationClassManage() {
   }, [selectedYear, selectedGrade]);
 
   const handleCellClick = (day, slotIdx) => {
+    const existingActivity = activities[day][slotIdx];
+    
+    // If there's an existing lesson, restore its duration when replacing/removing
+    if (existingActivity && existingActivity.type === "lesson") {
+      setLessonDurations(prev => {
+        const newDurations = { ...prev };
+        newDurations[existingActivity.value] = (newDurations[existingActivity.value] ?? 0) + 1;
+        return newDurations;
+      });
+    }
+
     setPopupDay(day);
     setPopupSlotIdx(slotIdx);
     setPopupType("lesson");
@@ -242,23 +302,74 @@ export default function EducationClassManage() {
     setPopupActivity("");
     setPopupOpen(true);
   };
+  console.log("lessonList", lessonList);
 
   const handlePopupSave = () => {
-    setActivities((prev) => {
-      const updated = { ...prev };
-      updated[popupDay] = [...updated[popupDay]];
-      updated[popupDay][popupSlotIdx] =
-        popupType === "lesson"
-          ? {
-              type: "lesson",
-              value: popupLesson,
-              topic:
-                lessonList.find((l) => String(l.value) === String(popupLesson))
-                  ?.label || popupLesson,
-            }
-          : { type: "activity", value: popupActivity };
-      return updated;
-    });
+    if (popupType === "lesson" && popupLesson) {
+      // Find the lesson info
+      const selectedLessonInfo = lessonList.find(l => String(l.value) === String(popupLesson));
+      
+      // Check if lesson has duration remaining
+      const currentDuration = lessonDurations[popupLesson] ?? selectedLessonInfo?.originalDuration ?? 0;
+      if (currentDuration <= 0) {
+        enqueueSnackbar("This lesson has no remaining duration!", { variant: "warning" });
+        return;
+      }
+
+      // Decrement the duration for the selected lesson
+      setLessonDurations(prev => {
+        const newDurations = { ...prev };
+        newDurations[popupLesson] = Math.max(0, (newDurations[popupLesson] ?? selectedLessonInfo?.originalDuration ?? 0) - 1);
+        return newDurations;
+      });
+
+      // Update activities
+      setActivities((prev) => {
+        const updated = { ...prev };
+        updated[popupDay] = [...updated[popupDay]];
+        
+        // Check if there's an existing lesson in this slot and restore its duration
+        const existingActivity = updated[popupDay][popupSlotIdx];
+        if (existingActivity && existingActivity.type === "lesson" && existingActivity.value !== popupLesson) {
+          setLessonDurations(prevDurations => {
+            const restored = { ...prevDurations };
+            restored[existingActivity.value] = (restored[existingActivity.value] ?? 0) + 1;
+            return restored;
+          });
+        }
+        
+        updated[popupDay][popupSlotIdx] = {
+          type: "lesson",
+          value: popupLesson,
+          topic: selectedLessonInfo?.topic || popupLesson,
+        };
+        return updated;
+      });
+
+      enqueueSnackbar(`Added lesson: ${selectedLessonInfo?.topic}`, { variant: "success" });
+    } else if (popupType === "activity" && popupActivity) {
+      // Handle activity case
+      setActivities((prev) => {
+        const updated = { ...prev };
+        updated[popupDay] = [...updated[popupDay]];
+        
+        // Check if there's an existing lesson in this slot and restore its duration
+        const existingActivity = updated[popupDay][popupSlotIdx];
+        if (existingActivity && existingActivity.type === "lesson") {
+          setLessonDurations(prevDurations => {
+            const restored = { ...prevDurations };
+            restored[existingActivity.value] = (restored[existingActivity.value] ?? 0) + 1;
+            return restored;
+          });
+        }
+        
+        updated[popupDay][popupSlotIdx] = { type: "activity", value: popupActivity };
+        return updated;
+      });
+
+      enqueueSnackbar(`Added activity: ${popupActivity}`, { variant: "success" });
+    }
+    
     setPopupOpen(false);
   };
 
@@ -270,18 +381,24 @@ export default function EducationClassManage() {
   };
 
   // Delete class function
-  const handleDeleteClass = async (classId, className) => {
-    if (!window.confirm("Are you sure you want to delete this class?")) return;
-    setDeletingClassId(classId);
+  const handleDeleteClass = (classId, className) => {
+    setPendingDeleteClass({ id: classId, name: className });
+    setDeleteConfirmModal(true);
+  };
+
+  const confirmDeleteClass = async () => {
+    if (!pendingDeleteClass) return;
+    setDeletingClassId(pendingDeleteClass.id);
+    setDeleteConfirmModal(false);
     try {
-      await deleteClass(classId);
+      await deleteClass(pendingDeleteClass.id);
       // Refresh class list after delete
       const classListResponse = await getClassesByYearAndGrade(
         getStartYear(selectedYear),
         selectedGrade
       );
       setClasses(classListResponse.data.data || []);
-      enqueueSnackbar(`Deleted class ${className} successfully!`, {
+      enqueueSnackbar(`Deleted class ${pendingDeleteClass.name} successfully!`, {
         variant: "success",
       });
     } catch (error) {
@@ -291,10 +408,15 @@ export default function EducationClassManage() {
           ? "Only classes with status 'ACTIVE' can be deleted"
           : "Delete failed!";
       enqueueSnackbar(msg, { variant: "error" });
-      //       console.error("Delete class error:", error);
     } finally {
       setDeletingClassId(null);
+      setPendingDeleteClass(null);
     }
+  };
+
+  const cancelDeleteClass = () => {
+    setDeleteConfirmModal(false);
+    setPendingDeleteClass(null);
   };
 
   const buildActivitiesNameByDay = () => {
@@ -315,20 +437,29 @@ export default function EducationClassManage() {
 
   const handleCreateClass = async (e) => {
     e.preventDefault();
-    //     console.log("Starting create class...");
-
+    setIsCreatingClass(true);
     try {
       // Validate form
       if (!selectedYear || !selectedGrade || !selectedSyllabus || !startDate) {
         enqueueSnackbar(`Please fill in all required information!`, {
           variant: "error",
         });
+        setIsCreatingClass(false);
+        return;
+      }
+
+      // Validate that start date is a Monday
+      const selectedStartDate = new Date(startDate);
+      if (selectedStartDate.getDay() !== 1) {
+        enqueueSnackbar(`Start date must be a Monday!`, {
+          variant: "error",
+        });
+        setIsCreatingClass(false);
         return;
       }
 
       // Build activities list
       const activitiesNameByDay = buildActivitiesNameByDay();
-      //       console.log("Activities list built:", activitiesNameByDay);
 
       // Prepare payload
       const payload = {
@@ -338,11 +469,9 @@ export default function EducationClassManage() {
         gradeName: selectedGrade.toLowerCase(),
         activitiesNameByDay,
       };
-      //       console.log("Sending create class request with payload:", payload);
 
       // Call API to create class
       const response = await createClass(payload);
-      //       console.log("Create class response:", response);
 
       // Success handling
       enqueueSnackbar(`Created classes successfully!`, {
@@ -356,7 +485,6 @@ export default function EducationClassManage() {
         getStartYear(selectedYear),
         selectedGrade
       );
-      //       console.log("Updated class list:", classListResponse.data);
       setClasses(classListResponse.data.data || []);
     } catch (error) {
       enqueueSnackbar(
@@ -367,6 +495,7 @@ export default function EducationClassManage() {
     } finally {
       // Refresh number of unassigned students
       await refreshNumUnassigned();
+      setIsCreatingClass(false);
     }
   };
 
@@ -584,6 +713,36 @@ export default function EducationClassManage() {
     }
   };
 
+  // Function to reset lesson durations when creating a new class
+  const resetLessonDurations = () => {
+    setLessonDurations({});
+    setLessonList([]);
+  };
+
+  // Function to clear a specific cell
+  const handleClearCell = (day, slotIdx) => {
+    const existingActivity = activities[day][slotIdx];
+    
+    // If there's an existing lesson, restore its duration
+    if (existingActivity && existingActivity.type === "lesson") {
+      setLessonDurations(prev => {
+        const newDurations = { ...prev };
+        newDurations[existingActivity.value] = (newDurations[existingActivity.value] ?? 0) + 1;
+        return newDurations;
+      });
+      enqueueSnackbar(`Removed lesson: ${existingActivity.topic}`, { variant: "info" });
+    } else if (existingActivity && existingActivity.type === "activity") {
+      enqueueSnackbar(`Removed activity: ${existingActivity.value}`, { variant: "info" });
+    }
+
+    setActivities(prev => {
+      const updated = { ...prev };
+      updated[day] = [...updated[day]];
+      updated[day][slotIdx] = null;
+      return updated;
+    });
+  };
+
   // Cancel auto assignment
   const handleCancelAutoAssign = () => {
     setConfirmAutoAssignModal(false);
@@ -748,6 +907,9 @@ export default function EducationClassManage() {
         <div className="text-right mb-8">
           <Button
             onClick={() => {
+              // Reset lesson durations when starting to create a new class
+              resetLessonDurations();
+              
               // Initialize the activities with default lunch and nap times
               setActivities(() => {
                 const obj = {};
@@ -799,7 +961,7 @@ export default function EducationClassManage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Syllabus
+                  Syllabus <span className="text-red-600">*</span>
                 </label>
                 <InputSelect
                   options={syllabusList}
@@ -807,18 +969,34 @@ export default function EducationClassManage() {
                   onChange={(e) => setSelectedSyllabus(e.target.value)}
                   placeholder="Select syllabus"
                   size="md"
+                  required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Date
+                  Start Date (Must be Monday) <span className="text-red-600">*</span>
                 </label>
                 <Input
                   type="date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                  }}
                   size="md"
+                  required
                 />
+                {!startDate && (
+                  <p className="text-sm text-red-600 mt-1">Start date is required</p>
+                )}
+                {startDate && (() => {
+                  const date = new Date(startDate);
+                  const dayOfWeek = date.getDay();
+                  if (dayOfWeek === 1) {
+                    return <p className="text-sm text-green-600 mt-1">✓ Start date is Monday</p>;
+                  } else {
+                    return <p className="text-sm text-red-600 mt-1">Start date must be a Monday!</p>;
+                  }
+                })()}
               </div>
             </div>
 
@@ -844,20 +1022,38 @@ export default function EducationClassManage() {
                         {DAYS.map((day) => (
                           <td
                             key={day}
-                            className="py-2 px-4 text-center cursor-pointer hover:bg-blue-50"
-                            onClick={() => handleCellClick(day, slotIdx)}
+                            className="py-2 px-4 text-center relative group"
                           >
-                            {activities[day][slotIdx]?.type === "lesson" ? (
-                              <span className="text-blue-700 font-bold">
-                                {activities[day][slotIdx].topic}
-                              </span>
-                            ) : activities[day][slotIdx]?.type ===
-                              "activity" ? (
-                              <span className="text-green-700 font-bold">
-                                {activities[day][slotIdx].value}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">+</span>
+                            <div
+                              className="cursor-pointer hover:bg-blue-50 p-2 rounded min-h-[40px] flex items-center justify-center"
+                              onClick={() => handleCellClick(day, slotIdx)}
+                            >
+                              {activities[day][slotIdx]?.type === "lesson" ? (
+                                <span className="text-blue-700 font-bold">
+                                  {activities[day][slotIdx].topic}
+                                </span>
+                              ) : activities[day][slotIdx]?.type ===
+                                "activity" ? (
+                                <span className="text-green-700 font-bold">
+                                  {activities[day][slotIdx].value}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">+</span>
+                              )}
+                            </div>
+                            
+                            {/* Clear button - only show when there's content */}
+                            {activities[day][slotIdx] && (
+                              <button
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleClearCell(day, slotIdx);
+                                }}
+                                title="Clear this slot"
+                              >
+                                ×
+                              </button>
                             )}
                           </td>
                         ))}
@@ -878,8 +1074,13 @@ export default function EducationClassManage() {
               >
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" size="md">
-                Create class
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                disabled={isCreatingClass}
+              >
+                {isCreatingClass ? 'Creating...' : 'Create class'}
               </Button>
             </div>
           </form>
@@ -1183,6 +1384,32 @@ export default function EducationClassManage() {
           </Button>
           <Button onClick={handleConfirmUnassign} variant="primary">
             Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmation Modal for deleting a class */}
+      <Dialog
+        open={deleteConfirmModal}
+        onClose={cancelDeleteClass}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Confirm Delete Class</DialogTitle>
+        <DialogContent>
+          <div className="my-4">
+            <p className="mb-2">
+              Are you sure you want to delete class <span className="font-semibold text-red-600">{pendingDeleteClass?.name}</span>?
+            </p>
+            <p className="text-red-600">This action cannot be undone.</p>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelDeleteClass} variant="secondary">
+            Cancel
+          </Button>
+          <Button onClick={confirmDeleteClass} variant="danger" disabled={deletingClassId === pendingDeleteClass?.id}>
+            {deletingClassId === pendingDeleteClass?.id ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
