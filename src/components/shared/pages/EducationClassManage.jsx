@@ -193,11 +193,15 @@ export default function EducationClassManage() {
         const obj = {};
         DAYS.forEach((day) => {
           const slots = Array(TIME_SLOTS.length).fill(null);
-          const lunchTimeIndex = TIME_SLOTS.findIndex((slot) => slot === "11:00-12:00");
+          const lunchTimeIndex = TIME_SLOTS.findIndex(
+            (slot) => slot === "11:00-12:00"
+          );
           if (lunchTimeIndex !== -1) {
             slots[lunchTimeIndex] = { type: "activity", value: "Lunch Time" };
           }
-          const napTimeIndex = TIME_SLOTS.findIndex((slot) => slot === "12:00-13:00");
+          const napTimeIndex = TIME_SLOTS.findIndex(
+            (slot) => slot === "12:00-13:00"
+          );
           if (napTimeIndex !== -1) {
             slots[napTimeIndex] = { type: "activity", value: "Nap Time" };
           }
@@ -285,12 +289,13 @@ export default function EducationClassManage() {
 
   const handleCellClick = (day, slotIdx) => {
     const existingActivity = activities[day][slotIdx];
-    
+
     // If there's an existing lesson, restore its duration when replacing/removing
     if (existingActivity && existingActivity.type === "lesson") {
-      setLessonDurations(prev => {
+      setLessonDurations((prev) => {
         const newDurations = { ...prev };
-        newDurations[existingActivity.value] = (newDurations[existingActivity.value] ?? 0) + 1;
+        newDurations[existingActivity.value] =
+          (newDurations[existingActivity.value] ?? 0) + 1;
         return newDurations;
       });
     }
@@ -307,19 +312,31 @@ export default function EducationClassManage() {
   const handlePopupSave = () => {
     if (popupType === "lesson" && popupLesson) {
       // Find the lesson info
-      const selectedLessonInfo = lessonList.find(l => String(l.value) === String(popupLesson));
-      
+      const selectedLessonInfo = lessonList.find(
+        (l) => String(l.value) === String(popupLesson)
+      );
+
       // Check if lesson has duration remaining
-      const currentDuration = lessonDurations[popupLesson] ?? selectedLessonInfo?.originalDuration ?? 0;
+      const currentDuration =
+        lessonDurations[popupLesson] ??
+        selectedLessonInfo?.originalDuration ??
+        0;
       if (currentDuration <= 0) {
-        enqueueSnackbar("This lesson has no remaining duration!", { variant: "warning" });
+        enqueueSnackbar("This lesson has no remaining duration!", {
+          variant: "warning",
+        });
         return;
       }
 
       // Decrement the duration for the selected lesson
-      setLessonDurations(prev => {
+      setLessonDurations((prev) => {
         const newDurations = { ...prev };
-        newDurations[popupLesson] = Math.max(0, (newDurations[popupLesson] ?? selectedLessonInfo?.originalDuration ?? 0) - 1);
+        newDurations[popupLesson] = Math.max(
+          0,
+          (newDurations[popupLesson] ??
+            selectedLessonInfo?.originalDuration ??
+            0) - 1
+        );
         return newDurations;
       });
 
@@ -327,17 +344,22 @@ export default function EducationClassManage() {
       setActivities((prev) => {
         const updated = { ...prev };
         updated[popupDay] = [...updated[popupDay]];
-        
+
         // Check if there's an existing lesson in this slot and restore its duration
         const existingActivity = updated[popupDay][popupSlotIdx];
-        if (existingActivity && existingActivity.type === "lesson" && existingActivity.value !== popupLesson) {
-          setLessonDurations(prevDurations => {
+        if (
+          existingActivity &&
+          existingActivity.type === "lesson" &&
+          existingActivity.value !== popupLesson
+        ) {
+          setLessonDurations((prevDurations) => {
             const restored = { ...prevDurations };
-            restored[existingActivity.value] = (restored[existingActivity.value] ?? 0) + 1;
+            restored[existingActivity.value] =
+              (restored[existingActivity.value] ?? 0) + 1;
             return restored;
           });
         }
-        
+
         updated[popupDay][popupSlotIdx] = {
           type: "lesson",
           value: popupLesson,
@@ -346,30 +368,38 @@ export default function EducationClassManage() {
         return updated;
       });
 
-      enqueueSnackbar(`Added lesson: ${selectedLessonInfo?.topic}`, { variant: "success" });
+      enqueueSnackbar(`Added lesson: ${selectedLessonInfo?.topic}`, {
+        variant: "success",
+      });
     } else if (popupType === "activity" && popupActivity) {
       // Handle activity case
       setActivities((prev) => {
         const updated = { ...prev };
         updated[popupDay] = [...updated[popupDay]];
-        
+
         // Check if there's an existing lesson in this slot and restore its duration
         const existingActivity = updated[popupDay][popupSlotIdx];
         if (existingActivity && existingActivity.type === "lesson") {
-          setLessonDurations(prevDurations => {
+          setLessonDurations((prevDurations) => {
             const restored = { ...prevDurations };
-            restored[existingActivity.value] = (restored[existingActivity.value] ?? 0) + 1;
+            restored[existingActivity.value] =
+              (restored[existingActivity.value] ?? 0) + 1;
             return restored;
           });
         }
-        
-        updated[popupDay][popupSlotIdx] = { type: "activity", value: popupActivity };
+
+        updated[popupDay][popupSlotIdx] = {
+          type: "activity",
+          value: popupActivity,
+        };
         return updated;
       });
 
-      enqueueSnackbar(`Added activity: ${popupActivity}`, { variant: "success" });
+      enqueueSnackbar(`Added activity: ${popupActivity}`, {
+        variant: "success",
+      });
     }
-    
+
     setPopupOpen(false);
   };
 
@@ -397,10 +427,18 @@ export default function EducationClassManage() {
         getStartYear(selectedYear),
         selectedGrade
       );
+      getNumberOfAvailableChildren(getStartYear(selectedYear), selectedGrade)
+        .then((res) => {
+          setNumUnassigned(res.data.data ?? 0);
+        })
+        .catch(() => setNumUnassigned(0));
       setClasses(classListResponse.data.data || []);
-      enqueueSnackbar(`Deleted class ${pendingDeleteClass.name} successfully!`, {
-        variant: "success",
-      });
+      enqueueSnackbar(
+        `Deleted class ${pendingDeleteClass.name} successfully!`,
+        {
+          variant: "success",
+        }
+      );
     } catch (error) {
       const msg =
         error?.response?.data?.message ===
@@ -722,20 +760,25 @@ export default function EducationClassManage() {
   // Function to clear a specific cell
   const handleClearCell = (day, slotIdx) => {
     const existingActivity = activities[day][slotIdx];
-    
+
     // If there's an existing lesson, restore its duration
     if (existingActivity && existingActivity.type === "lesson") {
-      setLessonDurations(prev => {
+      setLessonDurations((prev) => {
         const newDurations = { ...prev };
-        newDurations[existingActivity.value] = (newDurations[existingActivity.value] ?? 0) + 1;
+        newDurations[existingActivity.value] =
+          (newDurations[existingActivity.value] ?? 0) + 1;
         return newDurations;
       });
-      enqueueSnackbar(`Removed lesson: ${existingActivity.topic}`, { variant: "info" });
+      enqueueSnackbar(`Removed lesson: ${existingActivity.topic}`, {
+        variant: "info",
+      });
     } else if (existingActivity && existingActivity.type === "activity") {
-      enqueueSnackbar(`Removed activity: ${existingActivity.value}`, { variant: "info" });
+      enqueueSnackbar(`Removed activity: ${existingActivity.value}`, {
+        variant: "info",
+      });
     }
 
-    setActivities(prev => {
+    setActivities((prev) => {
       const updated = { ...prev };
       updated[day] = [...updated[day]];
       updated[day][slotIdx] = null;
@@ -909,7 +952,7 @@ export default function EducationClassManage() {
             onClick={() => {
               // Reset lesson durations when starting to create a new class
               resetLessonDurations();
-              
+
               // Initialize the activities with default lunch and nap times
               setActivities(() => {
                 const obj = {};
@@ -974,7 +1017,8 @@ export default function EducationClassManage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Date (Must be Monday) <span className="text-red-600">*</span>
+                  Start Date (Must be Monday){" "}
+                  <span className="text-red-600">*</span>
                 </label>
                 <Input
                   type="date"
@@ -986,17 +1030,28 @@ export default function EducationClassManage() {
                   required
                 />
                 {!startDate && (
-                  <p className="text-sm text-red-600 mt-1">Start date is required</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    Start date is required
+                  </p>
                 )}
-                {startDate && (() => {
-                  const date = new Date(startDate);
-                  const dayOfWeek = date.getDay();
-                  if (dayOfWeek === 1) {
-                    return <p className="text-sm text-green-600 mt-1">✓ Start date is Monday</p>;
-                  } else {
-                    return <p className="text-sm text-red-600 mt-1">Start date must be a Monday!</p>;
-                  }
-                })()}
+                {startDate &&
+                  (() => {
+                    const date = new Date(startDate);
+                    const dayOfWeek = date.getDay();
+                    if (dayOfWeek === 1) {
+                      return (
+                        <p className="text-sm text-green-600 mt-1">
+                          ✓ Start date is Monday
+                        </p>
+                      );
+                    } else {
+                      return (
+                        <p className="text-sm text-red-600 mt-1">
+                          Start date must be a Monday!
+                        </p>
+                      );
+                    }
+                  })()}
               </div>
             </div>
 
@@ -1041,7 +1096,7 @@ export default function EducationClassManage() {
                                 <span className="text-gray-400">+</span>
                               )}
                             </div>
-                            
+
                             {/* Clear button - only show when there's content */}
                             {activities[day][slotIdx] && (
                               <button
@@ -1080,7 +1135,7 @@ export default function EducationClassManage() {
                 size="md"
                 disabled={isCreatingClass}
               >
-                {isCreatingClass ? 'Creating...' : 'Create class'}
+                {isCreatingClass ? "Creating..." : "Create class"}
               </Button>
             </div>
           </form>
@@ -1399,7 +1454,11 @@ export default function EducationClassManage() {
         <DialogContent>
           <div className="my-4">
             <p className="mb-2">
-              Are you sure you want to delete class <span className="font-semibold text-red-600">{pendingDeleteClass?.name}</span>?
+              Are you sure you want to delete class{" "}
+              <span className="font-semibold text-red-600">
+                {pendingDeleteClass?.name}
+              </span>
+              ?
             </p>
             <p className="text-red-600">This action cannot be undone.</p>
           </div>
@@ -1408,8 +1467,14 @@ export default function EducationClassManage() {
           <Button onClick={cancelDeleteClass} variant="secondary">
             Cancel
           </Button>
-          <Button onClick={confirmDeleteClass} variant="danger" disabled={deletingClassId === pendingDeleteClass?.id}>
-            {deletingClassId === pendingDeleteClass?.id ? "Deleting..." : "Delete"}
+          <Button
+            onClick={confirmDeleteClass}
+            variant="danger"
+            disabled={deletingClassId === pendingDeleteClass?.id}
+          >
+            {deletingClassId === pendingDeleteClass?.id
+              ? "Deleting..."
+              : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
