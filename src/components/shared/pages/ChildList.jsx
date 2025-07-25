@@ -552,11 +552,13 @@ const ChildList = () => {
       enqueueSnackbar("Child updated successfully!", { variant: "success" });
       closeEditModal();
     } catch (err) {
-      console.error("Child update error:", err);
+      // Hiển thị rõ message lỗi từ BE nếu có
+      const beMsg = err?.response?.data?.message;
       setFormError("root.serverError", {
         type: "manual",
-        message: "Failed to update child information. Please try again.",
+        message: beMsg || "Failed to update child information. Please try again.",
       });
+      enqueueSnackbar(beMsg || "Failed to update child information. Please try again.", { variant: "error" });
     } finally {
       setUploading(false);
     }
@@ -768,23 +770,33 @@ const ChildList = () => {
                 Enroll
               </Button>
 
-              {/* Conditional Edit Button based on hadForm */}
-              {child.hadForm ? (
-                <div className="w-full bg-gray-100 border border-gray-300 rounded px-4 py-2 text-center">
-                  <span className="text-gray-500 text-sm">
-                    Cannot edit - Form already submitted
-                  </span>
-                </div>
-              ) : (
-                <Button
-                  variant="secondary"
-                  className="w-full mb-2"
-                  onClick={() => openEditModal(child)}
-                  disabled={(editCounts[child.id] || 0) >= MAX_EDIT_TIMES}
-                >
-                  Edit
-                </Button>
-              )}
+              {/* Conditional Edit Button based on admission form status */}
+              {(() => {
+                // Cho phép edit nếu tất cả form đều là draft/cancelled/rejected
+                const hasActiveForm = child.admissionForms && child.admissionForms.some(
+                  form => !['draft', 'cancelled', 'rejected'].includes((form.status || '').toLowerCase())
+                );
+                if (hasActiveForm) {
+                  return (
+                    <div className="w-full bg-gray-100 border border-gray-300 rounded px-4 py-2 text-center">
+                      <span className="text-gray-500 text-sm">
+                        Cannot edit - Form already submitted
+                      </span>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <Button
+                      variant="secondary"
+                      className="w-full mb-2"
+                      onClick={() => openEditModal(child)}
+                      disabled={(editCounts[child.id] || 0) >= MAX_EDIT_TIMES}
+                    >
+                      Edit
+                    </Button>
+                  );
+                }
+              })()}
             </div>
           ))}
         </div>
@@ -1254,7 +1266,8 @@ const ChildList = () => {
                       documentErrors.profile !== "" || 
                       documentErrors.birth !== "" || 
                       documentErrors.house !== "" ||
-                      !hasAnyChanges()
+                      !hasAnyChanges() ||
+                      !!errors.root?.serverError // disable nếu có lỗi BE
                     }
                     className="flex-1"
                   >

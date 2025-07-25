@@ -455,6 +455,22 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
         }
     }
 
+    // Thêm hàm getGradeByAge để xác định grade dựa trên ngày sinh
+    const getGradeByAge = (dateOfBirth) => {
+        if (!dateOfBirth) return '';
+        const today = new Date();
+        const birthDate = new Date(dateOfBirth);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        if (age === 3) return 'SEED';
+        if (age === 4) return 'BUD';
+        if (age === 5) return 'LEAF';
+        return '';
+    };
+
     return (
         <Dialog
             fullScreen
@@ -518,7 +534,8 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                             </RadioGroup>
                         </FormControl>
                     </Stack>
-                    <Stack>
+                    {/* Date of Birth và Grade trên cùng 1 hàng */}
+                    <Stack direction="row" spacing={2}>
                         <DatePicker
                             label="Date of Birth"
                             format={'DD/MM/YYYY'}
@@ -526,17 +543,16 @@ function RenderDetailPopUp({handleClosePopUp, isPopUpOpen, selectedForm, GetForm
                             disabled
                             renderInput={(params) => <TextField {...params} fullWidth/>}
                         />
+                        <TextField fullWidth label={'Grade'} disabled value={getGradeByAge(selectedForm.studentDateOfBirth)}/>
                     </Stack>
                     <Stack>
                         <TextField fullWidth label={'Place of birth'} disabled
                                    value={selectedForm.studentPlaceOfBirth || ''}/>
                     </Stack>
-
                     <Stack>
                         <TextField fullWidth label={'Household registration address'} disabled
                                    value={selectedForm.householdRegistrationAddress || ''}/>
                     </Stack>
-
                     <Stack>
                         <TextField fullWidth label={'Note'} disabled value={selectedForm.note || ''}/>
                     </Stack>
@@ -1110,6 +1126,22 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
         setSelectedImage(null);
     };
 
+    // Thêm hàm getGradeByAge
+    const getGradeByAge = (dateOfBirth) => {
+      if (!dateOfBirth) return '';
+      const today = new Date();
+      const birthDate = new Date(dateOfBirth);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age === 3) return 'SEED';
+      if (age === 4) return 'BUD';
+      if (age === 5) return 'LEAF';
+      return '';
+    };
+
     return (
         <Dialog
             fullScreen
@@ -1270,12 +1302,17 @@ function RenderFormPopUp({handleClosePopUp, isPopUpOpen, studentList, GetForm}) 
                                         fullWidth
                                         label="Place of Birth"
                                         value={student.placeOfBirth || ''}
-                                        slotProps={{
-                                            input: {readOnly: true}
-                                        }}
+                                        slotProps={{ input: { readOnly: true } }}
                                     />
                                 </Grid>
-
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Grade"
+                                        value={getGradeByAge(student.dateOfBirth)}
+                                        slotProps={{ input: { readOnly: true } }}
+                                    />
+                                </Grid>
                                 <Grid item xs={12}>
                                     <Typography variant="h6" sx={{
                                         mb: 2,
@@ -1857,11 +1894,15 @@ function RenderRefillForm({handleClosePopUp, isPopUpOpen, selectedForm, GetForm}
                                     fullWidth
                                     label="Place of Birth"
                                     value={selectedForm?.studentPlaceOfBirth || ''}
-                                    slotProps={{
-                                        input: {
-                                            readOnly: true
-                                        }
-                                    }}
+                                    slotProps={{ input: { readOnly: true } }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Grade"
+                                    value={getGradeByAge(selectedForm?.studentDateOfBirth)}
+                                    slotProps={{ input: { readOnly: true } }}
                                 />
                             </Grid>
                         </Grid>

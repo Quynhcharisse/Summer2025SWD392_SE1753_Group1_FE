@@ -37,6 +37,7 @@ export default function EditChildPopUp({ open, onClose, childId, onSuccess }) {
     house: null
   });
   const [loading, setLoading] = useState(false);
+  const [canEdit, setCanEdit] = useState(true);
 
   useEffect(() => {
     async function fetchChild() {
@@ -44,7 +45,14 @@ export default function EditChildPopUp({ open, onClose, childId, onSuccess }) {
       const found = Array.isArray(res.data)
         ? res.data.find(c => String(c.id) === String(childId))
         : null;
-      if (found) setForm(found);
+      if (found) {
+        setForm(found);
+        // Kiểm tra trạng thái các form
+        const hasActiveForm = found.admissionForms && found.admissionForms.some(
+          form => !['draft', 'cancelled', 'rejected'].includes((form.status || '').toLowerCase())
+        );
+        setCanEdit(!hasActiveForm);
+      }
     }
     if (open && childId) fetchChild();
   }, [open, childId]);
@@ -92,9 +100,14 @@ export default function EditChildPopUp({ open, onClose, childId, onSuccess }) {
       </AppBar>
       <Box p={4}>
         <Stack spacing={3}>
-          <TextField label="Name" name="name" value={form.name} onChange={handleChange} fullWidth />
+          {!canEdit && (
+            <Typography color="error" fontWeight="bold">
+              Cannot update child info while there is an active admission form (pending/approved)
+            </Typography>
+          )}
+          <TextField label="Name" name="name" value={form.name} onChange={handleChange} fullWidth disabled={!canEdit} />
           <FormLabel>Gender</FormLabel>
-          <RadioGroup row name="gender" value={form.gender} onChange={handleChange}>
+          <RadioGroup row name="gender" value={form.gender} onChange={handleChange} disabled={!canEdit}>
             <FormControlLabel value="male" control={<Radio />} label="Male" />
             <FormControlLabel value="female" control={<Radio />} label="Female" />
           </RadioGroup>
@@ -106,15 +119,16 @@ export default function EditChildPopUp({ open, onClose, childId, onSuccess }) {
             onChange={handleChange}
             fullWidth
             InputLabelProps={{ shrink: true }}
+            disabled={!canEdit}
           />
-          <TextField label="Place of Birth" name="placeOfBirth" value={form.placeOfBirth} onChange={handleChange} fullWidth />
+          <TextField label="Place of Birth" name="placeOfBirth" value={form.placeOfBirth} onChange={handleChange} fullWidth disabled={!canEdit} />
           <FormLabel>Profile Image</FormLabel>
-          <input type="file" accept="image/*" onChange={e => handleFileChange(e, "profile")}/>
+          <input type="file" accept="image/*" onChange={e => handleFileChange(e, "profile") } disabled={!canEdit}/>
           <FormLabel>Birth Certificate Image</FormLabel>
-          <input type="file" accept="image/*" onChange={e => handleFileChange(e, "birth")}/>
+          <input type="file" accept="image/*" onChange={e => handleFileChange(e, "birth") } disabled={!canEdit}/>
           <FormLabel>Household Registration Image</FormLabel>
-          <input type="file" accept="image/*" onChange={e => handleFileChange(e, "house")}/>
-          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+          <input type="file" accept="image/*" onChange={e => handleFileChange(e, "house") } disabled={!canEdit}/>
+          <Button variant="contained" onClick={handleSubmit} disabled={loading || !canEdit}>
             {loading ? "Saving..." : "Save"}
           </Button>
         </Stack>
