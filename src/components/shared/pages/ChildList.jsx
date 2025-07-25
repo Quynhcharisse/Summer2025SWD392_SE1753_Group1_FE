@@ -701,15 +701,17 @@ const ChildList = () => {
               className="bg-white rounded-lg border hover:border-blue-300 shadow-sm hover:shadow transition-all relative"
             >
               {/* Icon View (con mắt) ở góc trên bên phải, không chồng lên icon trẻ con */}
-              <button
-                type="button"
-                className="absolute top-2 right-16 z-20 bg-white rounded-full shadow p-1 hover:bg-blue-50 transition"
-                onClick={() => openDetailModal(child)}
-                title="View Details"
-                style={{ border: 'none', cursor: 'pointer' }}
-              >
-                <Visibility style={{ fontSize: 26, color: '#2563eb' }} />
-              </button>
+              {(!editModalOpen) && (
+                <button
+                  type="button"
+                  className="absolute top-2 right-16 z-20 bg-white rounded-full shadow p-1 hover:bg-blue-50 transition"
+                  onClick={() => openDetailModal(child)}
+                  title="View Details"
+                  style={{ border: 'none', cursor: 'pointer' }}
+                >
+                  <Visibility style={{ fontSize: 26, color: '#2563eb' }} />
+                </button>
+              )}
               <div className="flex justify-between items-start">
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold text-gray-800">

@@ -86,84 +86,191 @@ const EditChildForm = () => {
 
   if (loading) {
     return (
-      <PageTemplate title="Edit Child">
-        <div className="text-center py-8">
-          <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600">Loading child info...</p>
+      <>
+        {/* Overlay nền mờ */}
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.4)', // tăng opacity
+          zIndex: 3000 // cao hơn mọi thứ khác
+        }} />
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 3100 // popup cao hơn overlay
+        }}>
+          <div style={{ background: 'white', borderRadius: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: 420, maxWidth: 520, width: '100%', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 24, color: '#07663a', marginBottom: 8, textAlign: 'center' }}>
+              Edit Child Information
+            </div>
+            <div className="text-center py-8">
+              <Spinner size="lg" className="mx-auto mb-4" />
+              <p className="text-gray-600">Loading child info...</p>
+            </div>
+          </div>
         </div>
-      </PageTemplate>
+      </>
     );
   }
   if (error) {
     return (
-      <PageTemplate title="Edit Child">
-        <div className="text-center py-8 text-red-600">{error}</div>
-      </PageTemplate>
+      <>
+        {/* Overlay nền mờ */}
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.4)',
+          zIndex: 3000
+        }} />
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 3100
+        }}>
+          <div style={{ background: 'white', borderRadius: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: 420, maxWidth: 520, width: '100%', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 24, color: '#07663a', marginBottom: 8, textAlign: 'center' }}>
+              Edit Child Information
+            </div>
+            <div className="text-center py-8 text-red-600">{error}</div>
+          </div>
+        </div>
+      </>
     );
   }
   return (
-    <PageTemplate title="Edit Child">
-      {error && (
-        <div className="text-center py-8 text-red-600">{error}</div>
-      )}
-      {!error && (
-        <form onSubmit={handleSubmit} className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow space-y-4">
-          <div>
-            <label className="block font-medium mb-1">Name</label>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              className="input input-bordered w-full"
-              required
-            />
+    <>
+      {/* Overlay nền mờ */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(0,0,0,0.4)',
+        zIndex: 3000
+      }} />
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 3100
+      }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            background: 'white',
+            borderRadius: 24,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            minWidth: 420,
+            maxWidth: 520,
+            width: '100%',
+            padding: 32,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20,
+            position: 'relative'
+          }}
+        >
+          <div style={{ fontWeight: 700, fontSize: 24, color: '#07663a', marginBottom: 8, textAlign: 'center' }}>
+            Edit Child Information
           </div>
-          <div>
-            <label className="block font-medium mb-1">Gender</label>
-            <select
-              name="gender"
-              value={form.gender}
-              onChange={handleChange}
-              className="input input-bordered w-full"
-              required
-            >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <div style={{ flex: 1 }}>
+              <label className="block font-medium mb-1">Full Name</label>
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                className="input input-bordered w-full"
+                required
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="block font-medium mb-1">Gender</label>
+              <select
+                name="gender"
+                value={form.gender}
+                onChange={handleChange}
+                className="input input-bordered w-full"
+                required
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="block font-medium mb-1">Date of Birth</label>
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={form.dateOfBirth}
-              onChange={handleChange}
-              className="input input-bordered w-full"
-              required
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Place of Birth</label>
-            <input
-              type="text"
-              name="placeOfBirth"
-              value={form.placeOfBirth}
-              onChange={handleChange}
-              className="input input-bordered w-full"
-              required
-            />
+          <div style={{ display: 'flex', gap: 16 }}>
+            <div style={{ flex: 1 }}>
+              <label className="block font-medium mb-1">Date of Birth</label>
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={form.dateOfBirth}
+                onChange={handleChange}
+                className="input input-bordered w-full"
+                required
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="block font-medium mb-1">Place of Birth</label>
+              <input
+                type="text"
+                name="placeOfBirth"
+                value={form.placeOfBirth}
+                onChange={handleChange}
+                className="input input-bordered w-full"
+                required
+              />
+            </div>
           </div>
           {/* Có thể bổ sung upload ảnh nếu muốn */}
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-4 mt-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              style={{
+                border: '1.5px solid #07663a',
+                color: '#07663a',
+                borderRadius: 8,
+                padding: '10px 28px',
+                fontWeight: 600,
+                background: 'white'
+              }}
+            >
+              Cancel
+            </button>
             <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? <Spinner size="sm" /> : "Save"}
             </Button>
           </div>
         </form>
-      )}
-    </PageTemplate>
+      </div>
+    </>
   );
 };
 
