@@ -120,6 +120,36 @@ export const hrService = {
   parents: parentService,
 
   /**
+   * Ban a user account
+   * @param {string} email - User email to ban
+   * @returns {Promise} Ban response
+   */
+  banUser: async (email) => {
+    try {
+      const response = await apiClient.put('/hr/ban', { email });
+      return response.data;
+    } catch (error) {
+      console.error('Error banning user:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Unban a user account
+   * @param {string} email - User email to unban
+   * @returns {Promise} Unban response
+   */
+  unbanUser: async (email) => {
+    try {
+      const response = await apiClient.put('/hr/unban', { email });
+      return response.data;
+    } catch (error) {
+      console.error('Error unbanning user:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Download file helper for exports
    * @param {Blob} blob - File blob data
    * @param {string} filename - Name for downloaded file
