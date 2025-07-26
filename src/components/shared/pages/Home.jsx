@@ -11,6 +11,70 @@ import { Button } from "../atoms";
 import { ProcessStepCard, ProgramCard, SearchBar } from "../molecules";
 import { PageTemplate } from "../templates";
 
+// SlideBar component (simple custom carousel)
+function SlideBar() {
+  const slides = [
+    {
+      id: 1,
+      image: "/banner1.jpg",
+      title: "Welcome to Sunshine Preschool",
+      description: "Nurturing young minds for a brighter future.",
+    },
+    {
+      id: 2,
+      image: "/banner2.png",
+      title: "Modern Facilities",
+      description: "Safe, fun, and creative learning environment.",
+    },
+    {
+      id: 3,
+      image: "/banner3.webp",
+      title: "Experienced Teachers",
+      description: "Our teachers are passionate and dedicated.",
+    },
+  ];
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % slides.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  return (
+    <div className="relative w-full max-w-4xl mx-auto mb-8 rounded-xl overflow-hidden shadow-lg">
+      {slides.map((slide, idx) => (
+        <div
+          key={slide.id}
+          className={`transition-opacity duration-700 absolute inset-0 ${idx === current ? "opacity-100 z-10" : "opacity-0 z-0"}`}
+        >
+          <img
+            src={slide.image}
+            alt={slide.title}
+            className="w-full h-56 md:h-80 object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-white p-6">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2 drop-shadow-lg">{slide.title}</h2>
+            <p className="text-base md:text-lg drop-shadow">{slide.description}</p>
+          </div>
+        </div>
+      ))}
+      {/* Dots navigation */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        {slides.map((_, idx) => (
+          <button
+            key={idx}
+            className={`w-3 h-3 rounded-full ${idx === current ? "bg-white" : "bg-white/50"}`}
+            onClick={() => setCurrent(idx)}
+            aria-label={`Go to slide ${idx + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { t } = useTranslation("home");
   const navigate = useNavigate();
@@ -225,37 +289,8 @@ export default function Home() {
             </div>
           )}
         </div>
-        {/* Quick Enrollment Process */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800 text-center">
-            {t("quick_enrollment")}
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <ProcessStepCard
-              step={1}
-              title={t("step1_title")}
-              description={t("step1_desc")}
-              variant="numbered"
-              status="active"
-              actionLabel={t("step1_action")}
-            />
-            <ProcessStepCard
-              step={2}
-              title={t("step2_title")}
-              description={t("step2_desc")}
-              variant="numbered"
-              status="pending"
-            />
-            <ProcessStepCard
-              step={3}
-              title={t("step3_title")}
-              description={t("step3_desc")}
-              variant="numbered"
-              status="pending"
-            />
-          </div>
-        </div>
-        {/* Featured Programs */}
+        {/* SlideBar Section */}
+        <SlideBar />
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-800 text-center">
             {t("featured_programs")}

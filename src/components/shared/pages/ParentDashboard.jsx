@@ -198,18 +198,10 @@ const ParentDashboard = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => navigate("/user/parent/schedule")}
+                  onClick={() => navigate("/user/parent/class-schedule")}
                 >
                   {/* Calendar icon removed */}
-                  Schedule Student
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => navigate("/user/parent/payments")}
-                >
-                  <CreditCard className="w-4 h-4 mr-3" />
-                  Payment
+                  Schedule Information
                 </Button>
                 <Button
                   variant="outline"
