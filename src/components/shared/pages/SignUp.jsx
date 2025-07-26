@@ -197,18 +197,19 @@ const SignUp = () => {
             // Call the registration API with the code from URL
             await authService.register({
                 ...formData,
+                email: email, // Use email from URL params
                 code: code
             });
             
             // Save email for success message
-            setRegisteredEmail(formData.email);
+            setRegisteredEmail(email);
             
             // Show success message
             setShowSuccess(true);
 
             // Auto redirect to login after 3 seconds
             setTimeout(() => {
-                handleContinueToLogin(formData.email);
+                handleContinueToLogin(email);
             }, 3000);
         } catch (error) {
             if (error.response?.data?.message) {
@@ -238,7 +239,7 @@ const SignUp = () => {
 
     // Show success screen if registration was successful
     if (showSuccess) {
-        return <SuccessMessage onContinue={() => handleContinueToLogin(registeredEmail)} />;
+        return <SuccessMessage onContinue={() => handleContinueToLogin(registeredEmail || email)} />;
     }
 
     return (

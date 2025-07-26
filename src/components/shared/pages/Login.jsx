@@ -1,5 +1,5 @@
 import {AUTH_ROUTES, getDashboardRoute} from "@/constants/routes";
-import authService from "@services/authService";
+import {authService} from "@/api/services/authService";
 import {getCurrentTokenData} from "@services/JWTService.jsx";
 import {useEffect, useState} from "react";
 import {Link, useLocation, useNavigate} from "react-router-dom";
@@ -52,7 +52,9 @@ function Login() {
 
     // Get success message and pre-filled email from signup redirect
     const successMessage = location.state?.message;
-    const prefilledEmail = location.state?.email || "";    // Get redirect parameters from URL and state
+    const prefilledEmail = location.state?.email || "";
+    
+    // Get redirect parameters from URL and state
     const urlParams = new URLSearchParams(location.search);
     const redirectUrl = urlParams.get('redirect') || location.state?.returnUrl;
     const fromUrl = urlParams.get('from');

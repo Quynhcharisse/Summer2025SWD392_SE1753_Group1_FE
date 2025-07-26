@@ -6,10 +6,113 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   getAuthStatusMessage,
   handleEnrollmentNavigation,
-} from "../../../utils/authUtils";
+} from "@utils/authUtils.js";
 import { Button } from "../atoms";
-import { ProcessStepCard, ProgramCard, SearchBar } from "../molecules";
+import { ProgramCard, SearchBar } from "../molecules";
 import { PageTemplate } from "../templates";
+
+// SlideBar component (simple custom carousel)
+function SlideBar() {
+  const slides = [
+    {
+      id: 1,
+      image: "/img1.webp",
+      title: "Welcome to Sunshine Preschool",
+      description: "Nurturing young minds for a brighter future.",
+    },
+    {
+      id: 2,
+      image: "/img2.jpg",
+      title: "Modern Facilities",
+      description: "Safe, fun, and creative learning environment.",
+    },
+    {
+      id: 3,
+      image: "/img3.webp",
+      title: "Experienced Teachers",
+      description: "Our teachers are passionate and dedicated.",
+    },
+  ];
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % slides.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  return (
+    <div className="relative w-full max-w-5xl mx-auto mb-8 rounded-xl overflow-hidden shadow-2xl bg-gray-100" style={{ minHeight: '400px' }}>
+      
+      {slides.map((slide, idx) => (
+        <div
+          key={slide.id}
+          className={`transition-all duration-1000 ease-in-out absolute inset-0 ${idx === current ? "opacity-100 z-10 scale-100" : "opacity-0 z-0 scale-105"}`}
+          style={{ display: idx === current ? 'block' : 'none' }}
+        >
+          {/* Fallback background color */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-600"></div>
+          <img
+            src={slide.image}
+            alt={slide.title}
+            className="w-full h-64 md:h-96 lg:h-[500px] object-cover relative z-10"
+            style={{
+              imageRendering: 'auto',
+              backfaceVisibility: 'hidden',
+              transform: 'translateZ(0)'
+            }}
+            onError={(e) => {
+              console.error(`Failed to load image: ${slide.image}`);
+              e.target.style.display = 'none';
+            }}
+            onLoad={() => {
+              console.log(`Loaded image: ${slide.image}`);
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end items-center text-white p-8">
+            <div className="text-center max-w-2xl">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 drop-shadow-2xl leading-tight">{slide.title}</h2>
+              <p className="text-lg md:text-xl lg:text-2xl drop-shadow-lg font-medium">{slide.description}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+      
+      {/* Dots navigation */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+        {slides.map((_, idx) => (
+          <button
+            key={idx}
+            className={`w-4 h-4 rounded-full transition-all duration-300 ${idx === current ? "bg-white scale-125 shadow-lg" : "bg-white/60 hover:bg-white/80 hover:scale-110"}`}
+            onClick={() => setCurrent(idx)}
+            aria-label={`Go to slide ${idx + 1}`}
+          />
+        ))}
+      </div>
+      
+      {/* Arrow navigation */}
+      <button
+        className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black/80 hover:scale-110 transition-all duration-300 z-20 shadow-lg backdrop-blur-sm"
+        onClick={() => setCurrent((prev) => (prev - 1 + slides.length) % slides.length)}
+        aria-label="Previous slide"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        className="absolute right-6 top-1/2 -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black/80 hover:scale-110 transition-all duration-300 z-20 shadow-lg backdrop-blur-sm"
+        onClick={() => setCurrent((prev) => (prev + 1) % slides.length)}
+        aria-label="Next slide"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 export default function Home() {
   const { t } = useTranslation("home");
@@ -225,37 +328,8 @@ export default function Home() {
             </div>
           )}
         </div>
-        {/* Quick Enrollment Process */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800 text-center">
-            {t("quick_enrollment")}
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <ProcessStepCard
-              step={1}
-              title={t("step1_title")}
-              description={t("step1_desc")}
-              variant="numbered"
-              status="active"
-              actionLabel={t("step1_action")}
-            />
-            <ProcessStepCard
-              step={2}
-              title={t("step2_title")}
-              description={t("step2_desc")}
-              variant="numbered"
-              status="pending"
-            />
-            <ProcessStepCard
-              step={3}
-              title={t("step3_title")}
-              description={t("step3_desc")}
-              variant="numbered"
-              status="pending"
-            />
-          </div>
-        </div>
-        {/* Featured Programs */}
+        {/* SlideBar Section */}
+        <SlideBar />
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-800 text-center">
             {t("featured_programs")}
