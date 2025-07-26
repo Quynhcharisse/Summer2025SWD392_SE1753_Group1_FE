@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import PropTypes from "prop-types";
 import {Link, useNavigate, useSearchParams} from "react-router-dom";
 import {useTranslation} from "react-i18next";
-import authService from "@services/authService";
+import {authService} from "@/api/services/authService";
 import {ROUTES} from "@/constants/routes";
 import {Spinner} from "../atoms";
 import SignUpForm from "../molecules/forms/SignUpForm";
@@ -155,6 +155,7 @@ const SignUp = () => {
     const [loading, setLoading] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [submitError, setSubmitError] = useState("");
+    const [registeredEmail, setRegisteredEmail] = useState("");
 
     // Check if we have code and email in URL params
     const code = searchParams.get('code');
@@ -199,6 +200,9 @@ const SignUp = () => {
                 code: code
             });
             
+            // Save email for success message
+            setRegisteredEmail(formData.email);
+            
             // Show success message
             setShowSuccess(true);
 
@@ -234,7 +238,7 @@ const SignUp = () => {
 
     // Show success screen if registration was successful
     if (showSuccess) {
-        return <SuccessMessage onContinue={() => handleContinueToLogin()} />;
+        return <SuccessMessage onContinue={() => handleContinueToLogin(registeredEmail)} />;
     }
 
     return (
