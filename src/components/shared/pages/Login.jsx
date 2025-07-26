@@ -54,8 +54,6 @@ function Login() {
     const successMessage = location.state?.message;
     const prefilledEmail = location.state?.email || "";
     
-
-    
     // Get redirect parameters from URL and state
     const urlParams = new URLSearchParams(location.search);
     const redirectUrl = urlParams.get('redirect') || location.state?.returnUrl;

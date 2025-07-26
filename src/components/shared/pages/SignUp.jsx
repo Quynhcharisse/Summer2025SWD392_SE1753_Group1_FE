@@ -209,7 +209,6 @@ const SignUp = () => {
 
             // Auto redirect to login after 3 seconds
             setTimeout(() => {
-                console.log("🔍 SignUp - Auto redirect timeout triggered");
                 handleContinueToLogin(email);
             }, 3000);
         } catch (error) {
